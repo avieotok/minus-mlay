@@ -218,11 +218,9 @@
     <div class="panel">
       <div class="panel-head" id="setHead"><span>⚙️ פרטים קבועים (שם שולח)</span><span style="color:#78716c">▾</span></div>
       <div class="panel-body hidden" id="setBody">
-        <label class="field"><span class="label">השם שלך (יופיע בהודעה)</span>
-          <input class="input" id="reporter" placeholder="לדוגמה: יוסי"></label>
-        <label class="field"><span class="label">הטלפון שלך (לקבלת אישור טיפול חזרה)</span>
-          <input class="input" id="reporterPhone" inputmode="tel" placeholder="050-1234567"></label>
-        <p class="hist-empty">נשמר במכשיר זה בלבד.</p>
+        <label class="field"><span class="label">השם שלך (בחר מהרשימה)</span>
+          <select class="input" id="reporter"><option value="">— בחר —</option></select></label>
+        <p class="hist-empty">אם שמך לא ברשימה — פנה למפתח להוספה. נשמר במכשיר זה.</p>
       </div>
     </div>
 
@@ -271,6 +269,18 @@
         <div style="font-weight:700;font-size:15px;color:#e7e5e4">📲 הורדה ושיתוף — סרקו את הקוד</div>
         <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;width:100%"><div style="display:flex;flex-direction:column;align-items:center;gap:7px"><div id="qrWh" style="background:#fff;padding:11px;border-radius:14px;width:168px;height:168px;display:flex;align-items:center;justify-content:center"></div><div style="font-weight:800;font-size:14.5px;color:#fafaf9">📦 למחסנאים</div><div style="font-size:12px;color:#78716c">דיווח חוסרים</div></div><div style="display:flex;flex-direction:column;align-items:center;gap:7px"><div id="qrBuy" style="background:#fff;padding:11px;border-radius:14px;width:168px;height:168px;display:flex;align-items:center;justify-content:center"></div><div style="font-weight:800;font-size:14.5px;color:#fafaf9">🛒 לקניינים ולמנהל</div><div style="font-size:12px;color:#78716c">לוח בקרה וטיפול</div></div></div>
         <button class="ghost-btn" id="copyLink" style="max-width:280px"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fafaf9" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> העתק קישור</button>
+        <div style="height:1px;background:#292524;width:100%;margin:4px 0"></div>
+        <div style="font-weight:700;font-size:15px;color:#e7e5e4">👥 ניהול שמות</div>
+        <div style="display:flex;gap:8px;width:100%;max-width:340px">
+          <button class="seg-btn on" id="nameTabBuyers" style="flex:1;padding:8px;border-radius:9px;background:#292524;color:#fafaf9;border:1px solid #3f3f46;font-family:'Heebo',sans-serif;font-size:13px;cursor:pointer">קניינים</button>
+          <button class="seg-btn" id="nameTabReporters" style="flex:1;padding:8px;border-radius:9px;background:transparent;color:#a8a29e;border:1px solid #3f3f46;font-family:'Heebo',sans-serif;font-size:13px;cursor:pointer">מחסנאים</button>
+        </div>
+        <div id="nameList" style="display:flex;flex-direction:column;gap:7px;width:100%;max-width:340px"></div>
+        <div style="display:flex;gap:8px;width:100%;max-width:340px">
+          <input id="nameNew" placeholder="שם מלא חדש" style="flex:1;background:#0c0a09;border:1px solid #3f3f46;border-radius:10px;padding:10px 12px;color:#fafaf9;font-family:'Heebo',sans-serif;font-size:14px">
+          <button class="ghost-btn" id="nameAdd" style="max-width:90px;margin:0">➕</button>
+        </div>
+        <div id="nameNote" class="desc-line" style="color:#fbbf24"></div>
         </div>
       </div>
     </div>
@@ -316,6 +326,14 @@
       <button class="send" id="ackSend" disabled>שלח אישור ורשום במערכת</button>
       <div id="ackNote" style="font-size:12.5px;color:#78716c;min-height:2px"></div>
       <a id="ackOpen" style="font-size:13px;color:#78716c" href="#">פתח את האפליקציה הרגילה</a>
+    </div>
+  </div>
+
+  <div class="recip-overlay hidden" id="sentWrap">
+    <div class="recip-card">
+      <div class="recip-title">✅ הדיווח נשלח</div>
+      <div id="sentInfo" style="background:#0c0a09;border:1px solid #166534;border-radius:12px;padding:16px;font-size:14.5px;color:#e7e5e4;line-height:1.7;margin-bottom:12px;text-align:center"></div>
+      <button class="send" id="sentOk">סגור</button>
     </div>
   </div>
 
@@ -412,7 +430,7 @@
       const box=document.getElementById('qrLock');
       if(box.style.display!=='none'){ box.style.display='none'; return; }
       const p=prompt('הזן סיסמת מפתח:');
-      if(p==='30172'){ box.style.display='flex'; renderQRs(); }
+      if(p==='30172'){ box.style.display='flex'; renderQRs(); renderNames(); if(apiOn()) loadRoster(); }
       else if(p!==null){ try{ setStatus('סיסמה שגויה'); }catch(_){ } }
     }
   });
@@ -454,10 +472,52 @@
   $('copyLink').addEventListener('click',async ()=>{ try{ await navigator.clipboard.writeText(APP_URL); setStatus('הקישור הועתק ✓'); }catch(e){ prompt('העתק את הקישור:', APP_URL); } });
 
   // saved details
-  $('reporter').value=localStorage.getItem(K.reporter)||'';
-  $('reporter').addEventListener('input',e=>localStorage.setItem(K.reporter,e.target.value));
-  $('reporterPhone').value=localStorage.getItem('afcon_reporter_phone')||'';
-  $('reporterPhone').addEventListener('input',e=>localStorage.setItem('afcon_reporter_phone',e.target.value));
+  let BUYERS=[], REPORTERS=[];
+  function fillReporter(){
+    const sel=$('reporter'); if(!sel) return; const cur=(localStorage.getItem(K.reporter)||'').trim();
+    sel.innerHTML='<option value="">— בחר —</option>'+REPORTERS.map(n=>'<option value="'+esc(n)+'">'+esc(n)+'</option>').join('');
+    if(cur && REPORTERS.indexOf(cur)>=0) sel.value=cur;
+  }
+  $('reporter').addEventListener('change',e=>localStorage.setItem(K.reporter,e.target.value));
+  async function loadRoster(){
+    if(!apiOn()) return;
+    try{ const r=await apiGet('roster'); if(r&&r.ok){ BUYERS=Array.isArray(r.buyers)?r.buyers:[]; REPORTERS=Array.isArray(r.reporters)?r.reporters:[]; fillReporter(); renderNames&&renderNames(); } }catch(e){}
+  }
+
+  // ניהול שמות (קניינים/מחסנאים) — מאחורי 30172
+  let nameKind='buyers';
+  function curNames(){ return nameKind==='reporters'?REPORTERS:BUYERS; }
+  function setCurNames(arr){ if(nameKind==='reporters') REPORTERS=arr; else BUYERS=arr; }
+  function renderNames(){
+    const el=$('nameList'); if(!el) return;
+    const arr=curNames();
+    el.innerHTML = arr.length ? arr.map((n,i)=>'<div style="display:flex;align-items:center;gap:8px;background:#0c0a09;border:1px solid #3f3f46;border-radius:10px;padding:8px 11px">'
+      +'<span style="flex:1;font-size:14px;color:#e7e5e4">'+esc(n)+'</span>'
+      +'<button class="nm-edit" data-i="'+i+'" style="background:none;border:none;color:#a8a29e;cursor:pointer;font-size:15px">✎</button>'
+      +'<button class="nm-del" data-i="'+i+'" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:15px">🗑</button>'
+      +'</div>').join('') : '<div style="color:#78716c;font-size:13px">אין שמות. הוסף למטה.</div>';
+  }
+  async function saveNames(){
+    $('nameNote').textContent='שומר…';
+    try{ const r=await apiPost('rosterSet',{kind:nameKind, names:curNames()});
+      $('nameNote').textContent=(r&&r.ok)?'נשמר ✓':'השמירה נכשלה.'; fillReporter(); }
+    catch(e){ $('nameNote').textContent='השמירה נכשלה — בדוק חיבור.'; }
+  }
+  function nameTab(k){ nameKind=k;
+    $('nameTabBuyers').classList.toggle('on',k==='buyers'); $('nameTabBuyers').style.background=(k==='buyers')?'#292524':'transparent'; $('nameTabBuyers').style.color=(k==='buyers')?'#fafaf9':'#a8a29e';
+    $('nameTabReporters').classList.toggle('on',k==='reporters'); $('nameTabReporters').style.background=(k==='reporters')?'#292524':'transparent'; $('nameTabReporters').style.color=(k==='reporters')?'#fafaf9':'#a8a29e';
+    renderNames(); }
+  $('nameTabBuyers').addEventListener('click',()=>nameTab('buyers'));
+  $('nameTabReporters').addEventListener('click',()=>nameTab('reporters'));
+  $('nameAdd').addEventListener('click',()=>{ const v=$('nameNew').value.trim(); if(!v){ $('nameNote').textContent='הקלד שם.'; return; }
+    const arr=curNames().slice(); if(arr.indexOf(v)>=0){ $('nameNote').textContent='השם כבר קיים.'; return; }
+    arr.push(v); setCurNames(arr); $('nameNew').value=''; renderNames(); saveNames(); });
+  $('nameList').addEventListener('click',e=>{
+    const ed=e.target.closest('.nm-edit'), dl=e.target.closest('.nm-del');
+    if(ed){ const i=+ed.dataset.i; const arr=curNames().slice(); const nv=prompt('עריכת שם:',arr[i]);
+      if(nv!==null){ const t=nv.trim(); if(t){ arr[i]=t; setCurNames(arr); renderNames(); saveNames(); } } return; }
+    if(dl){ const i=+dl.dataset.i; const arr=curNames().slice(); if(confirm('להסיר את "'+arr[i]+'"?')){ arr.splice(i,1); setCurNames(arr); renderNames(); saveNames(); } return; }
+  });
 
   // collapsibles
   $('setHead').addEventListener('click',()=>$('setBody').classList.toggle('hidden'));
@@ -723,7 +783,38 @@
         }catch(e){ setStatus('לא ניתן לבדוק כפילות (אולי אין רשת) — ניתן לשלוח.'); }
       }
     }
-    openRecipients(kind);
+    submitReport(kind);
+  }
+
+  // שליחה ללא וואטסאפ — רושם את הדיווח במערכת, והוא מופיע מיד בלוח הקניינים
+  async function submitReport(kind){
+    const subj=subjectFor(kind);
+    if(!subj.sku){ setStatus('נא למלא מק״ט.'); return; }
+    if(!apiOn()){ setStatus('אין חיבור למערכת — לא ניתן לשלוח. פנה למפתח.'); return; }
+    currentAlertId=newAlertId();
+    setStatus('שולח לקניינים…');
+    try{
+      const r=await apiPost('create',{ id:currentAlertId, sku:subj.sku, desc:subj.desc, qty:subj.qty,
+        urgency:URG[urgency].label, reporter:(localStorage.getItem(K.reporter)||''),
+        reporterPhone:(localStorage.getItem('afcon_reporter_phone')||''), recipients:'כל הצוות', assignee:'' });
+      if(r && r.ok){
+        addHist('מק״ט: '+subj.sku);
+        reportDone(subj);
+      } else { setStatus('השליחה נכשלה — נסה שוב.'); }
+    }catch(e){ setStatus('השליחה נכשלה — בדוק חיבור ונסה שוב.'); }
+  }
+
+  // מסך אישור אחרי שליחה + איפוס הטופס
+  function reportDone(subj){
+    setStatus('');
+    if($('txtSku')) $('txtSku').value='';
+    if($('qtyText')) $('qtyText').value='';
+    if($('overlayText')) $('overlayText').value='';
+    if($('qtyPhoto')) $('qtyPhoto').value='';
+    refreshDesc && refreshDesc();
+    if(typeof currentImg!=='undefined'){ currentImg=null; hide($('previewWrap')); if($('sendPhoto')) $('sendPhoto').disabled=true; }
+    show($('sentWrap'));
+    $('sentInfo').innerHTML='מק״ט <b>'+esc(subj.sku)+'</b>'+(subj.desc?(' — '+esc(subj.desc)):'')+' נשלח לקניינים ונכנס ללוח לטיפול. ✓';
   }
 
   // דיאלוג כפילות
@@ -738,8 +829,9 @@
     show($('dupWrap'));
   }
   function closeDup(){ hide($('dupWrap')); }
+  $('sentOk').addEventListener('click',()=>hide($('sentWrap')));
   $('dupCancel').addEventListener('click', closeDup);
-  $('dupNew').addEventListener('click',()=>{ closeDup(); openRecipients(pendingKind); });
+  $('dupNew').addEventListener('click',()=>{ closeDup(); submitReport(pendingKind); });
   $('dupBump').addEventListener('click', async ()=>{
     if(!dupExisting){ closeDup(); return; }
     $('dupMsg').textContent='מעדכן…';
@@ -833,13 +925,13 @@
   // ===== הגדרות חיבור למערכת =====
   function paintApiState(){ $('apiState').textContent = apiOn()?'מחובר ✓':'לא מחובר'; }
   $('apiUrlInp').value=apiUrl(); $('apiTokenInp').value=apiToken(); paintApiState();
-  if(apiOn()) syncCatalog();
+  if(apiOn()){ syncCatalog(); loadRoster(); }
   $('apiTest').addEventListener('click', async ()=>{
     const url=$('apiUrlInp').value.trim(), tok=$('apiTokenInp').value.trim();
     if(!url){ $('apiMsg').textContent='הזן כתובת.'; return; }
     localStorage.setItem(K.api,url); localStorage.setItem(K.token,tok); paintApiState();
     $('apiMsg').textContent='בודק…';
-    try{ const r=await apiGet('ping'); if(r&&r.ok){ $('apiMsg').textContent='מחובר ✓'; paintApiState(); syncCatalog(); } else { $('apiMsg').textContent='הכתובת הגיבה אך עם שגיאה — בדוק את הטוקן.'; } }
+    try{ const r=await apiGet('ping'); if(r&&r.ok){ $('apiMsg').textContent='מחובר ✓'; paintApiState(); syncCatalog(); loadRoster(); } else { $('apiMsg').textContent='הכתובת הגיבה אך עם שגיאה — בדוק את הטוקן.'; } }
     catch(e){ $('apiMsg').textContent='לא ניתן להתחבר — ודא שזו כתובת Web App ושפורסמה לגישת Anyone.'; }
   });
 
@@ -949,7 +1041,7 @@
     if(kpStep==='sku' && kpVal){ const d=lookupDesc(kpVal); if(d){ kd.style.color='#34d399'; kd.textContent='📦 '+d; } else { kd.style.color='#78716c'; kd.textContent='מק״ט לא נמצא בקטלוג'; } }
     else { kd.textContent=''; }
   }
-  function kpFinish(){ hide($('kpWrap')); if($('txtSku').value.trim()) openRecipients('text'); }
+  function kpFinish(){ hide($('kpWrap')); refreshDesc && refreshDesc(); }
   $('kpGrid').addEventListener('click',e=>{ const k=e.target.closest('.kp-key'); if(!k) return; speakDigit(k.dataset.d); if(kpVal.length<14){ kpVal+=k.dataset.d; kpRender(); } });
   $('kpBack').addEventListener('click',()=>{ kpVal=kpVal.slice(0,-1); kpRender(); });
   $('kpCancel').addEventListener('click',()=>hide($('kpWrap')));
