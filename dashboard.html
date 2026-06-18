@@ -485,9 +485,9 @@
   $('exportBtn').addEventListener('click',()=>{
     if(typeof XLSX==='undefined'){ toast('מנוע האקסל נטען — נסה שוב'); return; }
     if(!ALERTS.length){ toast('אין נתונים לייצוא'); return; }
-    const rows=[['מק״ט','תיאור','כמות','דחיפות','דווח ע״י','נשלח אל','סטטוס','קניין אחראי','טופל ע״י','תגובה','נוצר','עודכן']];
-    ALERTS.forEach(a=>rows.push([a.sku,a.desc,a.qty,a.urgency,a.reporter,a.recipients,a.status,a.assignee,a.ackBy,a.response,fmt(a.created),fmt(a.updated)]));
-    const ws=XLSX.utils.aoa_to_sheet(rows); ws['!cols']=[{wch:9},{wch:22},{wch:8},{wch:12},{wch:14},{wch:18},{wch:9},{wch:14},{wch:14},{wch:26},{wch:15},{wch:15}];
+    const rows=[['מק״ט','תיאור','כמות','דחיפות','דווח ע״י','נשלח אל','סטטוס','קניין אחראי','טופל ע״י','תאריך טיפול','בארכיון','תגובה','נוצר','עודכן']];
+    ALERTS.forEach(a=>rows.push([a.sku,a.desc,a.qty,a.urgency,a.reporter,a.recipients,a.status,a.assignee,a.ackBy,(a.status==='טופל'?fmt(a.ackAt||a.updated):''),(isArchived(a)?'כן':'לא'),a.response,fmt(a.created),fmt(a.updated)]));
+    const ws=XLSX.utils.aoa_to_sheet(rows); ws['!cols']=[{wch:9},{wch:22},{wch:8},{wch:12},{wch:14},{wch:18},{wch:9},{wch:14},{wch:14},{wch:15},{wch:9},{wch:26},{wch:15},{wch:15}];
     const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'דיווחים');
     XLSX.writeFile(wb,'afcon-dashboard-'+new Date().toISOString().slice(0,10)+'.xlsx');
   });
