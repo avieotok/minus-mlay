@@ -213,16 +213,7 @@
 
     <!-- חיבור למערכת המשותפת -->
     <div class="panel">
-      <div class="panel-head" id="apiHead"><span>🔗 חיבור למערכת &nbsp;·&nbsp; <span id="apiState" class="badge-count">לא מחובר</span></span><span style="color:#78716c">▾</span></div>
-      <div class="panel-body hidden" id="apiBody">
-        <p class="hist-empty">הדבק את כתובת ה-Web App מ-Google Apps Script ואת הטוקן הסודי. זהה לכל אנשי הצוות (מחסנאים וקניינים).</p>
-        <label class="field"><span class="label">כתובת המערכת (Web App URL)</span>
-          <input class="input" id="apiUrlInp" placeholder="https://script.google.com/macros/s/..."></label>
-        <label class="field"><span class="label">טוקן סודי</span>
-          <input class="input" id="apiTokenInp" placeholder="אותו סוד שבקוד השרת"></label>
-        <button class="scan-btn" id="apiTest">בדוק חיבור ושמור</button>
-        <div id="apiMsg" class="desc-line" style="color:#fbbf24"></div>
-      </div>
+      <div class="panel-head" style="cursor:default"><span>🔗 חיבור למערכת &nbsp;·&nbsp; <span id="apiState" class="badge-count">לא מחובר</span></span></div>
     </div>
 
     <!-- Fixed details -->
@@ -268,8 +259,17 @@
           <span>📷 צילום ממותג</span><span>🚦 דרגת דחיפות</span><span>📊 ברקוד</span><span>📋 היסטוריה</span>
         </div>
         <div style="height:1px;background:#292524;width:100%;margin:8px 0"></div>
-        <button class="ghost-btn" id="qrUnlock" style="max-width:300px">🔒 קודי QR להתקנה (מפתח)</button>
+        <button class="ghost-btn" id="qrUnlock" style="max-width:320px">🔒 הגדרות מערכת ו‑QR (מפתח)</button>
         <div id="qrLock" style="display:none;flex-direction:column;align-items:center;gap:13px;width:100%">
+        <div style="font-weight:700;font-size:15px;color:#e7e5e4">🔗 חיבור למערכת</div>
+        <p class="hist-empty" style="margin:0">כתובת ה-Web App והטוקן הסודי. זהה לכל הצוות.</p>
+        <label class="field" style="width:100%;max-width:340px"><span class="label">כתובת המערכת (Web App URL)</span>
+          <input class="input" id="apiUrlInp" placeholder="https://script.google.com/macros/s/..."></label>
+        <label class="field" style="width:100%;max-width:340px"><span class="label">טוקן סודי</span>
+          <input class="input" id="apiTokenInp" placeholder="אותו סוד שבקוד השרת"></label>
+        <button class="scan-btn" id="apiTest" style="max-width:340px">בדוק חיבור ושמור</button>
+        <div id="apiMsg" class="desc-line" style="color:#fbbf24"></div>
+        <div style="height:1px;background:#292524;width:100%;margin:4px 0"></div>
         <div style="font-weight:700;font-size:15px;color:#e7e5e4">📲 הורדה ושיתוף — סרקו את הקוד</div>
         <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;width:100%"><div style="display:flex;flex-direction:column;align-items:center;gap:7px"><div id="qrWh" style="background:#fff;padding:11px;border-radius:14px;width:168px;height:168px;display:flex;align-items:center;justify-content:center"></div><div style="font-weight:800;font-size:14.5px;color:#fafaf9">📦 למחסנאים</div><div style="font-size:12px;color:#78716c">דיווח חוסרים</div></div><div style="display:flex;flex-direction:column;align-items:center;gap:7px"><div id="qrBuy" style="background:#fff;padding:11px;border-radius:14px;width:168px;height:168px;display:flex;align-items:center;justify-content:center"></div><div style="font-weight:800;font-size:14.5px;color:#fafaf9">🛒 לקניינים ולמנהל</div><div style="font-size:12px;color:#78716c">לוח בקרה וטיפול</div></div></div>
         <button class="ghost-btn" id="copyLink" style="max-width:280px"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fafaf9" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> העתק קישור</button>
@@ -830,8 +830,7 @@
   renderContacts();
 
   // ===== הגדרות חיבור למערכת =====
-  function paintApiState(){ $('apiState').textContent = apiOn()?'מחובר':'לא מחובר'; }
-  $('apiHead').addEventListener('click',()=>$('apiBody').classList.toggle('hidden'));
+  function paintApiState(){ $('apiState').textContent = apiOn()?'מחובר ✓':'לא מחובר'; }
   $('apiUrlInp').value=apiUrl(); $('apiTokenInp').value=apiToken(); paintApiState();
   if(apiOn()) syncCatalog();
   $('apiTest').addEventListener('click', async ()=>{
@@ -839,14 +838,14 @@
     if(!url){ $('apiMsg').textContent='הזן כתובת.'; return; }
     localStorage.setItem(K.api,url); localStorage.setItem(K.token,tok); paintApiState();
     $('apiMsg').textContent='בודק…';
-    try{ const r=await apiGet('ping'); if(r&&r.ok){ $('apiMsg').textContent='מחובר ✓'; syncCatalog(); } else { $('apiMsg').textContent='הכתובת הגיבה אך עם שגיאה — בדוק את הטוקן.'; } }
+    try{ const r=await apiGet('ping'); if(r&&r.ok){ $('apiMsg').textContent='מחובר ✓'; paintApiState(); syncCatalog(); } else { $('apiMsg').textContent='הכתובת הגיבה אך עם שגיאה — בדוק את הטוקן.'; } }
     catch(e){ $('apiMsg').textContent='לא ניתן להתחבר — ודא שזו כתובת Web App ושפורסמה לגישת Anyone.'; }
   });
 
   // ===== תיבת "התקבלו" — התראות פתוחות מהמערכת =====
   async function loadInbox(){
     const L=$('inboxList');
-    if(!apiOn()){ L.innerHTML='<div class="hist-empty">אין חיבור למערכת. הזן כתובת וטוקן ב⚙️ הגדרות ▸ חיבור למערכת.</div>'; return; }
+    if(!apiOn()){ L.innerHTML='<div class="hist-empty">אין חיבור למערכת. החיבור מוגדר באודות תחת סיסמת מפתח.</div>'; return; }
     L.innerHTML='<div class="hist-empty">טוען…</div>';
     try{
       const res=await apiGet('open');
