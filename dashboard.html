@@ -183,6 +183,7 @@
     </div>
 
     <div class="field"><label>מי אתה? (בחר מרשימת הקניינים)</label><select id="mName"><option value="">— בחר —</option></select></div>
+    <p id="idLock" class="hidden" style="color:#22c55e;font-size:12.5px;margin:-8px 0 14px">🔒 השם נבחר וננעל. לשינוי — בהגדרות מתקדמות (מפתח).</p>
     <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:14px;font-size:14.5px;font-weight:700"><input type="checkbox" id="mBoss" style="width:22px;height:22px;accent-color:#22c55e;flex:0 0 auto"><span>אני מנהל — צפייה ומעקב בלבד (בלי כפתורי טיפול)</span></label>
     <button class="prim" id="mSave">שמור</button>
     <div class="note" id="mNote"></div>
@@ -233,6 +234,12 @@
           <button class="ghost" id="nameAdd" style="border-color:var(--green);color:var(--green2)">➕ הוסף</button>
         </div>
         <div class="note" id="nameNote"></div>
+      </div>
+
+      <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:8px">🔄 איפוס זהות</div>
+        <p style="font-size:12.5px;color:var(--faint);line-height:1.6;margin-bottom:10px">מאפס את השם שנבחר במכשיר זה, כדי לאפשר בחירת שם מחדש.</p>
+        <button class="ghost" id="resetIdent" style="border-color:#7f1d1d;color:#f87171">🔄 אפס זהות במכשיר זה</button>
       </div>
     </div>
 
@@ -313,6 +320,8 @@
     let opts='<option value="">— בחר —</option>'+BUYERS.map(b=>'<option value="'+esc(b)+'">'+esc(b)+'</option>').join('');
     if(cur && BUYERS.indexOf(cur)<0) opts+='<option value="'+esc(cur)+'">'+esc(cur)+'</option>';
     sel.innerHTML=opts; sel.value=cur;
+    sel.disabled=!!cur;
+    if($('idLock')) $('idLock').classList.toggle('hidden',!cur);
   }
   function buyerOptions(){ return '<option value="">העבר לקניין…</option>'+BUYERS.map(b=>'<option value="'+esc(b)+'">'+esc(b)+'</option>').join(''); }
 
@@ -596,6 +605,7 @@
     catch(e){ $('nameNote').textContent='השמירה נכשלה — בדוק חיבור.'; }
   }
   $('nameTabBuyers').addEventListener('click',()=>{ nameKind='buyers'; $('nameTabBuyers').classList.add('on'); $('nameTabReporters').classList.remove('on'); renderNames(); });
+  $('resetIdent').addEventListener('click',()=>{ if(confirm('לאפס את הזהות שנבחרה במכשיר זה?')){ localStorage.removeItem(K.me); fillIdentity(); toast('הזהות אופסה'); } });
   $('nameTabReporters').addEventListener('click',()=>{ nameKind='reporters'; $('nameTabReporters').classList.add('on'); $('nameTabBuyers').classList.remove('on'); renderNames(); });
   $('nameAdd').addEventListener('click',()=>{ const v=$('nameNew').value.trim(); if(!v){ $('nameNote').textContent='הקלד שם.'; return; }
     const arr=curNames().slice(); if(arr.indexOf(v)>=0){ $('nameNote').textContent='השם כבר קיים.'; return; }
