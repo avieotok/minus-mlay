@@ -124,7 +124,8 @@
 
   <main>
     <div class="tabs">
-      <button class="tab active" id="tabText">✍️ טקסט</button>
+      <button class="tab active" id="tabText">✍️ דיווח</button>
+      <button class="tab" id="tabInbox">📥 התקבלו</button>
       <button class="tab tab-about" id="tabAbout">ℹ️ אודות</button>
     </div>
     <div id="opsWrap">
@@ -210,6 +211,20 @@
       </div>
     </div>
 
+    <!-- חיבור למערכת המשותפת -->
+    <div class="panel">
+      <div class="panel-head" id="apiHead"><span>🔗 חיבור למערכת &nbsp;·&nbsp; <span id="apiState" class="badge-count">לא מחובר</span></span><span style="color:#78716c">▾</span></div>
+      <div class="panel-body hidden" id="apiBody">
+        <p class="hist-empty">הדבק את כתובת ה-Web App מ-Google Apps Script ואת הטוקן הסודי. זהה לכל אנשי הצוות (מחסנאים וקניינים).</p>
+        <label class="field"><span class="label">כתובת המערכת (Web App URL)</span>
+          <input class="input" id="apiUrlInp" placeholder="https://script.google.com/macros/s/..."></label>
+        <label class="field"><span class="label">טוקן סודי</span>
+          <input class="input" id="apiTokenInp" placeholder="אותו סוד שבקוד השרת"></label>
+        <button class="scan-btn" id="apiTest">בדוק חיבור ושמור</button>
+        <div id="apiMsg" class="desc-line" style="color:#fbbf24"></div>
+      </div>
+    </div>
+
     <!-- Fixed details -->
     <div class="panel">
       <div class="panel-head" id="setHead"><span>⚙️ פרטים קבועים (שם שולח)</span><span style="color:#78716c">▾</span></div>
@@ -233,6 +248,14 @@
     </div>
 
     <button class="exit-btn" id="exitBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg> יציאה מהאפליקציה</button>
+    </div>
+
+    <div id="inboxMode" class="hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-family:'Rubik',sans-serif;font-weight:800;font-size:18px">📥 התראות פתוחות</div>
+        <button class="scan-btn" id="inboxRefresh" style="width:auto;padding:9px 14px">🔄 רענן</button>
+      </div>
+      <div id="inboxList"></div>
     </div>
 
     <div id="aboutMode" class="hidden">
@@ -285,8 +308,25 @@
       <div style="font-family:'Rubik',sans-serif;font-weight:900;font-size:20px">📩 התקבלה בקשת מלאי</div>
       <div id="ackItem" style="color:#fde68a;font-size:16px;font-weight:700"></div>
       <label class="ack-check"><input type="checkbox" id="ackChk"><span>קיבלתי ואני מטפל בבקשה</span></label>
-      <button class="send" id="ackSend" disabled>שלח אישור לשולח</button>
+      <div class="seg" id="ackSeg" style="width:100%">
+        <button data-s="בטיפול" style="background:#0f1f14;border-color:#22c55e;color:#34d399">🟠 בטיפול</button>
+        <button data-s="טופל">✅ טופל / הוזמן</button>
+      </div>
+      <textarea class="input" id="ackResp" placeholder="תגובה (לא חובה) — לדוגמה: הוזמן, מגיע יום ג׳" style="min-height:64px;resize:vertical"></textarea>
+      <button class="send" id="ackSend" disabled>שלח אישור ורשום במערכת</button>
+      <div id="ackNote" style="font-size:12.5px;color:#78716c;min-height:2px"></div>
       <a id="ackOpen" style="font-size:13px;color:#78716c" href="#">פתח את האפליקציה הרגילה</a>
+    </div>
+  </div>
+
+  <div class="recip-overlay hidden" id="dupWrap">
+    <div class="recip-card">
+      <div class="recip-title">⚠️ כבר קיים דיווח פתוח</div>
+      <div id="dupInfo" style="background:#0c0a09;border:1px solid #3f3f46;border-radius:12px;padding:14px 16px;font-size:14px;color:#e7e5e4;line-height:1.7;margin-bottom:12px"></div>
+      <button class="send" id="dupBump" style="background:#f59e0b;color:#0c0a09">🔁 סמן שעדיין נחוץ (עדכון לקיים)</button>
+      <button class="scan-btn" id="dupNew" style="margin-top:10px">שלח דיווח חדש בכל זאת</button>
+      <div id="dupMsg" style="color:#f87171;font-size:13px;text-align:center;min-height:2px;margin-top:8px"></div>
+      <button class="recip-cancel" id="dupCancel">ביטול</button>
     </div>
   </div>
 
@@ -352,10 +392,34 @@
     out:    {label:'אזל לגמרי',  bg:'#e2231a', fg:'#ffffff', emoji:'🔴'},
     urgent: {label:'דחוף',       bg:'#b91c1c', fg:'#ffffff', emoji:'⚠️'}
   };
-  const K={boss:'afcon_boss', reporter:'afcon_reporter', hist:'afcon_history'};
+  const K={boss:'afcon_boss', reporter:'afcon_reporter', hist:'afcon_history',
+           api:'afcon_api_url', token:'afcon_api_token'};
   const APP_URL='https://avieotok.github.io/minus-mlay';
   let urgency='low';
   let cardMode=false;
+
+  // ===== חיבור למערכת המשותפת (Google Sheet דרך Apps Script) =====
+  function apiUrl(){ return (localStorage.getItem(K.api)||'').trim(); }
+  function apiToken(){ return (localStorage.getItem(K.token)||'').trim(); }
+  function apiOn(){ return !!apiUrl(); }
+  function newAlertId(){ return 'A'+Date.now()+Math.floor(Math.random()*1000); }
+  async function apiGet(action, params){
+    const u=new URL(apiUrl());
+    u.searchParams.set('token', apiToken());
+    u.searchParams.set('action', action);
+    if(params) for(const k in params){ if(params[k]!=null) u.searchParams.set(k, params[k]); }
+    const r=await fetch(u.toString(), {method:'GET', redirect:'follow'});
+    return await r.json();
+  }
+  async function apiPost(action, payload){
+    // נשלח כ-text/plain כדי לא להפעיל preflight של CORS שאפס סקריפט לא מטפל בו
+    const body=Object.assign({token:apiToken(), action:action}, payload||{});
+    const r=await fetch(apiUrl(), {method:'POST', redirect:'follow',
+      headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(body)});
+    return await r.json();
+  }
+  let currentAlertId='';   // ה-id של ההתראה הנוכחית שנשלחת (משובץ בקישור האישור)
+  let dupExisting=null;    // התראה פתוחה זהה שנמצאה בבדיקת כפילות
   function setStatus(t){ $('status').textContent=t; }
   function nowStr(){ return new Date().toLocaleString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}); }
   function fmtPhone(raw){ let d=(raw||'').replace(/\D/g,''); if(d.startsWith('0')) d='972'+d.slice(1); return d; }
@@ -392,13 +456,17 @@
 
   // tabs
   $('tabText').addEventListener('click',()=>switchTab('text'));
+  $('tabInbox').addEventListener('click',()=>switchTab('inbox'));
   $('tabAbout').addEventListener('click',()=>switchTab('about'));
   function switchTab(t){
-    $('tabText').classList.toggle('active',t!=='about');
-    $('tabAbout').classList.toggle('active',t==='about');
-    if(t==='about'){ hide($('opsWrap')); show($('aboutMode')); closeScanner(); return; }
-    show($('opsWrap')); hide($('aboutMode')); cardMode=false;
-    $('textMode').style.display='flex'; setStatus(''); }
+    $('tabText').classList.toggle('active', t==='text');
+    $('tabInbox').classList.toggle('active', t==='inbox');
+    $('tabAbout').classList.toggle('active', t==='about');
+    hide($('opsWrap')); hide($('inboxMode')); hide($('aboutMode')); closeScanner();
+    if(t==='about'){ show($('aboutMode')); return; }
+    if(t==='inbox'){ show($('inboxMode')); loadInbox(); return; }
+    show($('opsWrap')); cardMode=false; $('textMode').style.display='flex'; setStatus('');
+  }
 
   // camera
   let stream=null, currentImg=null;
@@ -460,7 +528,7 @@
   function rgba(hex,a){ const n=parseInt(hex.slice(1),16); return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')'; }
   function roundRect(c,x,y,w,h,r){ c.beginPath(); c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); }
 
-  function composeMsg(line, qty){
+  function composeMsg(line, qty, alertId){
     const u=URG[urgency], out=['🚨🚨 *התראת מלאי — אפקון* 🚨🚨', u.emoji+' *'+u.label+'*'];
     if(line){ line.split('\n').forEach(l=>{ l=l.trim(); if(l) out.push('▫️ '+l); }); }
     if(qty) out.push('▫️ נותרו: '+qty);
@@ -468,7 +536,10 @@
     const rep=(localStorage.getItem(K.reporter)||'').trim();
     out.push(rep ? ('🧑\u200d🔧 '+rep+' · 🕒 '+nowStr().replace(',','')) : ('🕒 '+nowStr().replace(',','')));
     const rph=fmtPhone(localStorage.getItem('afcon_reporter_phone')||'');
-    if(rph){ let itm=''; if(line){ itm=line.split('\n')[0].replace('מק״ט: ','').trim(); } out.push('☑️ קיבלת? לחץ לאישור טיפול:'); out.push(APP_URL+'/?ack='+rph+'&item='+encodeURIComponent(itm)); }
+    if(rph){ let itm=''; if(line){ itm=line.split('\n')[0].replace('מק״ט: ','').trim(); }
+      const id=(alertId||currentAlertId||'');
+      out.push('☑️ קיבלת? לחץ לאישור וטיפול:');
+      out.push(APP_URL+'/?ack='+rph+'&item='+encodeURIComponent(itm)+(id?('&id='+encodeURIComponent(id)):'')); }
     return out.join('\n');
   }
   function waUrl(text){ return 'https://wa.me/?text='+encodeURIComponent(text); }
@@ -599,8 +670,49 @@
   function recipName(it){ return it.group?'נמען (בחירה ידנית)':it.name; }
   function dataURLtoFile(d,name){ const a=d.split(','), mime=a[0].match(/:(.*?);/)[1], bs=atob(a[1]); let n=bs.length, u=new Uint8Array(n); while(n--) u[n]=bs.charCodeAt(n); return new File([u],name,{type:mime}); }
 
-  $('sendPhoto').addEventListener('click',()=>{ if(!currentImg) return; cardMode=false; openRecipients('photo'); });
-  $('sendText').addEventListener('click',()=>{ if(!$('txtSku').value.trim()){ setStatus('נא למלא מק״ט.'); return; } openRecipients('text'); });
+  $('sendPhoto').addEventListener('click',()=>{ if(!currentImg) return; cardMode=false; trySend('photo'); });
+  $('sendText').addEventListener('click',()=>{ if(!$('txtSku').value.trim()){ setStatus('נא למלא מק״ט.'); return; } trySend('text'); });
+
+  // נושא הדיווח הנוכחי (מק״ט/תיאור/כמות) לפי המצב
+  function subjectFor(kind){
+    if(kind==='text' || cardMode){ const sku=$('txtSku').value.trim(); return {sku:sku, desc:lookupDesc(sku)||'', qty:$('qtyText').value.trim()}; }
+    return {sku:$('overlayText').value.trim(), desc:'', qty:$('qtyPhoto').value.trim()};
+  }
+
+  // לפני שליחה — בודק כפילות מול המערכת המשותפת
+  async function trySend(kind){
+    dupExisting=null;
+    if(apiOn()){
+      const subj=subjectFor(kind);
+      if(subj.sku){
+        setStatus('בודק אם כבר קיים דיווח פתוח…');
+        try{
+          const res=await apiGet('check',{sku:subj.sku});
+          setStatus('');
+          if(res && res.ok && res.duplicate && res.alert){ dupExisting=res.alert; pendingKind=kind; showDup(res.alert); return; }
+        }catch(e){ setStatus('לא ניתן לבדוק כפילות (אולי אין רשת) — ניתן לשלוח.'); }
+      }
+    }
+    openRecipients(kind);
+  }
+
+  // דיאלוג כפילות
+  function showDup(a){
+    const when = a.created ? new Date(a.created).toLocaleString('he-IL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
+    $('dupInfo').innerHTML = 'מק״ט <b>'+esc(a.sku||'')+'</b>'+(a.desc?(' — '+esc(a.desc)):'')+
+      '<br>דווח ע״י '+esc(a.reporter||'—')+(when?(' · '+when):'')+
+      '<br>סטטוס: '+esc(a.status||'')+(a.qty?(' · נותרו '+esc(a.qty)):'');
+    show($('dupWrap'));
+  }
+  function closeDup(){ hide($('dupWrap')); }
+  $('dupCancel').addEventListener('click', closeDup);
+  $('dupNew').addEventListener('click',()=>{ closeDup(); openRecipients(pendingKind); });
+  $('dupBump').addEventListener('click', async ()=>{
+    if(!dupExisting){ closeDup(); return; }
+    $('dupMsg').textContent='מעדכן…';
+    try{ await apiPost('bump',{id:dupExisting.id}); closeDup(); setStatus('סומן שהפריט עדיין נחוץ — עודכן הדיווח הקיים ✓'); }
+    catch(e){ $('dupMsg').textContent='העדכון נכשל — נסה שוב.'; }
+  });
 
   function openRecipients(kind){ pendingKind=kind; queue=[]; sentNames=[]; totalSel=0;
     addItem((pendingKind==='text'||cardMode) ? $('txtSku').value.trim() : $('overlayText').value.trim());
@@ -614,11 +726,25 @@
   $('recipClose').addEventListener('click', closeRecipients);
   $('recipWrap').addEventListener('click',e=>{ if(e.target===$('recipWrap')) closeRecipients(); });
 
-  $('recipSend').addEventListener('click',()=>{
+  $('recipSend').addEventListener('click', async ()=>{
     const checks=[...$('recipList').querySelectorAll('input:checked')];
     if(!checks.length){ $('recipMsg').textContent='סמן לפחות נמען אחד.'; return; }
     const selected=checks.map(ch=>ch.dataset.grp?{group:true}:CONTACTS[+ch.dataset.i]);
     totalSel=selected.length;
+    // מזהה חדש להתראה + רישום במערכת המשותפת (פעם אחת, לפני פתיחת הוואטסאפ)
+    currentAlertId=newAlertId();
+    if(apiOn()){
+      const subj=subjectFor(pendingKind);
+      const recips=selected.map(s=>s.group?'נמען ידני':s.name).join(', ');
+      const nonGroup=selected.filter(s=>!s.group);
+      const assignee=(nonGroup.length===1)?nonGroup[0].name:'';
+      $('recipMsg').textContent='רושם במערכת…';
+      try{ await apiPost('create',{ id:currentAlertId, sku:subj.sku, desc:subj.desc, qty:subj.qty,
+        urgency:URG[urgency].label, reporter:(localStorage.getItem(K.reporter)||''),
+        reporterPhone:(localStorage.getItem('afcon_reporter_phone')||''), recipients:recips, assignee:assignee }); }
+      catch(e){ /* גם אם הרישום נכשל — ממשיכים לשלוח בוואטסאפ */ }
+      $('recipMsg').textContent='';
+    }
     if(pendingKind==='photo'){ sharePhotoTo(selected); }
     else { queue=selected.slice(); sentNames=[]; $('recipPicker').classList.add('hidden'); $('recipProgress').classList.remove('hidden'); sendNextText(); }
   });
@@ -670,6 +796,52 @@
     else if(dl){ const i=+dl.dataset.i; if(confirm('למחוק את '+CONTACTS[i].name+'?')){ CONTACTS.splice(i,1); if(cnEdit===i){cnEdit=-1;$('cnAdd').textContent='הוסף איש קשר';} saveContacts(); renderContacts(); } }
   });
   renderContacts();
+
+  // ===== הגדרות חיבור למערכת =====
+  function paintApiState(){ $('apiState').textContent = apiOn()?'מחובר':'לא מחובר'; }
+  $('apiHead').addEventListener('click',()=>$('apiBody').classList.toggle('hidden'));
+  $('apiUrlInp').value=apiUrl(); $('apiTokenInp').value=apiToken(); paintApiState();
+  $('apiTest').addEventListener('click', async ()=>{
+    const url=$('apiUrlInp').value.trim(), tok=$('apiTokenInp').value.trim();
+    if(!url){ $('apiMsg').textContent='הזן כתובת.'; return; }
+    localStorage.setItem(K.api,url); localStorage.setItem(K.token,tok); paintApiState();
+    $('apiMsg').textContent='בודק…';
+    try{ const r=await apiGet('ping'); $('apiMsg').textContent=(r&&r.ok)?'מחובר ✓':'הכתובת הגיבה אך עם שגיאה — בדוק את הטוקן.'; }
+    catch(e){ $('apiMsg').textContent='לא ניתן להתחבר — ודא שזו כתובת Web App ושפורסמה לגישת Anyone.'; }
+  });
+
+  // ===== תיבת "התקבלו" — התראות פתוחות מהמערכת =====
+  async function loadInbox(){
+    const L=$('inboxList');
+    if(!apiOn()){ L.innerHTML='<div class="hist-empty">אין חיבור למערכת. הזן כתובת וטוקן ב⚙️ הגדרות ▸ חיבור למערכת.</div>'; return; }
+    L.innerHTML='<div class="hist-empty">טוען…</div>';
+    try{
+      const res=await apiGet('open');
+      if(!res || !res.ok){ L.innerHTML='<div class="hist-empty">שגיאה בטעינה (בדוק טוקן).</div>'; return; }
+      const a=res.alerts||[];
+      if(!a.length){ L.innerHTML='<div class="hist-empty">אין התראות פתוחות 🎉</div>'; return; }
+      L.innerHTML=a.map(x=>{
+        const when=x.created?new Date(x.created).toLocaleString('he-IL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+        return '<div class="hist-row" style="align-items:flex-start">'
+          +'<span class="hist-txt">מק״ט '+esc(x.sku||'—')+(x.desc?(' · '+esc(x.desc)):'')
+          +'<span class="hist-meta2">'+esc(x.urgency||'')+(x.qty?(' · נותרו '+esc(x.qty)):'')+(x.reporter?(' · '+esc(x.reporter)):'')+(when?(' · '+when):'')+'</span>'
+          +(x.response?('<span class="hist-meta2" style="color:#34d399">💬 '+esc(x.response)+'</span>'):'')
+          +'</span>'
+          +'<span style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">'
+          +'<button class="hist-stat'+(x.status==='בטיפול'?' done':'')+'" data-id="'+esc(x.id)+'" data-s="בטיפול">בטיפול</button>'
+          +'<button class="hist-stat" data-id="'+esc(x.id)+'" data-s="טופל">✓ טופל</button>'
+          +'</span></div>';
+      }).join('');
+    }catch(e){ L.innerHTML='<div class="hist-empty">לא ניתן להתחבר (בדוק כתובת/טוקן/רשת).</div>'; }
+  }
+  $('inboxRefresh').addEventListener('click', loadInbox);
+  $('inboxList').addEventListener('click', async e=>{
+    const b=e.target.closest('.hist-stat'); if(!b) return;
+    const who=(localStorage.getItem(K.reporter)||'').trim();
+    b.textContent='…';
+    try{ await apiPost('status',{id:b.dataset.id, status:b.dataset.s, by:who}); loadInbox(); }
+    catch(err){ b.textContent='שגיאה'; }
+  });
 
   // copy text
   $('copyText').addEventListener('click',async ()=>{
@@ -756,23 +928,36 @@
   $('txtSku').addEventListener('click',()=>openKeypad('sku'));
   $('qtyText').addEventListener('click',()=>openKeypad('qty'));
 
-  // acknowledgment mode (recipient taps the link in the message)
-  let ackTo='', ackItemText='';
+  // מצב אישור/טיפול (הקניין לוחץ על הקישור שבהודעה)
+  let ackTo='', ackItemText='', ackId='', ackStatus='בטיפול';
   (function(){ try{
     const p=new URLSearchParams(location.search); const ack=p.get('ack'); if(!ack) return;
-    ackTo=ack; ackItemText=(p.get('item')||'').trim();
+    ackTo=ack; ackItemText=(p.get('item')||'').trim(); ackId=(p.get('id')||'').trim();
     $('ackLogo').src=DEFAULT_LOGO;
     $('ackItem').textContent = ackItemText ? ('מק״ט: '+ackItemText) : 'בקשת מלאי חדשה';
     $('ackOpen').href=APP_URL;
+    $('ackNote').textContent = apiOn() ? '' : 'טיפ: כדי שהטיפול יירשם במערכת — הזן פעם אחת את כתובת המערכת בהגדרות.';
     const hd=document.querySelector('.header'), mn=document.querySelector('main'); if(hd) hd.style.display='none'; if(mn) mn.style.display='none';
     show($('ackWrap'));
   }catch(e){} })();
+  document.querySelectorAll('#ackSeg button').forEach(b=>b.addEventListener('click',()=>{
+    ackStatus=b.dataset.s;
+    document.querySelectorAll('#ackSeg button').forEach(x=>{ const on=x===b;
+      x.style.background=on?'#0f1f14':'#1c1917'; x.style.borderColor=on?'#22c55e':'#3f3f46'; x.style.color=on?'#34d399':'#d6d3d1'; });
+  }));
   $('ackChk').addEventListener('change',()=>{ $('ackSend').disabled=!$('ackChk').checked; });
-  $('ackSend').addEventListener('click',()=>{
+  $('ackSend').addEventListener('click', async ()=>{
     if(!$('ackChk').checked) return;
-    const who=(localStorage.getItem('afcon_reporter')||'').trim();
+    const who=(localStorage.getItem(K.reporter)||'').trim();
+    const resp=$('ackResp').value.trim();
+    $('ackSend').disabled=true; $('ackNote').textContent='רושם…';
+    if(apiOn() && ackId){
+      try{ await apiPost('ack',{ id:ackId, ackBy:who, response:resp, status:ackStatus }); $('ackNote').textContent='נרשם במערכת ✓'; }
+      catch(e){ $('ackNote').textContent='הרישום במערכת נכשל — האישור עדיין יישלח בוואטסאפ.'; }
+    }
     const t=new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
-    const txt='✅ בקשתך בטיפול'+(ackItemText?(' — מק״ט '+ackItemText):'')+(who?(' · טופל ע״י '+who):'')+' · 🕒 '+t;
+    const head = ackStatus==='טופל' ? '✅ בקשתך טופלה' : '🟠 בקשתך בטיפול';
+    const txt=head+(ackItemText?(' — מק״ט '+ackItemText):'')+(who?(' · '+who):'')+(resp?(' · '+resp):'')+' · 🕒 '+t;
     buzz(); window.open('https://wa.me/'+fmtPhone(ackTo)+'?text='+encodeURIComponent(txt),'_blank');
     $('ackItem').textContent='✓ האישור מוכן בוואטסאפ — לחץ שלח כדי שיגיע לשולח.';
   });

@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>אפקון — לוח בקרת מלאי</title>
+<meta name="theme-color" content="#e22d24">
+<meta name="apple-mobile-web-app-title" content="לוח מלאי">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" type="image/png" href="icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Rubik:wght@600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0c0a09; --surface:#1c1917; --surface2:#211e1c; --line:#292524; --line2:#3f3f46;
+    --text:#fafaf9; --muted:#a8a29e; --faint:#78716c;
+    --red:#e2231a; --amber:#f59e0b; --amber2:#fbbf24; --green:#22c55e; --green2:#34d399; --blue:#3b82f6; --blue2:#60a5fa;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{font-family:'Heebo',sans-serif;background:var(--ink);color:var(--text);min-height:100vh}
+  .wrap{max-width:760px;margin:0 auto}
+
+  /* header */
+  .top{position:sticky;top:0;z-index:20;background:rgba(12,10,9,0.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .top-in{display:flex;align-items:center;gap:12px;padding:14px 18px;max-width:760px;margin:0 auto}
+  .badge{width:42px;height:42px;border-radius:11px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
+  .badge img{width:100%;height:100%;object-fit:contain;padding:5px}
+  .ttl{font-family:'Rubik',sans-serif;font-weight:900;font-size:18px;line-height:1.1}
+  .sub{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;margin-top:2px}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--faint);flex-shrink:0}
+  .dot.on{background:var(--green);box-shadow:0 0 0 0 rgba(34,197,94,.6);animation:pulse 2.4s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,.5)}70%{box-shadow:0 0 0 7px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+  .top-actions{margin-inline-start:auto;display:flex;gap:8px}
+  .ico{width:40px;height:40px;border-radius:11px;background:var(--surface);border:1px solid var(--line2);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:17px}
+  .ico:active{transform:scale(.94)}
+
+  main{padding:16px 18px 40px}
+
+  /* KPI */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:16px}
+  .kpi{background:var(--surface);border:1px solid var(--line);border-radius:15px;padding:13px 12px;cursor:pointer;text-align:right;position:relative;overflow:hidden;transition:border-color .15s}
+  .kpi:active{transform:scale(.985)}
+  .kpi.sel{border-color:var(--amber)}
+  .kpi .num{font-family:'Rubik',sans-serif;font-weight:900;font-size:27px;line-height:1}
+  .kpi .lbl{font-size:11.5px;color:var(--muted);margin-top:5px;font-weight:500}
+  .kpi .strip{position:absolute;inset-block:0;inset-inline-start:0;width:4px}
+  .k-wait .num{color:var(--amber2)} .k-wait .strip{background:var(--amber)}
+  .k-prog .num{color:var(--blue2)} .k-prog .strip{background:var(--blue)}
+  .k-urg .num{color:var(--red)} .k-urg .strip{background:var(--red)}
+  .k-done .num{color:var(--green2)} .k-done .strip{background:var(--green)}
+
+  /* filters */
+  .filters{display:flex;flex-direction:column;gap:9px;margin-bottom:14px}
+  .chips{display:flex;gap:7px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+  .chip{flex-shrink:0;background:var(--surface);border:1px solid var(--line2);color:var(--muted);border-radius:20px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;white-space:nowrap}
+  .chip.on{background:var(--text);color:var(--ink);border-color:var(--text)}
+  .search{background:var(--surface);border:1px solid var(--line2);border-radius:12px;padding:12px 14px;color:var(--text);font-size:15px;font-family:'Heebo',sans-serif;width:100%}
+  .search:focus{outline:none;border-color:var(--green)}
+
+  /* alert card */
+  .list{display:flex;flex-direction:column;gap:11px}
+  .card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:15px 16px 15px 16px;overflow:hidden}
+  .card .rail{position:absolute;inset-block:0;inset-inline-end:0;width:5px}
+  .row1{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  .sku{font-family:'Rubik',sans-serif;font-weight:700;font-size:16.5px}
+  .desc{color:var(--muted);font-size:14px;margin-top:2px;font-weight:500}
+  .pill{flex-shrink:0;font-size:12px;font-weight:800;padding:5px 11px;border-radius:20px;border:1.5px solid;white-space:nowrap}
+  .meta{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:11px;font-size:12.5px;color:var(--faint)}
+  .meta b{color:var(--muted);font-weight:600}
+  .resp{margin-top:10px;background:var(--ink);border:1px solid var(--line2);border-radius:11px;padding:10px 12px;font-size:13px;color:var(--green2);display:flex;gap:7px;line-height:1.5}
+  .acts{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .btn{flex:1;min-width:96px;border:1.5px solid var(--line2);background:var(--surface2);color:var(--text);border-radius:11px;padding:11px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif}
+  .btn:active{transform:scale(.98)}
+  .btn.prog.on{background:#0c2236;border-color:var(--blue);color:var(--blue2)}
+  .btn.done.on{background:#0f2417;border-color:var(--green);color:var(--green2)}
+  .btn.reply{flex:0 0 auto;min-width:0;padding:11px 14px}
+  .editor{margin-top:11px;display:none;flex-direction:column;gap:9px}
+  .editor.open{display:flex}
+  .editor textarea{background:var(--ink);border:1px solid var(--line2);border-radius:11px;padding:11px 12px;color:var(--text);font-size:14.5px;font-family:'Heebo',sans-serif;min-height:62px;resize:vertical}
+  .editor textarea:focus{outline:none;border-color:var(--green)}
+  .editor .save{background:var(--green);border:none;color:#052e16;border-radius:11px;padding:12px;font-size:15px;font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer}
+
+  .empty{text-align:center;color:var(--faint);padding:40px 20px;font-size:14.5px;line-height:1.7}
+  .empty .big{font-size:46px;margin-bottom:10px}
+  .cta{display:inline-block;margin-top:14px;background:var(--red);color:#fff;border:none;border-radius:12px;padding:13px 22px;font-size:15px;font-weight:800;cursor:pointer;font-family:'Heebo',sans-serif}
+
+  .foot{display:flex;gap:9px;margin-top:18px}
+  .foot button{flex:1;background:transparent;border:1.5px solid var(--line2);color:var(--muted);border-radius:12px;padding:12px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif}
+
+  /* modal */
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:60;display:none;align-items:flex-end;justify-content:center}
+  .modal.open{display:flex}
+  .sheet{background:var(--surface);width:100%;max-width:760px;border-radius:20px 20px 0 0;border-top:1px solid var(--line);padding:20px 18px 26px}
+  .sheet h3{font-family:'Rubik',sans-serif;font-weight:800;font-size:17px;text-align:center;margin-bottom:14px}
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+  .field label{font-size:12.5px;color:var(--muted);font-weight:500}
+  .field input,.field select{background:var(--ink);border:1px solid var(--line2);border-radius:11px;padding:12px 13px;color:var(--text);font-size:15px;font-family:'Heebo',sans-serif;width:100%}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--green)}
+  .transfer{margin-top:10px;display:none;gap:9px;align-items:center}
+  .transfer.open{display:flex}
+  .transfer select{flex:1;background:var(--ink);border:1px solid var(--line2);border-radius:11px;padding:11px 12px;color:var(--text);font-size:14.5px;font-family:'Heebo',sans-serif}
+  .transfer .tgo{flex:0 0 auto;background:var(--amber);border:none;color:var(--ink);border-radius:11px;padding:11px 16px;font-size:14px;font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer}
+  .mine-tag{color:var(--green2);font-weight:700}
+  .prim{width:100%;background:var(--green);border:none;color:#052e16;border-radius:12px;padding:13px;font-size:15px;font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer}
+  .ghost{width:100%;background:transparent;border:1px solid var(--line2);color:var(--muted);border-radius:12px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;margin-top:9px}
+  .note{font-size:12.5px;color:var(--amber2);text-align:center;min-height:2px;margin-top:6px}
+
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:var(--ink);padding:11px 20px;border-radius:30px;font-size:14px;font-weight:700;opacity:0;transition:.25s;z-index:80;pointer-events:none}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  @media(max-width:520px){ .kpi .num{font-size:23px} .kpis{gap:7px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="top-in">
+      <div class="badge"><img src="icon.png" alt="אפקון" onerror="this.outerHTML='<span style=\'font-family:Rubik;font-weight:900;color:#e2231a;font-size:22px\'>A</span>'"></div>
+      <div>
+        <div class="ttl">לוח בקרת מלאי</div>
+        <div class="sub"><span class="dot" id="dot"></span><span id="status">לא מחובר</span></div>
+      </div>
+      <div class="top-actions">
+        <button class="ico" id="refreshBtn" title="רענן">🔄</button>
+        <button class="ico" id="gearBtn" title="הגדרות">⚙️</button>
+      </div>
+    </div>
+  </div>
+
+  <main>
+    <div class="kpis" id="kpis">
+      <div class="kpi k-wait" data-f="ממתין"><span class="strip"></span><div class="num" id="kWait">0</div><div class="lbl">ממתינות</div></div>
+      <div class="kpi k-prog" data-f="בטיפול"><span class="strip"></span><div class="num" id="kProg">0</div><div class="lbl">בטיפול</div></div>
+      <div class="kpi k-urg" data-f="urgent"><span class="strip"></span><div class="num" id="kUrg">0</div><div class="lbl">דחופות פתוחות</div></div>
+      <div class="kpi k-done" data-f="today"><span class="strip"></span><div class="num" id="kDone">0</div><div class="lbl">טופלו היום</div></div>
+    </div>
+
+    <div class="filters">
+      <div class="chips" id="scopeChips">
+        <button class="chip on" data-m="all">כל הצוות</button>
+        <button class="chip" data-m="mine">רק שלי</button>
+      </div>
+      <div class="chips" id="statusChips">
+        <button class="chip on" data-s="all">הכול</button>
+        <button class="chip" data-s="ממתין">ממתין</button>
+        <button class="chip" data-s="בטיפול">בטיפול</button>
+        <button class="chip" data-s="טופל">טופל</button>
+      </div>
+      <div class="chips" id="urgChips">
+        <button class="chip on" data-u="all">כל הדחיפויות</button>
+        <button class="chip" data-u="דחוף">⚠️ דחוף</button>
+        <button class="chip" data-u="אזל לגמרי">🔴 אזל</button>
+        <button class="chip" data-u="כמות נמוכה">🟠 כמות נמוכה</button>
+      </div>
+      <input class="search" id="search" placeholder="חיפוש מק״ט / תיאור / מדווח…">
+    </div>
+
+    <div class="list" id="list"></div>
+
+    <div class="foot">
+      <button id="exportBtn">⬇️ ייצוא לאקסל</button>
+      <button id="sheetBtn">📊 פתח גיליון</button>
+    </div>
+  </main>
+</div>
+
+<div class="modal" id="modal">
+  <div class="sheet">
+    <h3>הגדרות חיבור</h3>
+    <div class="field"><label>מי אתה? (בחר מרשימת הקניינים)</label><select id="mName"><option value="">— בחר —</option></select></div>
+    <div class="field"><label>כתובת המערכת (Web App URL)</label><input id="mUrl" placeholder="https://script.google.com/macros/s/..."></div>
+    <div class="field"><label>טוקן סודי</label><input id="mTok" placeholder="אותו סוד שבקוד השרת"></div>
+    <div class="field"><label>קישור לגיליון (לא חובה — לכפתור "פתח גיליון")</label><input id="mSheet" placeholder="https://docs.google.com/spreadsheets/..."></div>
+    <button class="prim" id="mSave">בדוק חיבור ושמור</button>
+    <div class="note" id="mNote"></div>
+    <button class="ghost" id="mClose">סגור</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+  const $ = id => document.getElementById(id);
+  const K = { api:'afcon_api_url', token:'afcon_api_token', me:'afcon_me', sheet:'afcon_sheet' };
+
+  function apiUrl(){ return (localStorage.getItem(K.api)||'').trim(); }
+  function apiToken(){ return (localStorage.getItem(K.token)||'').trim(); }
+  function apiOn(){ return !!apiUrl(); }
+  async function apiGet(action, params){
+    const u=new URL(apiUrl()); u.searchParams.set('token',apiToken()); u.searchParams.set('action',action);
+    if(params) for(const k in params){ if(params[k]!=null) u.searchParams.set(k,params[k]); }
+    const r=await fetch(u.toString(),{method:'GET',redirect:'follow'}); return await r.json();
+  }
+  async function apiPost(action, payload){
+    const body=Object.assign({token:apiToken(),action:action}, payload||{});
+    const r=await fetch(apiUrl(),{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)});
+    return await r.json();
+  }
+  function esc(s){ return (s||'').toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+  const URANK={'דחוף':3,'אזל לגמרי':2,'כמות נמוכה':1};
+  const UCOLOR={'דחוף':'#b91c1c','אזל לגמרי':'#e2231a','כמות נמוכה':'#f59e0b'};
+  const SPILL={
+    'ממתין':{c:'#fbbf24',bg:'rgba(245,158,11,.12)'},
+    'בטיפול':{c:'#60a5fa',bg:'rgba(59,130,246,.12)'},
+    'טופל':{c:'#34d399',bg:'rgba(34,197,94,.12)'}
+  };
+
+  let ALERTS=[], BUYERS=[], fStatus='all', fUrg='all', fSearch='', fMine=false, auto=true, timer=null, busy=false;
+  const me=()=> (localStorage.getItem(K.me)||'').trim();
+
+  async function loadRoster(){
+    if(!apiOn()) return;
+    try{ const r=await apiGet('roster'); if(r&&r.ok&&Array.isArray(r.buyers)){ BUYERS=r.buyers; fillIdentity(); if(ALERTS.length) render(); } }catch(e){}
+  }
+  function fillIdentity(){
+    const sel=$('mName'); if(!sel) return; const cur=me();
+    let opts='<option value="">— בחר —</option>'+BUYERS.map(b=>'<option value="'+esc(b)+'">'+esc(b)+'</option>').join('');
+    if(cur && BUYERS.indexOf(cur)<0) opts+='<option value="'+esc(cur)+'">'+esc(cur)+'</option>';
+    sel.innerHTML=opts; sel.value=cur;
+  }
+  function buyerOptions(){ return '<option value="">העבר לקניין…</option>'+BUYERS.map(b=>'<option value="'+esc(b)+'">'+esc(b)+'</option>').join(''); }
+
+  function fmt(iso){ if(!iso) return ''; try{ return new Date(iso).toLocaleString('he-IL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }catch(e){ return ''; } }
+  function isOpen(a){ return String(a.status)!=='טופל'; }
+  function isToday(iso){ if(!iso) return false; const d=new Date(iso); const n=new Date(); return d.toDateString()===n.toDateString(); }
+
+  function setConn(){
+    const on=apiOn();
+    $('dot').classList.toggle('on',on);
+    $('status').textContent = on ? '—' : 'לא מחובר · פתח הגדרות';
+  }
+
+  async function load(){
+    if(!apiOn()){ renderEmptyConfig(); setConn(); return; }
+    if(busy) return; busy=true;
+    try{
+      const res=await apiGet('all');
+      if(res && res.ok){ ALERTS=res.alerts||[]; $('status').textContent='מעודכן '+new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}); render(); }
+      else { $('status').textContent='שגיאה — בדוק טוקן'; }
+    }catch(e){ $('status').textContent='אין חיבור — בדוק כתובת/רשת'; }
+    busy=false;
+  }
+
+  function kpis(){
+    let w=0,p=0,u=0,d=0;
+    ALERTS.forEach(a=>{ if(a.status==='ממתין')w++; else if(a.status==='בטיפול')p++;
+      if(isOpen(a)&&(a.urgency==='דחוף'||a.urgency==='אזל לגמרי'))u++;
+      if(a.status==='טופל'&&isToday(a.updated||a.ackAt||a.created))d++; });
+    $('kWait').textContent=w; $('kProg').textContent=p; $('kUrg').textContent=u; $('kDone').textContent=d;
+  }
+
+  function filtered(){
+    let r=ALERTS.slice();
+    if(fMine) r=r.filter(a=>String(a.assignee||'')===me());
+    if(fStatus!=='all') r=r.filter(a=>String(a.status)===fStatus);
+    if(fUrg!=='all') r=r.filter(a=>String(a.urgency)===fUrg);
+    if(fSearch){ const q=fSearch.toLowerCase();
+      r=r.filter(a=>([a.sku,a.desc,a.reporter,a.response].join(' ')).toLowerCase().indexOf(q)>=0); }
+    r.sort((a,b)=>{ const oa=isOpen(a)?1:0, ob=isOpen(b)?1:0; if(oa!==ob) return ob-oa;
+      const ua=URANK[a.urgency]||0, ub=URANK[b.urgency]||0; if(ua!==ub) return ub-ua;
+      return (b.created||'').localeCompare(a.created||''); });
+    return r;
+  }
+
+  function render(){
+    kpis();
+    document.querySelectorAll('.kpi').forEach(k=>{
+      const f=k.dataset.f; const sel=(f===fStatus)||(f==='urgent'&&fUrg==='urgentSel')||(f==='today'&&fStatus==='todaySel');
+      k.classList.toggle('sel', f===fStatus);
+    });
+    const list=$('list'), items=filtered();
+    if(!items.length){ list.innerHTML='<div class="empty"><div class="big">📭</div>אין דיווחים שתואמים לסינון.</div>'; return; }
+    list.innerHTML=items.map(a=>{
+      const sp=SPILL[a.status]||SPILL['ממתין']; const rail=UCOLOR[a.urgency]||'#57534e';
+      const mineNow=a.assignee && String(a.assignee)===me();
+      const assignTxt = a.assignee ? (esc(a.assignee)+(mineNow?' <span class="mine-tag">• שלי</span>':'')) : '<span style="color:#a8a29e">לא משויך</span>';
+      return '<div class="card" data-id="'+esc(a.id)+'">'
+        +'<span class="rail" style="background:'+rail+'"></span>'
+        +'<div class="row1"><div><div class="sku">מק״ט '+esc(a.sku||'—')+'</div>'
+        +(a.desc?('<div class="desc">'+esc(a.desc)+'</div>'):'')+'</div>'
+        +'<span class="pill" style="color:'+sp.c+';background:'+sp.bg+';border-color:'+sp.c+'">'+esc(a.status||'')+'</span></div>'
+        +'<div class="meta">'
+        +'<span><b>אחראי:</b> '+assignTxt+'</span>'
+        +'<span><b>דחיפות:</b> '+esc(a.urgency||'—')+'</span>'
+        +(a.qty?('<span><b>נותרו:</b> '+esc(a.qty)+'</span>'):'')
+        +'<span><b>דווח:</b> '+esc(a.reporter||'—')+'</span>'
+        +(a.created?('<span>🕒 '+fmt(a.created)+'</span>'):'')
+        +'</div>'
+        +(a.response?('<div class="resp">💬 <span>'+esc(a.response)+'</span></div>'):'')
+        +'<div class="acts">'
+        +'<button class="btn prog'+(a.status==='בטיפול'?' on':'')+'" data-act="בטיפול">🟠 קח לטיפול</button>'
+        +'<button class="btn done'+(a.status==='טופל'?' on':'')+'" data-act="טופל">✅ טופל</button>'
+        +'<button class="btn reply" data-act="transfer">↪️ העבר</button>'
+        +'<button class="btn reply" data-act="reply">💬</button>'
+        +'</div>'
+        +'<div class="transfer"><select class="tsel">'+buyerOptions()+'</select><button class="tgo">העבר</button></div>'
+        +'<div class="editor"><textarea placeholder="כתוב תגובה — לדוגמה: הוזמן מהספק, מגיע יום ג׳">'+esc(a.response||'')+'</textarea>'
+        +'<button class="save">שמור תגובה ועדכן</button></div>'
+        +'</div>';
+    }).join('');
+  }
+
+  function renderEmptyConfig(){
+    $('list').innerHTML='<div class="empty"><div class="big">🔗</div>הלוח עדיין לא מחובר למערכת.<br>הזן את כתובת המערכת והטוקן שקיבלת.<br>'
+      +'<button class="cta" id="emptyCta">חבר את הלוח</button></div>';
+    const b=$('emptyCta'); if(b) b.addEventListener('click',openModal);
+  }
+
+  // actions — each maps to one backend call
+  async function assignTo(id, assignee, status){
+    const a=ALERTS.find(x=>String(x.id)===String(id));
+    if(a){ a.assignee=assignee; if(status) a.status=status; a.updated=new Date().toISOString(); }
+    render();
+    try{ await apiPost('assign',{id:id, assignee:assignee, status:status}); toast('עודכן ✓'); setTimeout(load,400); }
+    catch(e){ toast('העדכון נכשל — רענן ונסה שוב'); }
+  }
+  async function saveResp(id, text){
+    const a=ALERTS.find(x=>String(x.id)===String(id));
+    const status=(a&&a.status==='טופל')?'טופל':'בטיפול';
+    if(a){ a.response=text; a.status=status; a.ackBy=me(); a.updated=new Date().toISOString(); }
+    render();
+    try{ await apiPost('ack',{id:id, ackBy:me(), response:text, status:status}); toast('נשמר ✓'); setTimeout(load,400); }
+    catch(e){ toast('השמירה נכשלה — רענן ונסה שוב'); }
+  }
+  function needMe(){ if(!me()){ toast('בחר את שמך בהגדרות ⚙️'); openModal(); return true; } return false; }
+
+  $('list').addEventListener('click', e=>{
+    const card=e.target.closest('.card'); if(!card) return; const id=card.dataset.id;
+    const btn=e.target.closest('[data-act]');
+    if(btn){ const a=btn.dataset.act;
+      if(a==='reply'){ card.querySelector('.editor').classList.toggle('open'); return; }
+      if(a==='transfer'){ card.querySelector('.transfer').classList.toggle('open'); return; }
+      if(a==='בטיפול'||a==='טופל'){ if(needMe()) return; assignTo(id, me(), a); return; }
+      return;
+    }
+    if(e.target.closest('.tgo')){
+      const to=card.querySelector('.tsel').value;
+      if(!to){ toast('בחר קניין להעברה'); return; }
+      assignTo(id, to); toast('הועבר ל-'+to); return;
+    }
+    if(e.target.closest('.save')){
+      if(needMe()) return;
+      saveResp(id, card.querySelector('.editor textarea').value.trim());
+    }
+  });
+
+  // filters
+  $('scopeChips').addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b) return;
+    if(b.dataset.m==='mine' && !me()){ toast('בחר את שמך בהגדרות ⚙️'); openModal(); return; }
+    fMine=(b.dataset.m==='mine'); document.querySelectorAll('#scopeChips .chip').forEach(x=>x.classList.toggle('on',x===b)); render(); });
+  $('statusChips').addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b) return;
+    fStatus=b.dataset.s; document.querySelectorAll('#statusChips .chip').forEach(x=>x.classList.toggle('on',x===b)); render(); });
+  $('urgChips').addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b) return;
+    fUrg=b.dataset.u; document.querySelectorAll('#urgChips .chip').forEach(x=>x.classList.toggle('on',x===b)); render(); });
+  $('search').addEventListener('input',e=>{ fSearch=e.target.value.trim(); render(); });
+
+  // KPI cards as quick filters
+  $('kpis').addEventListener('click',e=>{ const k=e.target.closest('.kpi'); if(!k) return; const f=k.dataset.f;
+    const setStatusChip=s=>{ fStatus=s; document.querySelectorAll('#statusChips .chip').forEach(x=>x.classList.toggle('on',x.dataset.s===s)); };
+    const setUrgChip=u=>{ fUrg=u; document.querySelectorAll('#urgChips .chip').forEach(x=>x.classList.toggle('on',x.dataset.u===u)); };
+    if(f==='ממתין'){ setStatusChip('ממתין'); setUrgChip('all'); }
+    else if(f==='בטיפול'){ setStatusChip('בטיפול'); setUrgChip('all'); }
+    else if(f==='urgent'){ setStatusChip('all'); setUrgChip('דחוף'); }
+    else if(f==='today'){ setStatusChip('טופל'); setUrgChip('all'); }
+    render();
+  });
+
+  // refresh + auto
+  $('refreshBtn').addEventListener('click', load);
+  function startAuto(){ if(timer) clearInterval(timer); timer=setInterval(()=>{ if(auto&&document.visibilityState==='visible') load(); }, 30000); }
+
+  // export
+  $('exportBtn').addEventListener('click',()=>{
+    if(typeof XLSX==='undefined'){ toast('מנוע האקסל נטען — נסה שוב'); return; }
+    if(!ALERTS.length){ toast('אין נתונים לייצוא'); return; }
+    const rows=[['מק״ט','תיאור','כמות','דחיפות','דווח ע״י','נשלח אל','סטטוס','קניין אחראי','טופל ע״י','תגובה','נוצר','עודכן']];
+    ALERTS.forEach(a=>rows.push([a.sku,a.desc,a.qty,a.urgency,a.reporter,a.recipients,a.status,a.assignee,a.ackBy,a.response,fmt(a.created),fmt(a.updated)]));
+    const ws=XLSX.utils.aoa_to_sheet(rows); ws['!cols']=[{wch:9},{wch:22},{wch:8},{wch:12},{wch:14},{wch:18},{wch:9},{wch:14},{wch:14},{wch:26},{wch:15},{wch:15}];
+    const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'דיווחים');
+    XLSX.writeFile(wb,'afcon-dashboard-'+new Date().toISOString().slice(0,10)+'.xlsx');
+  });
+  $('sheetBtn').addEventListener('click',()=>{ const u=(localStorage.getItem(K.sheet)||'').trim();
+    if(u) window.open(u,'_blank'); else { toast('הוסף קישור לגיליון בהגדרות'); openModal(); } });
+
+  // settings modal
+  function openModal(){ fillIdentity(); $('mName').value=me(); $('mUrl').value=apiUrl(); $('mTok').value=apiToken(); $('mSheet').value=localStorage.getItem(K.sheet)||''; $('mNote').textContent=''; $('modal').classList.add('open'); if(apiOn()) loadRoster(); }
+  function closeModal(){ $('modal').classList.remove('open'); }
+  $('gearBtn').addEventListener('click', openModal);
+  $('mClose').addEventListener('click', closeModal);
+  $('modal').addEventListener('click',e=>{ if(e.target===$('modal')) closeModal(); });
+  $('mSave').addEventListener('click', async ()=>{
+    localStorage.setItem(K.me, $('mName').value.trim());
+    localStorage.setItem(K.api, $('mUrl').value.trim());
+    localStorage.setItem(K.token, $('mTok').value.trim());
+    localStorage.setItem(K.sheet, $('mSheet').value.trim());
+    setConn();
+    if(!apiOn()){ $('mNote').textContent='הזן כתובת מערכת.'; return; }
+    $('mNote').textContent='בודק…';
+    try{ const r=await apiGet('ping'); if(r&&r.ok){ $('mNote').textContent='מחובר ✓'; setTimeout(()=>{ closeModal(); load(); }, 500); }
+      else $('mNote').textContent='הכתובת הגיבה עם שגיאה — בדוק טוקן.'; }
+    catch(e){ $('mNote').textContent='לא ניתן להתחבר — ודא Web App ופרסום ל-Anyone.'; }
+  });
+
+  // toast
+  let tT=null;
+  function toast(t){ const el=$('toast'); el.textContent=t; el.classList.add('show'); if(tT)clearTimeout(tT); tT=setTimeout(()=>el.classList.remove('show'),1900); }
+
+  // init
+  setConn(); startAuto();
+  if(apiOn()){ load(); loadRoster(); } else renderEmptyConfig();
+  document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&apiOn()) load(); });
+</script>
+</body>
+</html>
