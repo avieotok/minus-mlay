@@ -118,11 +118,14 @@
     <div class="logo-badge"><img id="headerLogo" alt="לוגו"></div>
     <div>
       <div class="title">אפקון</div>
-      <div class="sub">התראת מלאי ← וואטסאפ</div>
+      <div class="sub">התראת מלאי</div>
     </div>
   </div>
 
   <main>
+    <div class="panel" style="margin-bottom:14px">
+      <div class="panel-head" style="cursor:default"><span>🔗 חיבור למערכת &nbsp;·&nbsp; <span id="apiState" class="badge-count">לא מחובר</span></span></div>
+    </div>
     <div class="tabs">
       <button class="tab active" id="tabText">✍️ דיווח</button>
       <button class="tab" id="tabInbox">📥 התקבלו</button>
@@ -209,11 +212,6 @@
         <button class="scan-btn" id="catLoad"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fafaf9" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg> בחר קובץ אקסל / CSV</button>
         <button class="ghost-btn" id="catClear">נקה קטלוג</button>
       </div>
-    </div>
-
-    <!-- חיבור למערכת המשותפת -->
-    <div class="panel">
-      <div class="panel-head" style="cursor:default"><span>🔗 חיבור למערכת &nbsp;·&nbsp; <span id="apiState" class="badge-count">לא מחובר</span></span></div>
     </div>
 
     <!-- Fixed details -->
@@ -397,6 +395,9 @@
   };
   const K={boss:'afcon_boss', reporter:'afcon_reporter', hist:'afcon_history',
            api:'afcon_api_url', token:'afcon_api_token'};
+  // חיבור מוטמע מראש — האפליקציה מחוברת אוטומטית בלי הגדרה ידנית
+  const EMBED_API='https://script.google.com/macros/s/AKfycbxM6pw13Hiz8j_upkO2rXKGb2nGZ0q5MnXoAlrS2Ts7pfZxWKPtjQyrgkhK_Alq6FgH-w/exec';
+  const EMBED_TOKEN='afcon2026';
   const APP_URL='https://avieotok.github.io/minus-mlay';
   // יצירת שני קודי QR — למחסנאים וללוח הקניינים
   function renderQRs(){
@@ -419,8 +420,8 @@
   let cardMode=false;
 
   // ===== חיבור למערכת המשותפת (Google Sheet דרך Apps Script) =====
-  function apiUrl(){ return (localStorage.getItem(K.api)||'').trim(); }
-  function apiToken(){ return (localStorage.getItem(K.token)||'').trim(); }
+  function apiUrl(){ return (localStorage.getItem(K.api)||EMBED_API||'').trim(); }
+  function apiToken(){ return (localStorage.getItem(K.token)||EMBED_TOKEN||'').trim(); }
   function apiOn(){ return !!apiUrl(); }
   function newAlertId(){ return 'A'+Date.now()+Math.floor(Math.random()*1000); }
   async function apiGet(action, params){
