@@ -101,6 +101,9 @@
   .transfer select{flex:1;background:var(--ink);border:1px solid var(--line2);border-radius:11px;padding:11px 12px;color:var(--text);font-size:14.5px;font-family:'Heebo',sans-serif}
   .transfer .tgo{flex:0 0 auto;background:var(--amber);border:none;color:var(--ink);border-radius:11px;padding:11px 16px;font-size:14px;font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer}
   .mine-tag{color:var(--green2);font-weight:700}
+  .devrow{margin-top:11px;border-top:1px dashed var(--line2);padding-top:11px}
+  .del{background:transparent;border:1.5px solid #7f1d1d;color:#f87171;border-radius:10px;padding:9px 13px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif}
+  .del:active{transform:scale(.98)}
   .prim{width:100%;background:var(--green);border:none;color:#052e16;border-radius:12px;padding:13px;font-size:15px;font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer}
   .ghost{width:100%;background:transparent;border:1px solid var(--line2);color:var(--muted);border-radius:12px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;margin-top:9px}
   .note{font-size:12.5px;color:var(--amber2);text-align:center;min-height:2px;margin-top:6px}
@@ -147,6 +150,7 @@
         <button class="chip" data-s="ממתין">ממתין</button>
         <button class="chip" data-s="בטיפול">בטיפול</button>
         <button class="chip" data-s="טופל">טופל</button>
+        <button class="chip" data-s="history">🗄️ היסטוריה</button>
       </div>
       <div class="chips" id="urgChips">
         <button class="chip on" data-u="all">כל הדחיפויות</button>
@@ -168,14 +172,54 @@
 
 <div class="modal" id="modal">
   <div class="sheet">
-    <h3>הגדרות חיבור</h3>
+    <h3>הגדרות</h3>
+
+    <div style="background:var(--ink);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px">
+      <div style="width:54px;height:54px;border-radius:13px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden"><img src="icon.png" style="width:100%;height:100%;object-fit:contain;padding:6px" alt="אפקון" onerror="this.outerHTML='<span style=\'font-family:Rubik;font-weight:900;color:#e2231a;font-size:24px\'>A</span>'"></div>
+      <div style="font-family:'Rubik',sans-serif;font-weight:900;font-size:17px">אפקון — לוח בקרת מלאי</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.6">מערכת לניהול חוסרים במחסן: המחסנאים מדווחים, הקניינים מטפלים, והמנהל עוקב. כל דיווח נרשם ומתועד אוטומטית.</div>
+      <div style="font-size:12px;color:var(--faint);margin-top:2px">© אבידן קוטאי · כל הזכויות שמורות</div>
+    </div>
+
     <div class="field"><label>מי אתה? (בחר מרשימת הקניינים)</label><select id="mName"><option value="">— בחר —</option></select></div>
-    <div class="field"><label>כתובת המערכת (Web App URL)</label><input id="mUrl" placeholder="https://script.google.com/macros/s/..."></div>
-    <div class="field"><label>טוקן סודי</label><input id="mTok" placeholder="אותו סוד שבקוד השרת"></div>
-    <div class="field"><label>קישור לגיליון (לא חובה — לכפתור "פתח גיליון")</label><input id="mSheet" placeholder="https://docs.google.com/spreadsheets/..."></div>
     <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:14px;font-size:14.5px;font-weight:700"><input type="checkbox" id="mBoss" style="width:22px;height:22px;accent-color:#22c55e;flex:0 0 auto"><span>אני מנהל — צפייה ומעקב בלבד (בלי כפתורי טיפול)</span></label>
-    <button class="prim" id="mSave">בדוק חיבור ושמור</button>
+    <button class="prim" id="mSave">שמור</button>
     <div class="note" id="mNote"></div>
+
+    <button class="ghost" id="advBtn">🔒 הגדרות מתקדמות (מפתח)</button>
+
+    <div id="advBox" class="hidden" style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px">
+      <div class="field"><label>כתובת המערכת (Web App URL)</label><input id="mUrl" placeholder="https://script.google.com/macros/s/..."></div>
+      <div class="field"><label>טוקן סודי</label><input id="mTok" placeholder="אותו סוד שבקוד השרת"></div>
+      <div class="field"><label>קישור לגיליון (לא חובה — לכפתור "פתח גיליון")</label><input id="mSheet" placeholder="https://docs.google.com/spreadsheets/..."></div>
+      <button class="prim" id="advSave">בדוק חיבור ושמור</button>
+      <div class="note" id="advNote"></div>
+
+      <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:4px">📦 קטלוג פריטים מרכזי</div>
+        <p style="font-size:12.5px;color:var(--faint);line-height:1.6;margin-bottom:10px">העלה קובץ אקסל/CSV — עמודה A: מק״ט, עמודה B: תיאור. הקטלוג יידחף לכל המחסנאים אוטומטית.</p>
+        <input type="file" id="catFile" accept=".xlsx,.xls,.csv" style="display:none">
+        <button class="ghost" id="catPush" style="border-color:var(--amber);color:var(--amber2)">⬆️ דחוף קטלוג לכולם</button>
+        <div class="note" id="catNote"></div>
+      </div>
+
+      <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:8px">📲 קודי QR להתקנה</div>
+        <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+            <div id="qrWh" style="background:#fff;padding:9px;border-radius:12px;width:140px;height:140px;display:flex;align-items:center;justify-content:center"></div>
+            <div style="font-weight:800;font-size:13px">📦 למחסנאים</div>
+            <div style="font-size:11px;color:var(--faint)">דיווח חוסרים</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+            <div id="qrBuy" style="background:#fff;padding:9px;border-radius:12px;width:140px;height:140px;display:flex;align-items:center;justify-content:center"></div>
+            <div style="font-weight:800;font-size:13px">🛒 לקניינים ולמנהל</div>
+            <div style="font-size:11px;color:var(--faint)">לוח בקרה</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <button class="ghost" id="mClose">סגור</button>
   </div>
 </div>
@@ -183,7 +227,16 @@
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
+  const APP_URL='https://avieotok.github.io/minus-mlay';
+  function renderQRs(){
+    if(typeof QRCode==='undefined') return;
+    const mk=(id,url)=>{ const el=document.getElementById(id); if(!el||el.dataset.done) return;
+      try{ new QRCode(el,{text:url,width:122,height:122,colorDark:'#0c0a09',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M}); el.dataset.done='1'; }catch(e){} };
+    mk('qrWh', APP_URL);
+    mk('qrBuy', APP_URL+'/dashboard.html');
+  }
   const $ = id => document.getElementById(id);
   const K = { api:'afcon_api_url', token:'afcon_api_token', me:'afcon_me', sheet:'afcon_sheet', boss:'afcon_boss' };
 
@@ -247,6 +300,13 @@
   function fmt(iso){ if(!iso) return ''; try{ return new Date(iso).toLocaleString('he-IL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }catch(e){ return ''; } }
   function isOpen(a){ return String(a.status)!=='טופל'; }
   function isToday(iso){ if(!iso) return false; const d=new Date(iso); const n=new Date(); return d.toDateString()===n.toDateString(); }
+  // רשומה שטופלה ועברו 30 יום מאז → עוברת להיסטוריה. לא‑מטופלת נשארת פעילה תמיד.
+  function isArchived(a){
+    if(String(a.status)!=='טופל') return false;
+    const t=a.updated||a.ackAt||a.created; if(!t) return false;
+    return (Date.now()-new Date(t).getTime())/86400000 > 30;
+  }
+  let devOpen=false; // ננעל מחדש בכל טעינת דף — נפתח רק עם 30172
 
   function setConn(){
     const on=apiOn();
@@ -281,8 +341,9 @@
 
   function filtered(){
     let r=ALERTS.slice();
+    if(fStatus==='history'){ r=r.filter(isArchived); }
+    else { r=r.filter(a=>!isArchived(a)); if(fStatus!=='all') r=r.filter(a=>String(a.status)===fStatus); }
     if(fMine) r=r.filter(a=>String(a.assignee||'')===me());
-    if(fStatus!=='all') r=r.filter(a=>String(a.status)===fStatus);
     if(fUrg!=='all') r=r.filter(a=>String(a.urgency)===fUrg);
     if(fSearch){ const q=fSearch.toLowerCase();
       r=r.filter(a=>([a.sku,a.desc,a.reporter,a.response].join(' ')).toLowerCase().indexOf(q)>=0); }
@@ -339,6 +400,7 @@
           +'<div class="editor"><textarea placeholder="כתוב תגובה — לדוגמה: הוזמן מהספק, מגיע יום ג׳">'+esc(a.response||'')+'</textarea>'
           +'<button class="save">שמור תגובה ועדכן</button></div>'
         ))
+        +(devOpen ? ('<div class="devrow"><button class="del" data-del="'+esc(a.id)+'">🗑 מחק רשומה (מפתח)</button></div>') : '')
         +'</div>';
     }).join('');
   }
@@ -380,6 +442,13 @@
       const to=card.querySelector('.tsel').value;
       if(!to){ toast('בחר קניין להעברה'); return; }
       assignTo(id, to); toast('הועבר ל-'+to); return;
+    }
+    if(e.target.closest('.del')){
+      const delId=e.target.closest('.del').dataset.del;
+      if(confirm('למחוק את הרשומה לצמיתות? פעולה זו אינה הפיכה.')){
+        apiPost('delete',{id:delId}).then(()=>{ toast('נמחק'); load(); }).catch(()=>toast('המחיקה נכשלה'));
+      }
+      return;
     }
     if(e.target.closest('.save')){
       if(needMe()) return;
@@ -426,24 +495,66 @@
     if(u) window.open(u,'_blank'); else { toast('הוסף קישור לגיליון בהגדרות'); openModal(); } });
 
   // settings modal
-  function openModal(){ fillIdentity(); $('mName').value=me(); $('mUrl').value=apiUrl(); $('mTok').value=apiToken(); $('mSheet').value=localStorage.getItem(K.sheet)||''; $('mBoss').checked=isBoss(); $('mNote').textContent=''; $('modal').classList.add('open'); if(apiOn()) loadRoster(); }
+  function openModal(){ fillIdentity(); $('mName').value=me(); $('mUrl').value=apiUrl(); $('mTok').value=apiToken(); $('mSheet').value=localStorage.getItem(K.sheet)||''; $('mBoss').checked=isBoss(); $('mNote').textContent=''; $('advNote').textContent=''; $('catNote').textContent=''; $('advBox').classList.add('hidden'); $('modal').classList.add('open'); if(apiOn()) loadRoster(); }
   function closeModal(){ $('modal').classList.remove('open'); }
   $('gearBtn').addEventListener('click', openModal);
   $('mClose').addEventListener('click', closeModal);
   $('modal').addEventListener('click',e=>{ if(e.target===$('modal')) closeModal(); });
-  $('mSave').addEventListener('click', async ()=>{
+
+  // שמירה רגילה — זהות + מצב מנהל (זמין לכולם)
+  $('mSave').addEventListener('click', ()=>{
     localStorage.setItem(K.me, $('mName').value.trim());
-    localStorage.setItem(K.api, $('mUrl').value.trim());
-    localStorage.setItem(K.token, $('mTok').value.trim());
-    localStorage.setItem(K.sheet, $('mSheet').value.trim());
     localStorage.setItem(K.boss, $('mBoss').checked?'1':'0');
     setConn(); render();
     try{ if('Notification' in window && Notification.permission==='default') Notification.requestPermission(); }catch(e){}
-    if(!apiOn()){ $('mNote').textContent='הזן כתובת מערכת.'; return; }
-    $('mNote').textContent='בודק…';
-    try{ const r=await apiGet('ping'); if(r&&r.ok){ $('mNote').textContent='מחובר ✓'; setTimeout(()=>{ closeModal(); load(); }, 500); }
-      else $('mNote').textContent='הכתובת הגיבה עם שגיאה — בדוק טוקן.'; }
-    catch(e){ $('mNote').textContent='לא ניתן להתחבר — ודא Web App ופרסום ל-Anyone.'; }
+    $('mNote').textContent = apiOn() ? 'נשמר ✓' : 'נשמר. כדי לחבר למערכת — פתח הגדרות מתקדמות.';
+  });
+
+  // נעילת מפתח — חושף את הכתובת/טוקן/קטלוג רק עם הסיסמה
+  const DEV_PIN='30172';
+  $('advBtn').addEventListener('click', ()=>{
+    if(!$('advBox').classList.contains('hidden')){ $('advBox').classList.add('hidden'); return; }
+    const p=prompt('הזן סיסמת מפתח:');
+    if(p===DEV_PIN){ $('advBox').classList.remove('hidden'); devOpen=true; render(); renderQRs(); }
+    else if(p!==null){ toast('סיסמה שגויה'); }
+  });
+
+  // שמירת חיבור (מאחורי הנעילה)
+  $('advSave').addEventListener('click', async ()=>{
+    localStorage.setItem(K.api, $('mUrl').value.trim());
+    localStorage.setItem(K.token, $('mTok').value.trim());
+    localStorage.setItem(K.sheet, $('mSheet').value.trim());
+    setConn();
+    if(!apiOn()){ $('advNote').textContent='הזן כתובת מערכת.'; return; }
+    $('advNote').textContent='בודק…';
+    try{ const r=await apiGet('ping'); if(r&&r.ok){ $('advNote').textContent='מחובר ✓'; loadRoster(); load(); }
+      else $('advNote').textContent='הכתובת הגיבה עם שגיאה — בדוק טוקן.'; }
+    catch(e){ $('advNote').textContent='לא ניתן להתחבר — ודא Web App ופרסום ל-Anyone.'; }
+  });
+
+  // דחיפת קטלוג מרכזי (מאחורי הנעילה)
+  $('catPush').addEventListener('click', ()=>{ if(!apiOn()){ $('catNote').textContent='חבר קודם למערכת.'; return; } $('catFile').click(); });
+  $('catFile').addEventListener('change', e=>{
+    const file=e.target.files[0]; if(!file) return;
+    if(typeof XLSX==='undefined'){ $('catNote').textContent='מנוע האקסל עדיין נטען — נסה שוב.'; e.target.value=''; return; }
+    const r=new FileReader();
+    r.onload=async ev=>{
+      try{
+        const wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'});
+        const ws=wb.Sheets[wb.SheetNames[0]];
+        const rows=XLSX.utils.sheet_to_json(ws,{header:1,blankrows:false});
+        let start=0; const h=((rows[0]&&rows[0][0]||'')+' '+(rows[0]&&rows[0][1]||'')).toString().toLowerCase();
+        if(/sku|מק|קוד|תיאור|desc|שם|name|item|barcode|ברקוד/.test(h)) start=1;
+        const items=[];
+        for(let i=start;i<rows.length;i++){ const sku=String(rows[i]&&rows[i][0]==null?'':rows[i][0]).trim(); const desc=String(rows[i]&&rows[i][1]==null?'':rows[i][1]).trim(); if(sku) items.push([sku,desc]); }
+        if(!items.length){ $('catNote').textContent='לא נמצאו פריטים. ודא: עמודה A = מק״ט, עמודה B = תיאור.'; e.target.value=''; return; }
+        $('catNote').textContent='דוחף '+items.length+' פריטים…';
+        const res=await apiPost('catalogSet',{items:items});
+        $('catNote').textContent=(res&&res.ok)?('✓ נדחפו '+res.count+' פריטים לכל המחסנאים'):'הדחיפה נכשלה — נסה שוב.';
+      }catch(err){ $('catNote').textContent='שגיאה בקריאת הקובץ.'; }
+      e.target.value='';
+    };
+    r.readAsArrayBuffer(file);
   });
 
   // toast
