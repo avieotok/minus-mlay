@@ -842,11 +842,19 @@
   function showDup(a){
     const when = a.created ? new Date(a.created).toLocaleString('he-IL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
     const who = (a.reporter||'').trim();
+    const resp = (a.response||'').trim();
+    const assignee = (a.assignee||'').trim();
     const head = who ? ('החבר שלך <b>'+esc(who)+'</b> כבר הכריז על חוסר במק״ט <b>'+esc(a.sku||'')+'</b>')
                      : ('כבר קיים דיווח פתוח על מק״ט <b>'+esc(a.sku||'')+'</b>');
-    $('dupInfo').innerHTML = head + (a.desc?('<br>'+esc(a.desc)):'') +
+    let html = head + (a.desc?('<br>'+esc(a.desc)):'') +
       (when?('<br>🕒 '+when):'') +
-      '<br>סטטוס: '+esc(a.status||'')+(a.qty?(' · נותרו '+esc(a.qty)):'');
+      '<br>סטטוס: <b>'+esc(a.status||'')+'</b>' + (assignee?(' · בטיפול אצל '+esc(assignee)):'') + (a.qty?(' · נותרו '+esc(a.qty)):'');
+    if(resp){
+      html += '<div style="margin-top:11px;padding:11px 13px;background:#0c2a14;border:1px solid #166534;border-radius:10px;color:#bbf7d0;font-size:14px;line-height:1.6">💬 <b>תשובת הקניין:</b><br>'+esc(resp)+'</div>';
+    } else {
+      html += '<div style="margin-top:11px;padding:10px 13px;background:#0c0a09;border:1px dashed #44403c;border-radius:10px;color:#a8a29e;font-size:13px">הקניין עדיין לא הגיב על הפריט הזה.</div>';
+    }
+    $('dupInfo').innerHTML = html;
     show($('dupWrap'));
   }
   function closeDup(){ hide($('dupWrap')); }
