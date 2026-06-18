@@ -114,7 +114,7 @@
 </style>
 </head>
 <body>
-<div id="idGate" class="hidden" style="position:fixed;inset:0;background:#0c0a09;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center">
+<div id="idGate" style="position:fixed;inset:0;background:#0c0a09;z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center">
   <div style="font-family:'Rubik',sans-serif;font-weight:900;font-size:24px;color:#fafaf9">מי אתה?</div>
   <div style="color:#a8a29e;font-size:14.5px;max-width:340px;line-height:1.7">בחר את שמך מהרשימה כדי להתחיל. הבחירה נשמרת וננעלת למכשיר זה.</div>
   <select id="gateSel" style="width:100%;max-width:320px;background:#1c1917;border:1px solid #44403c;border-radius:12px;padding:15px;color:#fafaf9;font-size:16px;font-family:'Heebo',sans-serif"><option value="">— בחר את שמך —</option></select>
@@ -502,7 +502,7 @@
   }
   // שער זהות — קופץ בכניסה ראשונה וחוסם עד שבוחרים שם
   function fillGate(){ const sel=$('gateSel'); if(!sel) return; sel.innerHTML='<option value="">— בחר את שמך —</option>'+REPORTERS.map(n=>'<option value="'+esc(n)+'">'+esc(n)+'</option>').join(''); }
-  function maybeGate(){ if(!$('idGate')) return; if(!identityLocked()){ fillGate(); $('idGate').classList.remove('hidden'); } else { $('idGate').classList.add('hidden'); } }
+  function maybeGate(){ const g=$('idGate'); if(!g) return; if(!identityLocked()){ fillGate(); g.style.display='flex'; } else { g.style.display='none'; } }
 
   // ניהול שמות (קניינים/מחסנאים) — מאחורי 30172
   let nameKind='buyers';
@@ -954,8 +954,8 @@
   // ===== הגדרות חיבור למערכת =====
   function paintApiState(){ $('apiState').textContent = apiOn()?'מחובר ✓':'לא מחובר'; }
   $('apiUrlInp').value=apiUrl(); $('apiTokenInp').value=apiToken(); paintApiState();
-  $('gateOk').addEventListener('click',()=>{ const v=$('gateSel').value.trim(); if(!v){ $('gateMsg').textContent='בחר את שמך מהרשימה.'; return; } localStorage.setItem(K.reporter,v); $('idGate').classList.add('hidden'); fillReporter(); setStatus('ברוך הבא, '+v); });
-  $('gateDev').addEventListener('click',()=>{ const p=prompt('סיסמת מפתח:'); if(p==='30172'){ $('idGate').classList.add('hidden'); switchTab('about'); const box=$('qrLock'); if(box){ box.style.display='flex'; renderQRs(); renderNames(); } if(apiOn()) loadRoster(); } });
+  $('gateOk').addEventListener('click',()=>{ const v=$('gateSel').value.trim(); if(!v){ $('gateMsg').textContent='בחר את שמך מהרשימה.'; return; } localStorage.setItem(K.reporter,v); $('idGate').style.display='none'; fillReporter(); setStatus('ברוך הבא, '+v); });
+  $('gateDev').addEventListener('click',()=>{ const p=prompt('סיסמת מפתח:'); if(p==='30172'){ $('idGate').style.display='none'; switchTab('about'); const box=$('qrLock'); if(box){ box.style.display='flex'; renderQRs(); renderNames(); } if(apiOn()) loadRoster(); } });
   maybeGate();
   if(apiOn()){ syncCatalog(); loadRoster(); }
   $('apiTest').addEventListener('click', async ()=>{
