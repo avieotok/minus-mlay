@@ -135,6 +135,8 @@
       <div class="kpi k-done" data-f="today"><span class="strip"></span><div class="num" id="kDone">0</div><div class="lbl">טופלו היום</div></div>
     </div>
 
+    <div id="bossBar" class="hidden" style="background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:11px 15px;margin-bottom:14px;font-size:13.5px;color:var(--muted);display:flex;gap:7px;align-items:center;flex-wrap:wrap"></div>
+
     <div class="filters">
       <div class="chips" id="scopeChips">
         <button class="chip on" data-m="all">כל הצוות</button>
@@ -171,6 +173,7 @@
     <div class="field"><label>כתובת המערכת (Web App URL)</label><input id="mUrl" placeholder="https://script.google.com/macros/s/..."></div>
     <div class="field"><label>טוקן סודי</label><input id="mTok" placeholder="אותו סוד שבקוד השרת"></div>
     <div class="field"><label>קישור לגיליון (לא חובה — לכפתור "פתח גיליון")</label><input id="mSheet" placeholder="https://docs.google.com/spreadsheets/..."></div>
+    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:14px;font-size:14.5px;font-weight:700"><input type="checkbox" id="mBoss" style="width:22px;height:22px;accent-color:#22c55e;flex:0 0 auto"><span>אני מנהל — צפייה ומעקב בלבד (בלי כפתורי טיפול)</span></label>
     <button class="prim" id="mSave">בדוק חיבור ושמור</button>
     <div class="note" id="mNote"></div>
     <button class="ghost" id="mClose">סגור</button>
@@ -182,7 +185,7 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
   const $ = id => document.getElementById(id);
-  const K = { api:'afcon_api_url', token:'afcon_api_token', me:'afcon_me', sheet:'afcon_sheet' };
+  const K = { api:'afcon_api_url', token:'afcon_api_token', me:'afcon_me', sheet:'afcon_sheet', boss:'afcon_boss' };
 
   function apiUrl(){ return (localStorage.getItem(K.api)||'').trim(); }
   function apiToken(){ return (localStorage.getItem(K.token)||'').trim(); }
@@ -207,8 +210,27 @@
     'טופל':{c:'#34d399',bg:'rgba(34,197,94,.12)'}
   };
 
-  let ALERTS=[], BUYERS=[], fStatus='all', fUrg='all', fSearch='', fMine=false, auto=true, timer=null, busy=false;
+  let ALERTS=[], BUYERS=[], fStatus='all', fUrg='all', fSearch='', fMine=false, auto=true, timer=null, busy=false, seen=null;
   const me=()=> (localStorage.getItem(K.me)||'').trim();
+  const isBoss=()=> localStorage.getItem(K.boss)==='1';
+
+  // התראה ("צלצול") כשנכנסת קריאה חדשה
+  function beep(){
+    try{ const C=window.AudioContext||window.webkitAudioContext; if(!C) return;
+      const ctx=beep._ctx||(beep._ctx=new C()); if(ctx.state==='suspended') ctx.resume();
+      const o=ctx.createOscillator(), g=ctx.createGain(); o.connect(g); g.connect(ctx.destination);
+      o.type='sine'; o.frequency.value=880; g.gain.setValueAtTime(0.0001,ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.25,ctx.currentTime+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.45);
+      o.start(); o.stop(ctx.currentTime+0.47);
+    }catch(e){}
+  }
+  function ring(n){
+    toast('📥 '+(n>1?(n+' קריאות חדשות'):'נכנסה קריאה חדשה'));
+    beep();
+    try{ if('Notification' in window && Notification.permission==='granted')
+      new Notification('אפקון — קריאה חדשה', { body:(n>1?(n+' קריאות חדשות לטיפול'):'נכנסה קריאה חדשה לטיפול') }); }catch(e){}
+  }
 
   async function loadRoster(){
     if(!apiOn()) return;
@@ -237,7 +259,13 @@
     if(busy) return; busy=true;
     try{
       const res=await apiGet('all');
-      if(res && res.ok){ ALERTS=res.alerts||[]; $('status').textContent='מעודכן '+new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}); render(); }
+      if(res && res.ok){
+        ALERTS=res.alerts||[];
+        const ids=ALERTS.map(a=>String(a.id));
+        if(seen===null){ seen=new Set(ids); }
+        else { const fresh=ids.filter(id=>!seen.has(id)); ids.forEach(id=>seen.add(id)); if(fresh.length) ring(fresh.length); }
+        $('status').textContent='מעודכן '+new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}); render();
+      }
       else { $('status').textContent='שגיאה — בדוק טוקן'; }
     }catch(e){ $('status').textContent='אין חיבור — בדוק כתובת/רשת'; }
     busy=false;
@@ -266,8 +294,19 @@
 
   function render(){
     kpis();
+    const boss=isBoss();
+    const bb=$('bossBar');
+    if(boss){
+      const total=ALERTS.length, done=ALERTS.filter(a=>a.status==='טופל').length, open=ALERTS.filter(a=>isOpen(a)).length, un=ALERTS.filter(a=>isOpen(a)&&!a.assignee).length;
+      bb.innerHTML='👁️ <b style="color:#fafaf9">מצב מנהל</b> · צפייה ומעקב'
+        +' &nbsp;|&nbsp; סה״כ קריאות: '+total
+        +' &nbsp;|&nbsp; פתוחות: '+open
+        +' &nbsp;|&nbsp; לא משויכות: '+un
+        +' &nbsp;|&nbsp; טופלו: '+done;
+      bb.classList.remove('hidden');
+    } else { bb.classList.add('hidden'); }
     document.querySelectorAll('.kpi').forEach(k=>{
-      const f=k.dataset.f; const sel=(f===fStatus)||(f==='urgent'&&fUrg==='urgentSel')||(f==='today'&&fStatus==='todaySel');
+      const f=k.dataset.f;
       k.classList.toggle('sel', f===fStatus);
     });
     const list=$('list'), items=filtered();
@@ -289,15 +328,17 @@
         +(a.created?('<span>🕒 '+fmt(a.created)+'</span>'):'')
         +'</div>'
         +(a.response?('<div class="resp">💬 <span>'+esc(a.response)+'</span></div>'):'')
-        +'<div class="acts">'
-        +'<button class="btn prog'+(a.status==='בטיפול'?' on':'')+'" data-act="בטיפול">🟠 קח לטיפול</button>'
-        +'<button class="btn done'+(a.status==='טופל'?' on':'')+'" data-act="טופל">✅ טופל</button>'
-        +'<button class="btn reply" data-act="transfer">↪️ העבר</button>'
-        +'<button class="btn reply" data-act="reply">💬</button>'
-        +'</div>'
-        +'<div class="transfer"><select class="tsel">'+buyerOptions()+'</select><button class="tgo">העבר</button></div>'
-        +'<div class="editor"><textarea placeholder="כתוב תגובה — לדוגמה: הוזמן מהספק, מגיע יום ג׳">'+esc(a.response||'')+'</textarea>'
-        +'<button class="save">שמור תגובה ועדכן</button></div>'
+        +(boss ? '' : (
+          '<div class="acts">'
+          +'<button class="btn prog'+(a.status==='בטיפול'?' on':'')+'" data-act="בטיפול">🟠 קח לטיפול</button>'
+          +'<button class="btn done'+(a.status==='טופל'?' on':'')+'" data-act="טופל">✅ טופל</button>'
+          +'<button class="btn reply" data-act="transfer">↪️ העבר</button>'
+          +'<button class="btn reply" data-act="reply">💬</button>'
+          +'</div>'
+          +'<div class="transfer"><select class="tsel">'+buyerOptions()+'</select><button class="tgo">העבר</button></div>'
+          +'<div class="editor"><textarea placeholder="כתוב תגובה — לדוגמה: הוזמן מהספק, מגיע יום ג׳">'+esc(a.response||'')+'</textarea>'
+          +'<button class="save">שמור תגובה ועדכן</button></div>'
+        ))
         +'</div>';
     }).join('');
   }
@@ -385,7 +426,7 @@
     if(u) window.open(u,'_blank'); else { toast('הוסף קישור לגיליון בהגדרות'); openModal(); } });
 
   // settings modal
-  function openModal(){ fillIdentity(); $('mName').value=me(); $('mUrl').value=apiUrl(); $('mTok').value=apiToken(); $('mSheet').value=localStorage.getItem(K.sheet)||''; $('mNote').textContent=''; $('modal').classList.add('open'); if(apiOn()) loadRoster(); }
+  function openModal(){ fillIdentity(); $('mName').value=me(); $('mUrl').value=apiUrl(); $('mTok').value=apiToken(); $('mSheet').value=localStorage.getItem(K.sheet)||''; $('mBoss').checked=isBoss(); $('mNote').textContent=''; $('modal').classList.add('open'); if(apiOn()) loadRoster(); }
   function closeModal(){ $('modal').classList.remove('open'); }
   $('gearBtn').addEventListener('click', openModal);
   $('mClose').addEventListener('click', closeModal);
@@ -395,7 +436,9 @@
     localStorage.setItem(K.api, $('mUrl').value.trim());
     localStorage.setItem(K.token, $('mTok').value.trim());
     localStorage.setItem(K.sheet, $('mSheet').value.trim());
-    setConn();
+    localStorage.setItem(K.boss, $('mBoss').checked?'1':'0');
+    setConn(); render();
+    try{ if('Notification' in window && Notification.permission==='default') Notification.requestPermission(); }catch(e){}
     if(!apiOn()){ $('mNote').textContent='הזן כתובת מערכת.'; return; }
     $('mNote').textContent='בודק…';
     try{ const r=await apiGet('ping'); if(r&&r.ok){ $('mNote').textContent='מחובר ✓'; setTimeout(()=>{ closeModal(); load(); }, 500); }
