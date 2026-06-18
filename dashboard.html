@@ -346,6 +346,16 @@
     return (Date.now()-new Date(t).getTime())/86400000 > 30;
   }
   let devOpen=false; // ננעל מחדש בכל טעינת דף — נפתח רק עם 30172
+  let selDel=new Set(); // רשומות שסומנו למחיקה (מצב מפתח)
+  function updSelN(){ const el=$('selN'); if(el) el.textContent=selDel.size; }
+  async function deleteSelected(){
+    const ids=[...selDel];
+    if(!ids.length){ toast('לא נבחרו רשומות'); return; }
+    if(!confirm('למחוק '+ids.length+' רשומות לצמיתות? פעולה זו אינה הפיכה.')) return;
+    toast('מוחק '+ids.length+'…');
+    for(const id of ids){ try{ await apiPost('delete',{id:id}); }catch(e){} }
+    selDel.clear(); load();
+  }
 
   function setConn(){
     const on=apiOn();
@@ -411,13 +421,18 @@
     });
     const list=$('list'), items=filtered();
     if(!items.length){ list.innerHTML='<div class="empty"><div class="big">📭</div>אין דיווחים שתואמים לסינון.</div>'; return; }
-    list.innerHTML=items.map(a=>{
+    const bar = devOpen ? ('<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#1c1917;border:1px solid #44403c;border-radius:12px;padding:10px 13px;margin-bottom:12px">'
+      +'<label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13.5px"><input type="checkbox" id="selAll" style="width:18px;height:18px;accent-color:#e2231a"> בחר הכל</label>'
+      +'<span style="flex:1"></span>'
+      +'<button class="del" id="delSel">🗑 מחק נבחרות (<span id="selN">0</span>)</button>'
+      +'</div>') : '';
+    list.innerHTML = bar + items.map(a=>{
       const sp=SPILL[a.status]||SPILL['ממתין']; const rail=UCOLOR[a.urgency]||'#57534e';
       const mineNow=a.assignee && String(a.assignee)===me();
       const assignTxt = a.assignee ? (esc(a.assignee)+(mineNow?' <span class="mine-tag">• שלי</span>':'')) : '<span style="color:#a8a29e">לא משויך</span>';
       return '<div class="card" data-id="'+esc(a.id)+'">'
         +'<span class="rail" style="background:'+rail+'"></span>'
-        +'<div class="row1"><div><div class="sku">מק״ט '+esc(a.sku||'—')+'</div>'
+        +'<div class="row1">'+(devOpen?('<input type="checkbox" class="selbox" data-sel="'+esc(a.id)+'" style="width:20px;height:20px;accent-color:#e2231a;margin-left:9px;flex:0 0 auto">'):'')+'<div><div class="sku">מק״ט '+esc(a.sku||'—')+'</div>'
         +(a.desc?('<div class="desc">'+esc(a.desc)+'</div>'):'')+'</div>'
         +'<span class="pill" style="color:'+sp.c+';background:'+sp.bg+';border-color:'+sp.c+'">'+esc(a.status||'')+'</span></div>'
         +'<div class="meta">'
@@ -442,6 +457,7 @@
         +(devOpen ? ('<div class="devrow"><button class="del" data-del="'+esc(a.id)+'">🗑 מחק רשומה (מפתח)</button></div>') : '')
         +'</div>';
     }).join('');
+    if(devOpen){ list.querySelectorAll('.selbox').forEach(b=>{ b.checked=selDel.has(b.dataset.sel); }); updSelN(); }
   }
 
   function renderEmptyConfig(){
@@ -468,7 +484,13 @@
   }
   function needMe(){ if(!me()){ toast('בחר את שמך בהגדרות ⚙️'); openModal(); return true; } return false; }
 
+  $('list').addEventListener('change', e=>{
+    const cb=e.target;
+    if(cb.classList && cb.classList.contains('selbox')){ if(cb.checked) selDel.add(cb.dataset.sel); else selDel.delete(cb.dataset.sel); updSelN(); return; }
+    if(cb.id==='selAll'){ $('list').querySelectorAll('.selbox').forEach(b=>{ b.checked=cb.checked; if(cb.checked) selDel.add(b.dataset.sel); else selDel.delete(b.dataset.sel); }); updSelN(); return; }
+  });
   $('list').addEventListener('click', e=>{
+    if(e.target.closest('#delSel')){ deleteSelected(); return; }
     const card=e.target.closest('.card'); if(!card) return; const id=card.dataset.id;
     const btn=e.target.closest('[data-act]');
     if(btn){ const a=btn.dataset.act;
