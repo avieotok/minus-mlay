@@ -197,6 +197,10 @@
     <div class="note" id="mNote"></div>
 
     <button class="ghost" id="advBtn">🔒 הגדרות מתקדמות (מפתח)</button>
+    <div id="advPinRow" style="display:none;gap:8px;margin-top:10px">
+      <input id="advPin" type="tel" inputmode="numeric" placeholder="סיסמת מפתח" style="flex:1;background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--text);font-family:'Heebo',sans-serif;font-size:16px">
+      <button class="prim" id="advPinOk" style="max-width:110px">אישור</button>
+    </div>
 
     <div id="advBox" class="hidden" style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px">
       <div class="field"><label>כתובת המערכת (Web App URL)</label><input id="mUrl" placeholder="https://script.google.com/macros/s/..."></div>
@@ -574,11 +578,17 @@
   // נעילת מפתח — חושף את הכתובת/טוקן/קטלוג רק עם הסיסמה
   const DEV_PIN='30172';
   $('advBtn').addEventListener('click', ()=>{
-    if(!$('advBox').classList.contains('hidden')){ $('advBox').classList.add('hidden'); return; }
-    const p=prompt('הזן סיסמת מפתח:');
-    if(p===DEV_PIN){ $('advBox').classList.remove('hidden'); devOpen=true; render(); renderQRs(); renderNames(); if(apiOn()) loadRoster(); }
-    else if(p!==null){ toast('סיסמה שגויה'); }
+    if(!$('advBox').classList.contains('hidden')){ $('advBox').classList.add('hidden'); $('advPinRow').style.display='none'; return; }
+    $('advPinRow').style.display = ($('advPinRow').style.display==='flex') ? 'none' : 'flex';
+    if($('advPinRow').style.display==='flex'){ $('advPin').value=''; setTimeout(()=>$('advPin').focus(),50); }
   });
+  function tryDevPin(){
+    const v=($('advPin').value||'').trim();
+    if(v===DEV_PIN){ $('advPinRow').style.display='none'; $('advBox').classList.remove('hidden'); devOpen=true; render(); renderQRs(); renderNames(); if(apiOn()) loadRoster(); }
+    else { toast('סיסמה שגויה'); $('advPin').value=''; }
+  }
+  $('advPinOk').addEventListener('click', tryDevPin);
+  $('advPin').addEventListener('keydown', e=>{ if(e.key==='Enter') tryDevPin(); });
 
   // שמירת חיבור (מאחורי הנעילה)
   $('advSave').addEventListener('click', async ()=>{
