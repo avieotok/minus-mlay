@@ -116,6 +116,14 @@
 </style>
 </head>
 <body>
+<div id="idGate" class="hidden" style="position:fixed;inset:0;background:#0c0a09;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center">
+  <div style="font-family:'Rubik',sans-serif;font-weight:900;font-size:24px;color:#fafaf9">מי אתה?</div>
+  <div style="color:#a8a29e;font-size:14.5px;max-width:340px;line-height:1.7">בחר את שמך מהרשימה כדי להיכנס ללוח. הבחירה נשמרת וננעלת למכשיר זה.</div>
+  <select id="gateSel" style="width:100%;max-width:320px;background:#1c1917;border:1px solid #44403c;border-radius:12px;padding:15px;color:#fafaf9;font-size:16px;font-family:'Heebo',sans-serif"><option value="">— בחר את שמך —</option></select>
+  <button class="prim" id="gateOk" style="max-width:320px;width:100%">כניסה</button>
+  <div id="gateMsg" style="color:#f87171;font-size:13px;min-height:16px"></div>
+  <button id="gateDev" style="background:none;border:none;color:#57534e;font-size:12px;cursor:pointer;text-decoration:underline">מפתח</button>
+</div>
 <div class="wrap">
   <div class="top">
     <div class="top-in">
@@ -313,8 +321,11 @@
 
   async function loadRoster(){
     if(!apiOn()) return;
-    try{ const r=await apiGet('roster'); if(r&&r.ok&&Array.isArray(r.buyers)){ BUYERS=r.buyers; REPORTERS=Array.isArray(r.reporters)?r.reporters:[]; fillIdentity(); renderNames&&renderNames(); if(ALERTS.length) render(); } }catch(e){}
+    try{ const r=await apiGet('roster'); if(r&&r.ok&&Array.isArray(r.buyers)){ BUYERS=r.buyers; REPORTERS=Array.isArray(r.reporters)?r.reporters:[]; fillIdentity(); fillGate(); maybeGate(); renderNames&&renderNames(); if(ALERTS.length) render(); } }catch(e){}
   }
+  // שער זהות — קופץ בכניסה ראשונה וחוסם עד שבוחרים שם
+  function fillGate(){ const sel=$('gateSel'); if(!sel) return; sel.innerHTML='<option value="">— בחר את שמך —</option>'+BUYERS.map(b=>'<option value="'+esc(b)+'">'+esc(b)+'</option>').join(''); }
+  function maybeGate(){ if(!$('idGate')) return; if(!me()){ fillGate(); $('idGate').classList.remove('hidden'); } else { $('idGate').classList.add('hidden'); } }
   function fillIdentity(){
     const sel=$('mName'); if(!sel) return; const cur=me();
     let opts='<option value="">— בחר —</option>'+BUYERS.map(b=>'<option value="'+esc(b)+'">'+esc(b)+'</option>').join('');
@@ -605,7 +616,7 @@
     catch(e){ $('nameNote').textContent='השמירה נכשלה — בדוק חיבור.'; }
   }
   $('nameTabBuyers').addEventListener('click',()=>{ nameKind='buyers'; $('nameTabBuyers').classList.add('on'); $('nameTabReporters').classList.remove('on'); renderNames(); });
-  $('resetIdent').addEventListener('click',()=>{ if(confirm('לאפס את הזהות שנבחרה במכשיר זה?')){ localStorage.removeItem(K.me); fillIdentity(); toast('הזהות אופסה'); } });
+  $('resetIdent').addEventListener('click',()=>{ if(confirm('לאפס את הזהות שנבחרה במכשיר זה?')){ localStorage.removeItem(K.me); fillIdentity(); closeModal(); maybeGate(); toast('הזהות אופסה'); } });
   $('nameTabReporters').addEventListener('click',()=>{ nameKind='reporters'; $('nameTabReporters').classList.add('on'); $('nameTabBuyers').classList.remove('on'); renderNames(); });
   $('nameAdd').addEventListener('click',()=>{ const v=$('nameNew').value.trim(); if(!v){ $('nameNote').textContent='הקלד שם.'; return; }
     const arr=curNames().slice(); if(arr.indexOf(v)>=0){ $('nameNote').textContent='השם כבר קיים.'; return; }
@@ -623,6 +634,9 @@
 
   // init
   setConn(); startAuto();
+  $('gateOk').addEventListener('click',()=>{ const v=$('gateSel').value.trim(); if(!v){ $('gateMsg').textContent='בחר את שמך מהרשימה.'; return; } localStorage.setItem(K.me,v); $('idGate').classList.add('hidden'); fillIdentity(); load(); });
+  $('gateDev').addEventListener('click',()=>{ const p=prompt('סיסמת מפתח:'); if(p==='30172'){ $('idGate').classList.add('hidden'); openModal(); } });
+  maybeGate();
   if(apiOn()){ load(); loadRoster(); } else renderEmptyConfig();
   document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&apiOn()) load(); });
 </script>

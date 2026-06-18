@@ -114,6 +114,14 @@
 </style>
 </head>
 <body>
+<div id="idGate" class="hidden" style="position:fixed;inset:0;background:#0c0a09;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center">
+  <div style="font-family:'Rubik',sans-serif;font-weight:900;font-size:24px;color:#fafaf9">מי אתה?</div>
+  <div style="color:#a8a29e;font-size:14.5px;max-width:340px;line-height:1.7">בחר את שמך מהרשימה כדי להתחיל. הבחירה נשמרת וננעלת למכשיר זה.</div>
+  <select id="gateSel" style="width:100%;max-width:320px;background:#1c1917;border:1px solid #44403c;border-radius:12px;padding:15px;color:#fafaf9;font-size:16px;font-family:'Heebo',sans-serif"><option value="">— בחר את שמך —</option></select>
+  <button class="send" id="gateOk" style="max-width:320px;width:100%">כניסה</button>
+  <div id="gateMsg" style="color:#f87171;font-size:13px;min-height:16px"></div>
+  <button id="gateDev" style="background:none;border:none;color:#57534e;font-size:12px;cursor:pointer;text-decoration:underline">מפתח</button>
+</div>
   <div class="header">
     <div class="logo-badge"><img id="headerLogo" alt="לוגו"></div>
     <div>
@@ -487,11 +495,14 @@
     if($('repHint')) $('repHint').classList.toggle('hidden',locked);
   }
   $('reporter').addEventListener('change',e=>{ const v=e.target.value.trim(); if(!v) return; localStorage.setItem(K.reporter,v); fillReporter(); setStatus('השם נבחר ✓'); });
-  function resetIdentity(){ localStorage.removeItem(K.reporter); fillReporter(); }
+  function resetIdentity(){ localStorage.removeItem(K.reporter); fillReporter(); maybeGate(); }
   async function loadRoster(){
     if(!apiOn()) return;
-    try{ const r=await apiGet('roster'); if(r&&r.ok){ BUYERS=Array.isArray(r.buyers)?r.buyers:[]; REPORTERS=Array.isArray(r.reporters)?r.reporters:[]; fillReporter(); renderNames&&renderNames(); } }catch(e){}
+    try{ const r=await apiGet('roster'); if(r&&r.ok){ BUYERS=Array.isArray(r.buyers)?r.buyers:[]; REPORTERS=Array.isArray(r.reporters)?r.reporters:[]; fillReporter(); fillGate(); maybeGate(); renderNames&&renderNames(); } }catch(e){}
   }
+  // שער זהות — קופץ בכניסה ראשונה וחוסם עד שבוחרים שם
+  function fillGate(){ const sel=$('gateSel'); if(!sel) return; sel.innerHTML='<option value="">— בחר את שמך —</option>'+REPORTERS.map(n=>'<option value="'+esc(n)+'">'+esc(n)+'</option>').join(''); }
+  function maybeGate(){ if(!$('idGate')) return; if(!identityLocked()){ fillGate(); $('idGate').classList.remove('hidden'); } else { $('idGate').classList.add('hidden'); } }
 
   // ניהול שמות (קניינים/מחסנאים) — מאחורי 30172
   let nameKind='buyers';
@@ -935,6 +946,9 @@
   // ===== הגדרות חיבור למערכת =====
   function paintApiState(){ $('apiState').textContent = apiOn()?'מחובר ✓':'לא מחובר'; }
   $('apiUrlInp').value=apiUrl(); $('apiTokenInp').value=apiToken(); paintApiState();
+  $('gateOk').addEventListener('click',()=>{ const v=$('gateSel').value.trim(); if(!v){ $('gateMsg').textContent='בחר את שמך מהרשימה.'; return; } localStorage.setItem(K.reporter,v); $('idGate').classList.add('hidden'); fillReporter(); setStatus('ברוך הבא, '+v); });
+  $('gateDev').addEventListener('click',()=>{ const p=prompt('סיסמת מפתח:'); if(p==='30172'){ $('idGate').classList.add('hidden'); switchTab('about'); const box=$('qrLock'); if(box){ box.style.display='flex'; renderQRs(); renderNames(); } if(apiOn()) loadRoster(); } });
+  maybeGate();
   if(apiOn()){ syncCatalog(); loadRoster(); }
   $('apiTest').addEventListener('click', async ()=>{
     const url=$('apiUrlInp').value.trim(), tok=$('apiTokenInp').value.trim();
