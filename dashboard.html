@@ -253,6 +253,13 @@
         <p style="font-size:12.5px;color:var(--faint);line-height:1.6;margin-bottom:10px">מאפס את השם שנבחר במכשיר זה, כדי לאפשר בחירת שם מחדש.</p>
         <button class="ghost" id="resetIdent" style="border-color:#7f1d1d;color:#f87171">🔄 אפס זהות במכשיר זה</button>
       </div>
+
+      <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:8px">📢 פרסום גרסה</div>
+        <p style="font-size:12.5px;color:var(--faint);line-height:1.6;margin-bottom:10px">אחרי שהעלית גרסה חדשה לאתר — לחץ כאן, וכל המכשירים הפתוחים יתרעננו אוטומטית לגרסה החדשה.</p>
+        <button class="ghost" id="pubVer" style="border-color:var(--green);color:var(--green2)">📢 פרסם גרסה לכולם</button>
+        <div class="note" id="pubNote"></div>
+      </div>
     </div>
 
     <button class="ghost" id="mClose">סגור</button>
@@ -666,6 +673,22 @@
 
   // init
   setConn(); startAuto();
+  let LOADED_VER=null;
+  async function checkVersion(){
+    if(!apiOn()) return;
+    try{ const r=await apiGet('version'); if(r&&r.ok){ const v=Number(r.version);
+      if(LOADED_VER===null){ LOADED_VER=v; }
+      else if(v!==LOADED_VER){ const ae=document.activeElement, t=ae&&ae.tagName;
+        if(t==='INPUT'||t==='TEXTAREA'||t==='SELECT') return;
+        location.replace(location.pathname+'?v='+v);
+      } } }catch(e){}
+  }
+  checkVersion(); setInterval(checkVersion, 45000);
+  const pv=$('pubVer'); if(pv) pv.addEventListener('click', async ()=>{
+    $('pubNote').textContent='מפרסם…';
+    try{ const r=await apiPost('versionSet'); if(r&&r.ok){ LOADED_VER=Number(r.version); $('pubNote').textContent='✓ פורסם — כל המכשירים יתעדכנו תוך דקה'; } else $('pubNote').textContent='הפרסום נכשל.'; }
+    catch(e){ $('pubNote').textContent='הפרסום נכשל — בדוק חיבור.'; }
+  });
   $('gateOk').addEventListener('click',()=>{ const v=$('gateSel').value.trim(); if(!v){ $('gateMsg').textContent='בחר את שמך מהרשימה.'; return; } localStorage.setItem(K.me,v); $('idGate').style.display='none'; fillIdentity(); load(); });
   $('gateDev').addEventListener('click',()=>{ const p=prompt('סיסמת מפתח:'); if(p==='30172'){ $('idGate').style.display='none'; openModal(); } });
   maybeGate();

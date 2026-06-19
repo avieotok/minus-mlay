@@ -959,6 +959,18 @@
   $('gateDev').addEventListener('click',()=>{ const p=prompt('סיסמת מפתח:'); if(p==='30172'){ $('idGate').style.display='none'; switchTab('about'); const box=$('qrLock'); if(box){ box.style.display='flex'; renderQRs(); renderNames(); } if(apiOn()) loadRoster(); } });
   maybeGate();
   if(apiOn()){ syncCatalog(); loadRoster(); }
+  let LOADED_VER=null;
+  async function checkVersion(){
+    if(!apiOn()) return;
+    try{ const r=await apiGet('version'); if(r&&r.ok){ const v=Number(r.version);
+      if(LOADED_VER===null){ LOADED_VER=v; }
+      else if(v!==LOADED_VER){ const ae=document.activeElement, t=ae&&ae.tagName;
+        if(t==='INPUT'||t==='TEXTAREA'||t==='SELECT') return;
+        if($('idGate') && $('idGate').style.display==='flex') return;
+        location.replace(location.pathname+'?v='+v);
+      } } }catch(e){}
+  }
+  checkVersion(); setInterval(checkVersion, 45000);
   $('apiTest').addEventListener('click', async ()=>{
     const url=$('apiUrlInp').value.trim(), tok=$('apiTokenInp').value.trim();
     if(!url){ $('apiMsg').textContent='הזן כתובת.'; return; }
