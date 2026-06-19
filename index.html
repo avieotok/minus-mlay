@@ -829,6 +829,8 @@
       if(r && r.ok){
         addHist('מק״ט: '+subj.sku);
         reportDone(subj);
+      } else if(r && r.duplicate && r.alert){
+        setStatus(''); dupExisting=r.alert; showDup(r.alert);
       } else { setStatus('השליחה נכשלה — נסה שוב.'); }
     }catch(e){ setStatus('השליחה נכשלה — בדוק חיבור ונסה שוב.'); }
   }
