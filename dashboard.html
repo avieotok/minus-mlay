@@ -145,6 +145,7 @@
       </div>
       <div class="top-actions">
         <button class="ico" id="refreshBtn" title="רענן">🔄</button>
+        <button class="ico" id="aboutBtn" title="אודות">ℹ️</button>
         <button class="ico" id="gearBtn" title="הגדרות">⚙️</button>
       </div>
     </div>
@@ -280,6 +281,22 @@
     </div>
 
     <button class="ghost" id="mClose">סגור</button>
+  </div>
+</div>
+
+<div class="modal" id="aboutModal">
+  <div class="sheet">
+    <h3>אודות</h3>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:13px;text-align:center">
+      <div style="font-size:12px;color:var(--faint)">© אבידן קוטאי · כל הזכויות שמורות</div>
+      <div style="width:72px;height:72px;border-radius:16px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden"><img src="icon.png" style="width:100%;height:100%;object-fit:contain;padding:8px" alt="אפקון" onerror="this.outerHTML='<span style=\'font-family:Rubik;font-weight:900;color:#e2231a;font-size:30px\'>A</span>'"></div>
+      <div style="font-family:'Rubik',sans-serif;font-weight:900;font-size:21px">אפקון — לוח בקרת מלאי</div>
+      <div style="color:var(--muted);font-size:14px;line-height:1.8;max-width:440px">הלוח של קנייני שרשרת האספקה והמנהל. כאן רואים בזמן אמת את כל דיווחי החוסרים מהמחסנאים, לוקחים דיווח לטיפול, מעבירים טיפול בין קניינים, כותבים תגובה שחוזרת למחסנאי, ומסמנים "טופל". כל דיווח שמטופל עובר אוטומטית להיסטוריה, וניתן לייצא דוח אקסל מלא — כולל שרשרת ההעברות בין הקניינים.</div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;font-size:13px;color:var(--text);margin-top:2px">
+        <span>📥 בזמן אמת</span><span>🟠 קח לטיפול</span><span>↪️ העברה בין קניינים</span><span>💬 תגובה למחסנאי</span><span>🗄️ היסטוריה</span><span>⬇️ ייצוא לאקסל</span>
+      </div>
+    </div>
+    <button class="ghost" id="aboutClose" style="margin-top:18px">סגור</button>
   </div>
 </div>
 
@@ -629,6 +646,9 @@
   function closeModal(){ $('modal').classList.remove('open'); }
   function openSettingsUnlocked(){ openModal(); $('advPinRow').style.display='none'; $('advBox').classList.remove('hidden'); devOpen=true; render(); renderQRs(); renderNames(); if(apiOn()) loadRoster(); }
   $('gearBtn').addEventListener('click', ()=>{ $('setPin').value=''; $('setPinMsg').textContent=''; $('setGate').style.display='flex'; setTimeout(()=>$('setPin').focus(),50); });
+  $('aboutBtn').addEventListener('click', ()=>$('aboutModal').classList.add('open'));
+  $('aboutClose').addEventListener('click', ()=>$('aboutModal').classList.remove('open'));
+  $('aboutModal').addEventListener('click', e=>{ if(e.target===$('aboutModal')) $('aboutModal').classList.remove('open'); });
   function trySettingsPin(){ const v=($('setPin').value||'').trim(); if(v===DEV_PIN){ $('setGate').style.display='none'; openSettingsUnlocked(); } else { $('setPinMsg').textContent='סיסמה שגויה'; $('setPin').value=''; } }
   $('setPinOk').addEventListener('click', trySettingsPin);
   $('setPin').addEventListener('keydown', e=>{ if(e.key==='Enter') trySettingsPin(); });

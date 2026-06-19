@@ -115,10 +115,11 @@
 </style>
 </head>
 <body>
-<div id="idGate" style="position:fixed;inset:0;background:#0c0a09;z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center">
-  <div style="font-family:'Rubik',sans-serif;font-weight:900;font-size:24px;color:#fafaf9">מי אתה?</div>
-  <div style="color:#a8a29e;font-size:14.5px;max-width:340px;line-height:1.7">בחר את שמך מהרשימה כדי להתחיל. הבחירה נשמרת וננעלת למכשיר זה.</div>
-  <select id="gateSel" style="width:100%;max-width:320px;background:#1c1917;border:1px solid #44403c;border-radius:12px;padding:15px;color:#fafaf9;font-size:16px;font-family:'Heebo',sans-serif"><option value="">— בחר את שמך —</option></select>
+<div id="idGate" style="position:fixed;inset:0;background:#0c0a09;z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center">
+  <div style="font-family:'Rubik',sans-serif;font-weight:900;font-size:24px;color:#fafaf9">חיפוש שם</div>
+  <div style="color:#a8a29e;font-size:14.5px;max-width:340px;line-height:1.7">הקלד את שמך כדי למצוא אותו ברשימה, ולחץ עליו לבחירה. הבחירה נשמרת וננעלת למכשיר זה.</div>
+  <input id="gateSearch" type="text" autocomplete="off" placeholder="🔍 הקלד את שמך…" style="width:100%;max-width:320px;background:#1c1917;border:1px solid #44403c;border-radius:12px;padding:15px;color:#fafaf9;font-size:16px;font-family:'Heebo',sans-serif;text-align:center">
+  <div id="gateResults" style="width:100%;max-width:320px;max-height:230px;overflow-y:auto;display:flex;flex-direction:column;gap:8px"></div>
   <button class="send" id="gateOk" style="max-width:320px;width:100%">כניסה</button>
   <div id="gateMsg" style="color:#f87171;font-size:13px;min-height:16px"></div>
   <button id="gateDev" style="background:none;border:none;color:#57534e;font-size:12px;cursor:pointer;text-decoration:underline">מפתח</button>
@@ -539,7 +540,17 @@
     try{ const r=await apiGet('roster'); if(r&&r.ok){ BUYERS=Array.isArray(r.buyers)?r.buyers:[]; REPORTERS=Array.isArray(r.reporters)?r.reporters:[]; fillReporter(); fillGate(); maybeGate(); renderNames&&renderNames(); } }catch(e){}
   }
   // שער זהות — קופץ בכניסה ראשונה וחוסם עד שבוחרים שם
-  function fillGate(){ const sel=$('gateSel'); if(!sel) return; sel.innerHTML='<option value="">— בחר את שמך —</option>'+REPORTERS.map(n=>'<option value="'+esc(n)+'">'+esc(n)+'</option>').join(''); }
+  let gateSelected='';
+  function gateRow(n){ const sel=(n===gateSelected);
+    return '<button type="button" class="gate-row" data-name="'+esc(n)+'" style="width:100%;text-align:center;background:'+(sel?'#0f1f14':'#1c1917')+';border:1.5px solid '+(sel?'#22c55e':'#44403c')+';border-radius:11px;padding:13px 15px;color:'+(sel?'#34d399':'#fafaf9')+';font-size:15.5px;font-weight:600;font-family:\'Heebo\',sans-serif;cursor:pointer">'+(sel?'✓ ':'')+esc(n)+'</button>'; }
+  function renderGateList(){ const el=$('gateResults'); if(!el) return;
+    if(!REPORTERS.length){ el.innerHTML='<div class="hist-empty">אין שמות זמינים — פנה למפתח.</div>'; return; }
+    const q=($('gateSearch')?$('gateSearch').value:'').trim().toLowerCase();
+    const list=REPORTERS.filter(n=>!q || String(n).toLowerCase().indexOf(q)>=0);
+    if(!list.length){ el.innerHTML='<div class="hist-empty">לא נמצא שם תואם. נסה שוב או פנה למפתח.</div>'; return; }
+    el.innerHTML=list.map(gateRow).join('');
+  }
+  function fillGate(){ gateSelected=''; if($('gateSearch')) $('gateSearch').value=''; renderGateList(); }
   function maybeGate(){ const g=$('idGate'); if(!g) return; if(!identityLocked()){ fillGate(); g.style.display='flex'; } else { g.style.display='none'; } }
 
   // ניהול שמות (קניינים/מחסנאים) — מאחורי 30172
@@ -1010,7 +1021,11 @@
   // ===== הגדרות חיבור למערכת =====
   function paintApiState(){ $('apiState').textContent = apiOn()?'מחובר ✓':'לא מחובר'; }
   $('apiUrlInp').value=apiUrl(); $('apiTokenInp').value=apiToken(); paintApiState();
-  $('gateOk').addEventListener('click',()=>{ const v=$('gateSel').value.trim(); if(!v){ $('gateMsg').textContent='בחר את שמך מהרשימה.'; return; } localStorage.setItem(K.reporter,v); $('idGate').style.display='none'; fillReporter(); setStatus('ברוך הבא, '+v); });
+  $('gateSearch').addEventListener('input', ()=>{ gateSelected=''; renderGateList(); });
+  $('gateResults').addEventListener('click', e=>{ const b=e.target.closest('.gate-row'); if(!b) return; gateSelected=b.dataset.name; $('gateMsg').textContent=''; renderGateList(); });
+  $('gateOk').addEventListener('click',()=>{ let v=(gateSelected||'').trim();
+    if(!v){ const q=$('gateSearch').value.trim().toLowerCase(); const list=REPORTERS.filter(n=>!q || String(n).toLowerCase().indexOf(q)>=0); if(list.length===1) v=list[0]; }
+    if(!v){ $('gateMsg').textContent='חפש את שמך ולחץ עליו לבחירה.'; return; } localStorage.setItem(K.reporter,v); $('idGate').style.display='none'; fillReporter(); setStatus('ברוך הבא, '+v); });
   $('gateDev').addEventListener('click',()=>{ const p=prompt('סיסמת מפתח:'); if(p==='30172'){ $('idGate').style.display='none'; switchTab('about'); const box=$('qrLock'); if(box){ box.style.display='flex'; renderQRs(); renderNames(); } if(apiOn()) loadRoster(); } });
   maybeGate();
   updateMeBar();
@@ -1242,6 +1257,6 @@
     setTimeout(()=>{ document.documentElement.innerHTML='<body style="background:#0c0a09;color:#a8a29e;font-family:Heebo,sans-serif;height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:18px;">להתראות 👋<br><br>אפשר לסגור את החלון/הכרטיסייה.</body>'; }, 250);
   });
 </script>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 38</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 39</div>
 </body>
 </html>
