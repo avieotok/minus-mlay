@@ -322,7 +322,7 @@
       function cleanup(){ try{ delete window[cb]; }catch(e){ window[cb]=undefined; } if(s&&s.parentNode) s.parentNode.removeChild(s); }
       window[cb]=function(data){ done=true; cleanup(); resolve(data); };
       s.onerror=function(){ if(!done){ cleanup(); reject(new Error('jsonp error')); } };
-      setTimeout(function(){ if(!done){ cleanup(); reject(new Error('jsonp timeout')); } }, 12000);
+      setTimeout(function(){ if(!done){ cleanup(); reject(new Error('jsonp timeout')); } }, 20000);
       s.src=url.toString();
       document.head.appendChild(s);
     });
