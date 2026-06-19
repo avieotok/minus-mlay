@@ -76,6 +76,8 @@
   .dcmp td:first-child{color:var(--muted);font-weight:700}
   .dphotos{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
   .dphotos img{width:92px;height:92px;object-fit:cover;border-radius:10px;border:1px solid var(--line2);display:block}
+  @keyframes blinkpulse{0%,100%{opacity:1}50%{opacity:.18}}
+  .pill.blink{animation:blinkpulse .55s ease-in-out infinite}
   .acts{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
   .btn{flex:1;min-width:96px;border:1.5px solid var(--line2);background:var(--surface2);color:var(--text);border-radius:11px;padding:11px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif}
   .btn:active{transform:scale(.98)}
@@ -526,9 +528,10 @@
       const TT={'חוסר מלאי':{t:'🟠 חוסר מלאי',c:'#fbbf24'},'פריט פגום':{t:'🔴 פריט פגום',c:'#f87171'},'אי-התאמה':{t:'🔵 אי-התאמה',c:'#60a5fa'}};
       const td=TT[ty]||{t:ty,c:'#a8a29e'};
       const isMis=(ty==='אי-התאמה'), isDef=(ty==='פריט פגום');
+      const blink=(String(a.status)!=='טופל')?' blink':'';
       return '<div class="card" data-id="'+esc(a.id)+'">'
         +'<span class="rail" style="background:'+rail+'"></span>'
-        +'<div style="margin-bottom:7px"><span class="pill" style="color:'+td.c+';background:transparent;border-color:'+td.c+'">'+esc(td.t)+'</span></div>'
+        +'<div style="margin-bottom:7px"><span class="pill'+blink+'" style="color:'+td.c+';background:transparent;border-color:'+td.c+'">'+esc(td.t)+'</span></div>'
         +'<div class="row1"><div><div class="sku">מק״ט '+esc(a.sku||'—')+'</div>'
         +(a.desc?('<div class="desc">'+esc(a.desc)+'</div>'):'')+'</div>'
         +'<span class="pill" style="color:'+sp.c+';background:'+sp.bg+';border-color:'+sp.c+'">'+esc(a.status||'')+'</span></div>'
