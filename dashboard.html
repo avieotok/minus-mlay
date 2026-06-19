@@ -550,11 +550,16 @@
   }
 
   // actions — each maps to one backend call
-  async function assignTo(id, assignee, status){
+  async function assignTo(id, assignee, status, resp){
+    resp=(resp||'').trim();
     const a=ALERTS.find(x=>String(x.id)===String(id));
-    if(a){ a.assignee=assignee; if(status) a.status=status; a.updated=new Date().toISOString(); }
+    if(a){ a.assignee=assignee; if(status) a.status=status; if(resp){ a.response=resp; a.ackBy=me(); } a.updated=new Date().toISOString(); }
     render();
-    try{ await apiPost('assign',{id:id, assignee:assignee, status:status}); toast('עודכן ✓'); setTimeout(load,400); }
+    try{
+      await apiPost('assign',{id:id, assignee:assignee, status:status});
+      if(resp){ await apiPost('ack',{id:id, ackBy:me(), response:resp, status:(status||(a&&a.status)||'בטיפול')}); }
+      toast('עודכן ✓'); setTimeout(load,400);
+    }
     catch(e){ toast('העדכון נכשל — רענן ונסה שוב'); }
   }
   async function saveResp(id, text){
@@ -579,7 +584,7 @@
     if(btn){ const a=btn.dataset.act;
       if(a==='reply'){ card.querySelector('.editor').classList.toggle('open'); return; }
       if(a==='transfer'){ card.querySelector('.transfer').classList.toggle('open'); return; }
-      if(a==='בטיפול'||a==='טופל'){ if(needMe()) return; assignTo(id, me(), a); return; }
+      if(a==='בטיפול'||a==='טופל'){ if(needMe()) return; const ed=card.querySelector('.editor textarea'); assignTo(id, me(), a, ed?ed.value:''); return; }
       return;
     }
     if(e.target.closest('.tgo')){

@@ -1126,9 +1126,9 @@
       const keys=feedbackKeys(res.alerts);
       const seen=loadSeen();
       const fresh=keys.filter(k=>seen.indexOf(k)===-1);
-      // אם הטאב פתוח כרגע — לא צריך נקודה (כבר רואים)
+      // אם הטאב פתוח כרגע — לא צריך נקודה (כבר רואים); נרענן אם יש חדש
       const inboxOpen = $('inboxMode') && !$('inboxMode').classList.contains('hidden');
-      if(inboxOpen){ saveSeen(keys); setInboxBadge(0); }
+      if(inboxOpen){ if(fresh.length){ loadInbox(); } else { saveSeen(keys); setInboxBadge(0); } }
       else { setInboxBadge(fresh.length); }
     }catch(e){}
   }
@@ -1265,6 +1265,6 @@
     setTimeout(()=>{ document.documentElement.innerHTML='<body style="background:#0c0a09;color:#a8a29e;font-family:Heebo,sans-serif;height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:18px;">להתראות 👋<br><br>אפשר לסגור את החלון/הכרטיסייה.</body>'; }, 250);
   });
 </script>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 42</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 43</div>
 </body>
 </html>
