@@ -194,13 +194,13 @@
         <svg width="20" height="20" viewBox="0 0 24 24" fill="#052e16"><path d="M.057 24l1.687-6.163a11.867 11.867 0 0 1-1.587-5.946C.16 5.335 5.495 0 12.05 0a11.82 11.82 0 0 1 8.413 3.488 11.82 11.82 0 0 1 3.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 0 1-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884a9.86 9.86 0 0 0 1.511 5.26l-.999 3.648 3.477-.711z"/></svg>
         שלח לקניין
       </button>
-      <button class="ghost-btn" id="copyText"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fafaf9" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> העתק הודעה</button>
+      <button class="ghost-btn" id="copyText" style="display:none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fafaf9" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> העתק הודעה</button>
     </div>
 
     <p class="status" id="status"></p>
 
     <!-- Contacts -->
-    <div class="panel">
+    <div class="panel" style="display:none">
       <div class="panel-head" id="cnHead"><span>👥 אנשי קשר &nbsp;·&nbsp; <span id="cnCount" class="badge-count">0</span></span><span style="color:#78716c">▾</span></div>
       <div class="panel-body hidden" id="cnBody">
         <div id="cnList"></div>
@@ -213,7 +213,7 @@
     </div>
 
     <!-- Catalog (Excel) -->
-    <div class="panel">
+    <div class="panel" style="display:none">
       <div class="panel-head" id="catHead"><span>📦 קובץ פריטים &nbsp;·&nbsp; נטענו: <span id="catCount" class="badge-count">0</span></span><span style="color:#78716c">▾</span></div>
       <div class="panel-body hidden" id="catBody">
         <p class="hist-empty">העלה קובץ אקסל/CSV — עמודה A: מק״ט, עמודה B: תיאור. אחרי הטעינה, סריקה או הקלדת מק״ט תשלים את התיאור אוטומטית.</p>
@@ -260,9 +260,9 @@
         <div style="font-size:12px;color:#78716c">© אבידן קוטאי · כל הזכויות שמורות</div>
         <div style="width:74px;height:74px;border-radius:16px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden"><img id="aboutLogo" style="width:100%;height:100%;object-fit:contain;padding:8px" alt="לוגו"></div>
         <div style="font-family:'Rubik',sans-serif;font-weight:900;font-size:22px">אפקון — התראת מלאי</div>
-        <div style="color:#a8a29e;font-size:14.5px;line-height:1.8;max-width:400px">אפליקציה לדיווח מהיר על חוסרים במחסן. מצלמים את מדבקת הפריט, בוחרים דרגת דחיפות, והאפליקציה מכינה תמונה ממותגת עם לוגו אפקון, המק״ט, הכמות והתאריך — ושולחת ישירות בוואטסאפ לקבוצת שרשרת האספקה. אפשר גם לשלוח התראת טקסט בלבד, לסרוק ברקוד למילוי המק״ט, ולעקוב אחר היסטוריית הדיווחים.</div>
+        <div style="color:#a8a29e;font-size:14.5px;line-height:1.8;max-width:400px">אפליקציה לדיווח מהיר על חוסרים במחסן. בוחרים שם מהרשימה, סורקים ברקוד או מקלידים מק״ט (התיאור מושלם אוטומטית), קובעים דרגת דחיפות וכמות — והדיווח נשלח ישירות לקנייני שרשרת האספקה. אפשר גם לצלם את הפריט וליצור תמונה ממותגת עם לוגו אפקון לשליחה בוואטסאפ. בטאב "הדיווחים שלי" עוקבים אחר תגובות הקניין וסטטוס הטיפול (ממתין · בטיפול · טופל), עם התראה אדומה ברגע שמתקבלת תגובה חדשה.</div>
         <div style="display:flex;gap:18px;flex-wrap:wrap;justify-content:center;font-size:13px;color:#d6d3d1;margin-top:2px">
-          <span>📷 צילום ממותג</span><span>🚦 דרגת דחיפות</span><span>📊 ברקוד</span><span>📋 היסטוריה</span>
+          <span>📷 צילום ממותג</span><span>🚦 דרגת דחיפות</span><span>📊 ברקוד</span><span>💬 תגובות הקניין</span><span>🔔 התראות</span>
         </div>
         <div style="height:1px;background:#292524;width:100%;margin:8px 0"></div>
         <button class="ghost-btn" id="qrUnlock" style="max-width:320px">🔒 הגדרות מערכת ו‑QR (מפתח)</button>
@@ -1242,6 +1242,6 @@
     setTimeout(()=>{ document.documentElement.innerHTML='<body style="background:#0c0a09;color:#a8a29e;font-family:Heebo,sans-serif;height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:18px;">להתראות 👋<br><br>אפשר לסגור את החלון/הכרטיסייה.</body>'; }, 250);
   });
 </script>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 34</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 36</div>
 </body>
 </html>
