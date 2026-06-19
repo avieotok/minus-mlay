@@ -307,27 +307,34 @@
   function apiUrl(){ return (localStorage.getItem(K.api)||EMBED_API||'').trim(); }
   function apiToken(){ return (localStorage.getItem(K.token)||EMBED_TOKEN||'').trim(); }
   function apiOn(){ return !!apiUrl(); }
-  async function apiGet(action, params){
-    const u=new URL(apiUrl()); u.searchParams.set('token',apiToken()); u.searchParams.set('action',action);
-    if(params) for(const k in params){ if(params[k]!=null) u.searchParams.set(k,params[k]); }
-    u.searchParams.set('_', Date.now());
-    let lastErr=null;
-    for(let attempt=0; attempt<3; attempt++){
-      try{ const r=await fetch(u.toString(),{method:'GET',redirect:'follow',cache:'no-store'}); const txt=await r.text(); try{ return JSON.parse(txt); }catch(pe){ lastErr=pe; } }
-      catch(e){ lastErr=e; }
-      await new Promise(res=>setTimeout(res, 400*(attempt+1)));
-    }
-    throw lastErr || new Error('get failed');
+  function apiGet(action, params){
+    return new Promise(function(resolve, reject){
+      let url;
+      try{ url=new URL(apiUrl()); }catch(e){ reject(e); return; }
+      const cb='__cb'+Date.now()+Math.floor(Math.random()*100000);
+      url.searchParams.set('token', apiToken());
+      url.searchParams.set('action', action);
+      if(params) for(const k in params){ if(params[k]!=null) url.searchParams.set(k, params[k]); }
+      url.searchParams.set('callback', cb);
+      url.searchParams.set('_', Date.now());
+      const s=document.createElement('script');
+      let done=false;
+      function cleanup(){ try{ delete window[cb]; }catch(e){ window[cb]=undefined; } if(s&&s.parentNode) s.parentNode.removeChild(s); }
+      window[cb]=function(data){ done=true; cleanup(); resolve(data); };
+      s.onerror=function(){ if(!done){ cleanup(); reject(new Error('jsonp error')); } };
+      setTimeout(function(){ if(!done){ cleanup(); reject(new Error('jsonp timeout')); } }, 15000);
+      s.src=url.toString();
+      document.head.appendChild(s);
+    });
   }
   async function apiPost(action, payload){
-    const body=Object.assign({token:apiToken(),action:action}, payload||{});
-    let lastErr=null;
-    for(let attempt=0; attempt<3; attempt++){
-      try{ const r=await fetch(apiUrl(),{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)}); const txt=await r.text(); try{ const j=JSON.parse(txt); if(j&&j.busy){ lastErr=new Error('busy'); } else { return j; } }catch(pe){ lastErr=pe; } }
-      catch(e){ lastErr=e; }
-      await new Promise(res=>setTimeout(res, 500*(attempt+1)));
+    // פעולות עם רשימות גדולות (קטלוג/שמות) נשארות ב-POST; כל השאר עובר דרך JSONP/GET כדי לעקוף CORS
+    if(action==='catalogSet' || action==='rosterSet'){
+      const body=Object.assign({token:apiToken(),action:action}, payload||{});
+      const r=await fetch(apiUrl(),{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)});
+      const txt=await r.text(); return JSON.parse(txt);
     }
-    throw lastErr || new Error('post failed');
+    return apiGet(action, payload||{});
   }
   function esc(s){ return (s||'').toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
