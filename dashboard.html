@@ -365,8 +365,19 @@
     if(!ids.length){ toast('לא נבחרו רשומות'); return; }
     if(!confirm('למחוק '+ids.length+' רשומות לצמיתות? פעולה זו אינה הפיכה.')) return;
     toast('מוחק '+ids.length+'…');
-    for(const id of ids){ try{ await apiPost('delete',{id:id}); }catch(e){} }
-    selDel.clear(); load();
+    let okN=0, failN=0;
+    for(const id of ids){
+      let done=false;
+      for(let attempt=0; attempt<2 && !done; attempt++){
+        try{ const r=await apiPost('delete',{id:id}); if(r && r.ok){ done=true; okN++; } }
+        catch(e){}
+        if(!done) await new Promise(res=>setTimeout(res,400));
+      }
+      if(!done) failN++;
+    }
+    selDel.clear();
+    await load();
+    toast(failN ? ('נמחקו '+okN+', נכשלו '+failN+' — נסה שוב') : ('נמחקו '+okN+' רשומות ✓'));
   }
 
   function setConn(){
@@ -516,10 +527,10 @@
       if(!to){ toast('בחר קניין להעברה'); return; }
       assignTo(id, to); toast('הועבר ל-'+to); return;
     }
-    if(e.target.closest('.del')){
+    if(e.target.closest('.del') && e.target.closest('.del').dataset.del){
       const delId=e.target.closest('.del').dataset.del;
       if(confirm('למחוק את הרשומה לצמיתות? פעולה זו אינה הפיכה.')){
-        apiPost('delete',{id:delId}).then(()=>{ toast('נמחק'); load(); }).catch(()=>toast('המחיקה נכשלה'));
+        apiPost('delete',{id:delId}).then(async r=>{ if(r&&r.ok){ await load(); toast('נמחק ✓'); } else { toast('המחיקה נכשלה — נסה שוב'); } }).catch(()=>toast('המחיקה נכשלה'));
       }
       return;
     }
