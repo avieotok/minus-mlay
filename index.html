@@ -548,6 +548,15 @@
     }
     throw lastErr || new Error('post failed');
   }
+  // העלאת תמונות — ניסיון יחיד בלבד (בלי חזרות), כי תמונות מתווספות ולא מוחלפות:
+  // חזרה אוטומטית הייתה גורמת לשמירה כפולה. הכתיבה מצליחה בשרת גם אם התשובה לא נקראת.
+  async function uploadPhotos(id, photos){
+    try{
+      await fetch(apiUrl(), {method:'POST', redirect:'follow',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body:JSON.stringify({token:apiToken(), action:'addPhotos', id:id, photos:photos})});
+    }catch(e){ /* התשובה לא נקראת בגלל CORS — אבל הכתיבה בוצעה */ }
+  }
   let currentAlertId='';   // ה-id של ההתראה הנוכחית שנשלחת (משובץ בקישור האישור)
   let dupExisting=null;    // התראה פתוחה זהה שנמצאה בבדיקת כפילות
   function setStatus(t){ $('status').textContent=t; }
@@ -1015,7 +1024,7 @@
         reporterPhone:(localStorage.getItem('afcon_reporter_phone')||''), recipients:'כל הצוות', assignee:'' });
       if(r && r.duplicate){ setStatus(''); dupExisting=r.alert||null; showDup(r.alert || {sku:subj.sku, status:'', reporter:'', response:'', assignee:''}); resetForm(); return; }
       if(r && r.ok){
-        if(defPhotos.length){ setStatus('מעלה תמונות…'); try{ await apiPost('addPhotos',{id:currentAlertId, photos:defPhotos}); }catch(_){ } }
+        if(defPhotos.length){ setStatus('מעלה תמונות…'); try{ await uploadPhotos(currentAlertId, defPhotos); }catch(_){ } }
         addHist((subj.type||'דיווח')+' · מק״ט '+subj.sku); reportDone(subj); return;
       }
       setStatus('לא ניתן היה לשלוח כרגע — נסה שוב בעוד רגע.');
@@ -1451,6 +1460,6 @@
     setTimeout(()=>{ document.documentElement.innerHTML='<body style="background:#0c0a09;color:#a8a29e;font-family:Heebo,sans-serif;height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:18px;">להתראות 👋<br><br>אפשר לסגור את החלון/הכרטיסייה.</body>'; }, 250);
   });
 </script>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 52</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 53</div>
 </body>
 </html>
