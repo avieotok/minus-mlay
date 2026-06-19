@@ -710,8 +710,12 @@
         for(let i=start;i<rows.length;i++){ const sku=String(rows[i]&&rows[i][0]==null?'':rows[i][0]).trim(); const desc=String(rows[i]&&rows[i][1]==null?'':rows[i][1]).trim(); if(sku) items.push([sku,desc]); }
         if(!items.length){ $('catNote').textContent='לא נמצאו פריטים. ודא: עמודה A = מק״ט, עמודה B = תיאור.'; e.target.value=''; return; }
         $('catNote').textContent='דוחף '+items.length+' פריטים…';
-        const res=await apiPost('catalogSet',{items:items});
-        $('catNote').textContent=(res&&res.ok)?('✓ נדחפו '+res.count+' פריטים לכל המחסנאים'):'הדחיפה נכשלה — נסה שוב.';
+        try{ await apiPost('catalogSet',{items:items}); }catch(_){ }
+        await new Promise(res=>setTimeout(res,500));
+        let okCount=null;
+        try{ const chk=await apiGet('catalog'); if(chk&&chk.ok&&Array.isArray(chk.items)) okCount=chk.items.length; }catch(_){ }
+        if(okCount!=null){ $('catNote').textContent='✓ נדחפו '+okCount+' פריטים — כל המסופונים יתעדכנו אוטומטית בפתיחה'; }
+        else { $('catNote').textContent='נשלח. אם לא הופיע במסופון — רענן ונסה שוב.'; }
       }catch(err){ $('catNote').textContent='שגיאה בקריאת הקובץ.'; }
       e.target.value='';
     };

@@ -854,10 +854,9 @@
       const r=await apiSend({ id:currentAlertId, sku:subj.sku, desc:subj.desc, qty:subj.qty,
         urgency:URG[urgency].label, reporter:(localStorage.getItem(K.reporter)||''),
         reporterPhone:(localStorage.getItem('afcon_reporter_phone')||''), recipients:'כל הצוות', assignee:'' });
-      if(r && (r.ok || r.duplicate || r.error==='duplicate' || r.reopened)){
-        addHist('מק״ט: '+subj.sku);
-        reportDone(subj);
-      } else { setStatus('לא ניתן היה לשלוח כרגע — נסה שוב בעוד רגע.'); }
+      if(r && r.duplicate){ setStatus(''); dupExisting=r.alert||null; showDup(r.alert || {sku:subj.sku, status:'', reporter:'', response:'', assignee:''}); return; }
+      if(r && r.ok){ addHist('מק״ט: '+subj.sku); reportDone(subj); return; }
+      setStatus('לא ניתן היה לשלוח כרגע — נסה שוב בעוד רגע.');
     }catch(e){ setStatus('לא ניתן היה לשלוח כרגע — נסה שוב בעוד רגע.'); }
   }
 
@@ -913,7 +912,7 @@
                      : ('כבר קיים דיווח פתוח על מק״ט <b>'+esc(a.sku||'')+'</b>');
     let html = head + (a.desc?('<br>'+esc(a.desc)):'') +
       (when?('<br>🕒 '+when):'') +
-      '<br>סטטוס: <b>'+esc(a.status||'')+'</b>' + (assignee?(' · בטיפול אצל '+esc(assignee)):'') + (a.qty?(' · נותרו '+esc(a.qty)):'');
+      '<br>סטטוס: <b>'+esc(a.status||'')+'</b>' + (assignee?(' · מטפל: <b>'+esc(assignee)+'</b>'):' · ממתין לשיוך לקניין') + (a.qty?(' · נותרו '+esc(a.qty)):'');
     if(resp){
       html += '<div style="margin-top:11px;padding:11px 13px;background:#0c2a14;border:1px solid #166534;border-radius:10px;color:#bbf7d0;font-size:14px;line-height:1.6">💬 <b>תשובת הקניין:</b><br>'+esc(resp)+'</div>';
     } else {
@@ -922,7 +921,7 @@
     html += '<div style="margin-top:11px;font-size:13px;color:#fbbf24">'
       + (String(a.status||'')==='טופל'
           ? 'ℹ️ הפריט טופל לאחרונה — אין צורך לדווח שוב כרגע.'
-          : 'ℹ️ אין צורך לדווח שוב — הקריאה כבר נמצאת אצל הקניינים.')
+          : 'ℹ️ אין צורך להודיע לקניין — כבר קיים דיווח פתוח על מק״ט זה.')
       + '</div>';
     $('dupInfo').innerHTML = html;
     show($('dupWrap'));
@@ -1257,6 +1256,6 @@
     setTimeout(()=>{ document.documentElement.innerHTML='<body style="background:#0c0a09;color:#a8a29e;font-family:Heebo,sans-serif;height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:18px;">להתראות 👋<br><br>אפשר לסגור את החלון/הכרטיסייה.</body>'; }, 250);
   });
 </script>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 39</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 40</div>
 </body>
 </html>
