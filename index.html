@@ -867,7 +867,11 @@
     } else {
       html += '<div style="margin-top:11px;padding:10px 13px;background:#0c0a09;border:1px dashed #44403c;border-radius:10px;color:#a8a29e;font-size:13px">הקניין עדיין לא הגיב על הפריט הזה.</div>';
     }
-    html += '<div style="margin-top:11px;font-size:13px;color:#fbbf24">ℹ️ אין צורך לדווח שוב — הקריאה כבר נמצאת אצל הקניינים.</div>';
+    html += '<div style="margin-top:11px;font-size:13px;color:#fbbf24">'
+      + (String(a.status||'')==='טופל'
+          ? 'ℹ️ הפריט טופל לאחרונה — אין צורך לדווח שוב כרגע.'
+          : 'ℹ️ אין צורך לדווח שוב — הקריאה כבר נמצאת אצל הקניינים.')
+      + '</div>';
     $('dupInfo').innerHTML = html;
     show($('dupWrap'));
   }
