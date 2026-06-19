@@ -812,7 +812,7 @@
   function dataURLtoFile(d,name){ const a=d.split(','), mime=a[0].match(/:(.*?);/)[1], bs=atob(a[1]); let n=bs.length, u=new Uint8Array(n); while(n--) u[n]=bs.charCodeAt(n); return new File([u],name,{type:mime}); }
 
   $('sendPhoto').addEventListener('click',()=>{ if(!currentImg) return; cardMode=false; trySend('photo'); });
-  $('sendText').addEventListener('click',()=>{ if(!$('txtSku').value.trim()){ setStatus('נא למלא מק״ט.'); return; } trySend('text'); });
+  $('sendText').addEventListener('click',()=>{ hide($('sentWrap')); hide($('dupWrap')); if(!$('txtSku').value.trim()){ setStatus('נא למלא מק״ט.'); try{$('txtSku').focus();}catch(e){} return; } trySend('text'); });
 
   // נושא הדיווח הנוכחי (מק״ט/תיאור/כמות) לפי המצב
   function subjectFor(kind){
@@ -909,6 +909,10 @@
   function closeDup(){ hide($('dupWrap')); }
   $('sentOk').addEventListener('click',()=>hide($('sentWrap')));
   $('dupCancel').addEventListener('click', closeDup);
+  // לחיצה על הרקע הכהה סוגרת את החלון (כדי שלא יחסום את כפתור השליחה)
+  ['sentWrap','dupWrap'].forEach(function(id){
+    var ov=$(id); if(ov){ ov.addEventListener('click', function(e){ if(e.target===ov){ hide(ov); } }); }
+  });
 
   function openRecipients(kind){ pendingKind=kind; queue=[]; sentNames=[]; totalSel=0;
     addItem((pendingKind==='text'||cardMode) ? $('txtSku').value.trim() : $('overlayText').value.trim());
