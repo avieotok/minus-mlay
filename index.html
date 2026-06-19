@@ -137,7 +137,6 @@
     </div>
     <div class="tabs">
       <button class="tab active" id="tabText">✍️ דיווח</button>
-      <button class="tab" id="tabInbox">📥 הדיווחים שלי</button>
       <button class="tab tab-about" id="tabAbout">ℹ️ אודות</button>
     </div>
     <div id="opsWrap">
@@ -595,15 +594,12 @@
 
   // tabs
   $('tabText').addEventListener('click',()=>switchTab('text'));
-  $('tabInbox').addEventListener('click',()=>switchTab('inbox'));
   $('tabAbout').addEventListener('click',()=>switchTab('about'));
   function switchTab(t){
     $('tabText').classList.toggle('active', t==='text');
-    $('tabInbox').classList.toggle('active', t==='inbox');
     $('tabAbout').classList.toggle('active', t==='about');
     hide($('opsWrap')); hide($('inboxMode')); hide($('aboutMode')); closeScanner();
     if(t==='about'){ show($('aboutMode')); return; }
-    if(t==='inbox'){ show($('inboxMode')); loadInbox(); return; }
     show($('opsWrap')); cardMode=false; $('textMode').style.display='flex'; setStatus('');
   }
 
@@ -827,20 +823,8 @@
     return {sku:$('overlayText').value.trim(), desc:'', qty:$('qtyPhoto').value.trim()};
   }
 
-  // לפני שליחה — בודק כפילות מול המערכת המשותפת
+  // שליחה ישירה (ללא בדיקת כפילות)
   async function trySend(kind){
-    dupExisting=null;
-    if(apiOn()){
-      const subj=subjectFor(kind);
-      if(subj.sku){
-        setStatus('בודק אם כבר קיים דיווח פתוח…');
-        try{
-          const res=await apiGet('check',{sku:subj.sku});
-          setStatus('');
-          if(res && res.ok && res.duplicate && res.alert){ dupExisting=res.alert; pendingKind=kind; showDup(res.alert); return; }
-        }catch(e){ setStatus('לא ניתן לבדוק כפילות (אולי אין רשת) — ניתן לשלוח.'); }
-      }
-    }
     submitReport(kind);
   }
 
@@ -855,15 +839,11 @@
       const r=await apiSend({ id:currentAlertId, sku:subj.sku, desc:subj.desc, qty:subj.qty,
         urgency:URG[urgency].label, reporter:(localStorage.getItem(K.reporter)||''),
         reporterPhone:(localStorage.getItem('afcon_reporter_phone')||''), recipients:'כל הצוות', assignee:'' });
-      if(r && r.ok){
+      if(r && (r.ok || r.duplicate || r.error==='duplicate' || r.reopened)){
         addHist('מק״ט: '+subj.sku);
         reportDone(subj);
-      } else if(r && (r.duplicate || r.error==='duplicate')){
-        setStatus('');
-        if(r.alert){ dupExisting=r.alert; showDup(r.alert); }
-        else { dupExisting=null; showDup({sku:subj.sku, status:'', reporter:'', response:''}); }
-      } else { await dupFallback(subj.sku); }
-    }catch(e){ await dupFallback(subj.sku); }
+      } else { setStatus('לא ניתן היה לשלוח כרגע — נסה שוב בעוד רגע.'); }
+    }catch(e){ setStatus('לא ניתן היה לשלוח כרגע — נסה שוב בעוד רגע.'); }
   }
 
   // אם השליחה לא הצליחה — נבדוק ישירות מול השרת אם המק״ט כבר קיים, ונציג הודעה נכונה
@@ -1210,6 +1190,6 @@
     setTimeout(()=>{ document.documentElement.innerHTML='<body style="background:#0c0a09;color:#a8a29e;font-family:Heebo,sans-serif;height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:18px;">להתראות 👋<br><br>אפשר לסגור את החלון/הכרטיסייה.</body>'; }, 250);
   });
 </script>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 30</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 31</div>
 </body>
 </html>
