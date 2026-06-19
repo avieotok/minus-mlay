@@ -43,6 +43,16 @@
   .row2 { display: flex; gap: 10px; }
   .label { font-size: 13px; color: #a8a29e; font-weight: 500; }
   .input { background: #1c1917; border: 1px solid #3f3f46; border-radius: 12px; padding: 13px 14px; color: #fafaf9; font-size: 16px; font-family: 'Heebo', sans-serif; width: 100%; }
+  .pobox { flex:1 1 0; min-width:0; width:100%; aspect-ratio:1/1.15; max-width:32px; background:#1c1917; border:1.5px solid #44403c; border-radius:8px; color:#fafaf9; font-size:17px; font-weight:800; text-align:center; font-family:'Rubik',sans-serif; padding:0; }
+  .pobox:focus { border-color:#22c55e; outline:none; background:#0f1f14; }
+  .pobox.filled { border-color:#60a5fa; }
+  .cmp-tbl { width:100%; border-collapse:collapse; margin-top:6px; }
+  .cmp-tbl th { font-size:13px; color:#a8a29e; font-weight:700; padding:5px; text-align:center; }
+  .cmp-tbl th:nth-child(2){ color:#fbbf24; } .cmp-tbl th:nth-child(3){ color:#60a5fa; }
+  .cmp-tbl td { padding:4px; }
+  .cmp-h { font-size:13.5px; font-weight:700; color:#d6d3d1; white-space:nowrap; text-align:center; }
+  .cmp-in { width:100%; background:#1c1917; border:1px solid #3f3f46; border-radius:10px; padding:11px 10px; color:#fafaf9; font-size:15px; font-family:'Heebo',sans-serif; text-align:center; }
+  .cmp-in:focus { border-color:#22c55e; outline:none; }
   .input:focus { outline: none; border-color: #22c55e; }
   .scan-btn, .ghost-btn { display: flex; align-items: center; justify-content: center; gap: 8px; background: #292524; border: 1.5px solid #44403c; color: #fafaf9; border-radius: 12px; padding: 12px; font-size: 14.5px; font-weight: 700; cursor: pointer; font-family: 'Heebo', sans-serif; width: 100%; }
   .send { display: flex; align-items: center; justify-content: center; gap: 9px; background: #22c55e; border: none; color: #052e16; border-radius: 14px; padding: 16px; font-size: 18px; font-weight: 800; font-family: 'Rubik', sans-serif; cursor: pointer; width: 100%; }
@@ -144,11 +154,20 @@
     </div>
     <div id="opsWrap">
 
+    <div class="urg-label">סוג דיווח</div>
+    <div class="seg" id="typeSeg">
+      <button data-t="חוסר מלאי">🟠 חוסר מלאי</button>
+      <button data-t="פריט פגום">🔴 פגום</button>
+      <button data-t="אי-התאמה">🔵 אי-התאמה</button>
+    </div>
+
+    <div id="urgBlock">
     <div class="urg-label">דרגת דחיפות</div>
     <div class="seg" id="urgSeg">
       <button data-u="low">כמות נמוכה</button>
       <button data-u="out">אזל לגמרי</button>
       <button data-u="urgent">דחוף</button>
+    </div>
     </div>
 
     <!-- PHOTO MODE -->
@@ -184,14 +203,37 @@
 
     <!-- TEXT MODE -->
     <div id="textMode" style="display:flex;flex-direction:column;gap:14px">
+      <div class="field" id="fldPo" style="display:none"><span class="label">מספר הזמנה</span>
+        <div id="poBoxes" style="display:flex;align-items:center;gap:4px;direction:ltr;flex-wrap:nowrap">
+          <span style="font-weight:800;font-size:17px;color:#fbbf24;font-family:'Rubik',sans-serif;margin-inline-end:3px;flex:0 0 auto">PO</span>
+          <input class="pobox" inputmode="numeric" maxlength="1"><input class="pobox" inputmode="numeric" maxlength="1"><input class="pobox" inputmode="numeric" maxlength="1"><input class="pobox" inputmode="numeric" maxlength="1"><input class="pobox" inputmode="numeric" maxlength="1"><input class="pobox" inputmode="numeric" maxlength="1"><input class="pobox" inputmode="numeric" maxlength="1"><input class="pobox" inputmode="numeric" maxlength="1"><input class="pobox" inputmode="numeric" maxlength="1">
+        </div></div>
       <label class="field"><span class="label">מק״ט</span>
         <input class="input" id="txtSku" placeholder="הקש כאן לפתיחת מקלדת" readonly></label>
       <div class="chips" id="chipsText"></div>
       <div class="desc-line" id="descText"></div>
       <button class="scan-btn" id="scanText"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fafaf9" stroke-width="2"><path d="M3 5v4M3 5h4M21 5v4M21 5h-4M3 19v-4M3 19h4M21 19v-4M21 19h-4M7 12h10"/></svg> סרוק ברקוד למק״ט</button>
       <button class="scan-btn" id="srchBtn"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fafaf9" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg> חפש פריט בקטלוג</button>
-      <label class="field"><span class="label">כמות שנותרה</span>
+      <label class="field" id="fldQty"><span class="label" id="qtyLabel">כמות שנותרה</span>
         <input class="input" id="qtyText" placeholder="הקש כאן (לא חובה)" readonly></label>
+      <div id="fldMismatch" style="display:none">
+        <span class="label">השוואה — מה הוזמן מול מה שהתקבל</span>
+        <table class="cmp-tbl">
+          <thead><tr><th></th><th>הוזמן</th><th>התקבל</th></tr></thead>
+          <tbody>
+            <tr><td class="cmp-h">תיאור</td><td><input class="cmp-in" id="ordDesc" placeholder="תיאור שהוזמן"></td><td><input class="cmp-in" id="recvDesc" placeholder="מה הגיע בפועל"></td></tr>
+            <tr><td class="cmp-h">כמות</td><td><input class="cmp-in" id="ordText" inputmode="numeric" placeholder="0"></td><td><input class="cmp-in" id="recvText" inputmode="numeric" placeholder="0"></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <label class="field" id="fldNote" style="display:none"><span class="label" id="noteLabel">מה הבעיה?</span>
+        <textarea class="input" id="noteText" rows="2" placeholder="פרט כאן…" style="resize:vertical;min-height:48px;font-family:'Heebo',sans-serif"></textarea></label>
+      <div id="fldPhotos" style="display:none">
+        <span class="label">תמונות (המוצר + המק״ט)</span>
+        <input type="file" id="defFile" accept="image/*" capture="environment" multiple class="hidden">
+        <button type="button" class="scan-btn" id="defPhotoBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fafaf9" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> צלם / צרף תמונה</button>
+        <div id="defPhotoStrip" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"></div>
+      </div>
       <button class="send" id="sendText">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="#052e16"><path d="M.057 24l1.687-6.163a11.867 11.867 0 0 1-1.587-5.946C.16 5.335 5.495 0 12.05 0a11.82 11.82 0 0 1 8.413 3.488 11.82 11.82 0 0 1 3.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 0 1-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884a9.86 9.86 0 0 0 1.511 5.26l-.999 3.648 3.477-.711z"/></svg>
         שלח לקניין
@@ -491,7 +533,7 @@
   function apiSend(payload){ return apiGet('create', payload||{}); }
   // פעולות כתיבה דרך script (השרת מטפל בהן ב-doGet); קטלוג/שמות נשארים ב-POST
   async function apiPost(action, payload){
-    if(action!=='catalogSet' && action!=='rosterSet'){ return apiGet(action, payload||{}); }
+    if(action!=='catalogSet' && action!=='rosterSet' && action!=='addPhotos'){ return apiGet(action, payload||{}); }
     const body=Object.assign({token:apiToken(), action:action}, payload||{});
     let lastErr=null;
     for(let attempt=0; attempt<3; attempt++){
@@ -533,18 +575,25 @@
     if($('repHint')) $('repHint').classList.toggle('hidden',locked);
     updateMeBar();
   }
-  function updateMeBar(){ const el=$('meBar'); if(!el) return; const n=(localStorage.getItem(K.reporter)||'').trim();
-    if(n){ el.innerHTML='👤 '+esc(n)+' <span style="color:#78716c;text-decoration:underline;font-weight:600">· החלף שם</span>'; el.style.cursor='pointer'; }
-    else { el.textContent=''; el.style.cursor='default'; } }
+  function updateMeBar(){ const el=$('meBar'); if(!el) return; const n=(localStorage.getItem(K.reporter)||'').trim(); el.textContent = n ? ('👤 '+n) : ''; el.style.cursor='default'; }
   $('reporter').addEventListener('change',e=>{ const v=e.target.value.trim(); if(!v) return; localStorage.setItem(K.reporter,v); fillReporter(); setStatus('השם נבחר ✓'); });
   function resetIdentity(){ localStorage.removeItem(K.reporter); fillReporter(); maybeGate(); }
-  $('meBar').addEventListener('click', ()=>{
+  // לחיצה משולשת על הלוגו → בקשת סיסמה להחלפת שם
+  let logoTaps=0, logoTimer=null;
+  function logoTapHandler(){
     if(!(localStorage.getItem(K.reporter)||'').trim()) return;
-    const p=prompt('להחלפת שם — הזן סיסמת מפתח:');
-    if(p===null) return;
-    if(p==='30172'){ resetIdentity(); updateMeBar(); setStatus('בחר את שמך החדש.'); }
-    else { setStatus('סיסמה שגויה — השם לא שונה.'); }
-  });
+    logoTaps++;
+    if(logoTimer) clearTimeout(logoTimer);
+    logoTimer=setTimeout(()=>{ logoTaps=0; }, 1200);
+    if(logoTaps>=3){
+      logoTaps=0; if(logoTimer) clearTimeout(logoTimer);
+      const p=prompt('להחלפת שם — הזן סיסמת מפתח:');
+      if(p===null) return;
+      if(p==='30172'){ resetIdentity(); updateMeBar(); setStatus('בחר את שמך החדש.'); }
+      else { setStatus('סיסמה שגויה — השם לא שונה.'); }
+    }
+  }
+  { const lb=document.querySelector('.logo-badge'); if(lb){ lb.style.cursor='pointer'; lb.addEventListener('click', logoTapHandler); } }
   async function loadRoster(){
     if(!apiOn()) return;
     try{ const r=await apiGet('roster'); if(r&&r.ok){ BUYERS=Array.isArray(r.buyers)?r.buyers:[]; REPORTERS=Array.isArray(r.reporters)?r.reporters:[]; fillReporter(); fillGate(); maybeGate(); renderNames&&renderNames(); } }catch(e){}
@@ -614,6 +663,85 @@
   }
   document.querySelectorAll('#urgSeg button').forEach(b=>b.addEventListener('click',()=>{ urgency=b.dataset.u; paintUrg(); if(currentImg) renderComposite(); }));
   paintUrg();
+
+  // ===== סוג דיווח =====
+  let reportType='חוסר מלאי';
+  const TYPE_COLORS={'חוסר מלאי':{bg:'#3a2a12',fg:'#fbbf24'},'פריט פגום':{bg:'#3a1212',fg:'#f87171'},'אי-התאמה':{bg:'#12233a',fg:'#60a5fa'}};
+  function paintType(){
+    document.querySelectorAll('#typeSeg button').forEach(b=>{ const on=b.dataset.t===reportType; const c=TYPE_COLORS[b.dataset.t]||{bg:'#1c1917',fg:'#d6d3d1'};
+      b.style.background=on?c.bg:'#1c1917'; b.style.color=on?c.fg:'#d6d3d1'; b.style.borderColor=on?'transparent':'#3f3f46'; });
+  }
+  function applyType(t){
+    reportType=t; paintType();
+    const isDef=(t==='פריט פגום'), isMis=(t==='אי-התאמה');
+    if($('fldPo')) $('fldPo').style.display=(isMis||isDef)?'':'none';
+    if($('fldQty')) $('fldQty').style.display=isMis?'none':'';
+    if($('fldMismatch')) $('fldMismatch').style.display=isMis?'':'none';
+    if($('fldNote')) $('fldNote').style.display=(isDef||isMis)?'':'none';
+    if($('fldPhotos')) $('fldPhotos').style.display=(isDef||isMis)?'':'none';
+    if($('urgBlock')) $('urgBlock').style.display=isMis?'none':'';
+    if($('qtyLabel')) $('qtyLabel').textContent=isDef?'כמות פגומה':'כמות שנותרה';
+    if($('noteLabel')) $('noteLabel').textContent=isMis?'הערה (לא חובה)':'מה הבעיה?';
+    if($('noteText')) $('noteText').placeholder=isMis?'לדוגמה: הגיע מק״ט שגוי':'לדוגמה: הגיע שבור / חסר חלק';
+  }
+  document.querySelectorAll('#typeSeg button').forEach(b=>b.addEventListener('click',()=>applyType(b.dataset.t)));
+  applyType('חוסר מלאי');
+
+  // ===== קוביות מספר הזמנה (PO) =====
+  const poBoxes = Array.prototype.slice.call(document.querySelectorAll('#fldPo .pobox'));
+  function poDigits(){ return poBoxes.map(b=>(b.value||'').replace(/\D/g,'')).join(''); }
+  function poClear(){ poBoxes.forEach(b=>{ b.value=''; b.classList.remove('filled'); }); }
+  function poMark(b){ b.classList.toggle('filled', !!b.value); }
+  poBoxes.forEach((b,i)=>{
+    b.addEventListener('input',()=>{ b.value=(b.value||'').replace(/\D/g,'').slice(0,1); poMark(b); if(b.value && i<poBoxes.length-1) poBoxes[i+1].focus(); });
+    b.addEventListener('keydown',e=>{ if(e.key==='Backspace' && !b.value && i>0){ poBoxes[i-1].focus(); poBoxes[i-1].value=''; poMark(poBoxes[i-1]); e.preventDefault(); } });
+    b.addEventListener('paste',e=>{ e.preventDefault(); const d=((e.clipboardData||window.clipboardData).getData('text')||'').replace(/\D/g,'').slice(0,poBoxes.length); for(let j=0;j<d.length && (i+j)<poBoxes.length;j++){ poBoxes[i+j].value=d[j]; poMark(poBoxes[i+j]); } const next=Math.min(i+d.length, poBoxes.length-1); if(poBoxes[next]) poBoxes[next].focus(); });
+  });
+
+  // ===== תמונות (מוצר פגום / אי-התאמה) =====
+  let defPhotos = [];
+  const MAX_PHOTOS = 3;
+  const PHOTO_TARGET = 55000; // ~55KB ליעד נפח לכל תמונה
+  function loadImg(file){
+    return new Promise(function(res,rej){
+      const r=new FileReader();
+      r.onload=function(){ const img=new Image(); img.onload=function(){ res(img); }; img.onerror=rej; img.src=r.result; };
+      r.onerror=rej; r.readAsDataURL(file);
+    });
+  }
+  function drawJpeg(img, maxDim, quality){
+    let w=img.width,h=img.height; const m=Math.max(w,h); if(m>maxDim){ const s=maxDim/m; w=Math.round(w*s); h=Math.round(h*s); }
+    const c=document.createElement('canvas'); c.width=w; c.height=h; const ctx=c.getContext('2d');
+    ctx.fillStyle='#fff'; ctx.fillRect(0,0,w,h); ctx.drawImage(img,0,0,w,h);
+    return c.toDataURL('image/jpeg', quality);
+  }
+  function dataUrlBytes(d){ const i=d.indexOf(','); return i<0?0:Math.round((d.length-i-1)*0.75); }
+  async function compressPhoto(file){
+    const img=await loadImg(file);
+    let dim=800, q=0.5;
+    let d=drawJpeg(img,dim,q);
+    let guard=0;
+    while(dataUrlBytes(d)>PHOTO_TARGET && guard++<12){
+      if(q>0.34){ q=Math.round((q-0.08)*100)/100; } else { dim=Math.round(dim*0.82); q=0.5; if(dim<420) break; }
+      d=drawJpeg(img,dim,q);
+    }
+    return d;
+  }
+  function renderDefPhotos(){
+    const strip=$('defPhotoStrip'); if(!strip) return;
+    strip.innerHTML=defPhotos.map((d,i)=>{ const kb=Math.round(dataUrlBytes(d)/1024);
+      return '<div style="position:relative"><img src="'+d+'" style="width:84px;height:84px;object-fit:cover;border-radius:10px;border:1px solid #44403c"><button type="button" data-rm="'+i+'" style="position:absolute;top:-7px;inset-inline-end:-7px;width:22px;height:22px;border-radius:50%;background:#e2231a;color:#fff;border:none;font-weight:800;cursor:pointer">✕</button><span style="position:absolute;bottom:2px;inset-inline-start:2px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;padding:1px 5px;border-radius:6px">'+kb+'KB</span></div>';
+    }).join('');
+    const btn=$('defPhotoBtn'); if(btn) btn.style.display=(defPhotos.length>=MAX_PHOTOS)?'none':'';
+  }
+  if($('defPhotoBtn')) $('defPhotoBtn').addEventListener('click',()=>{ if($('defFile')) $('defFile').click(); });
+  if($('defPhotoStrip')) $('defPhotoStrip').addEventListener('click',e=>{ const b=e.target.closest('[data-rm]'); if(!b) return; defPhotos.splice(+b.dataset.rm,1); renderDefPhotos(); });
+  if($('defFile')) $('defFile').addEventListener('change', async e=>{
+    const files=Array.prototype.slice.call(e.target.files||[]);
+    setStatus('מכווץ תמונות…');
+    for(const f of files){ if(defPhotos.length>=MAX_PHOTOS) break; try{ const d=await compressPhoto(f); defPhotos.push(d); }catch(x){} }
+    setStatus(''); renderDefPhotos(); e.target.value='';
+  });
 
   // tabs
   $('tabText').addEventListener('click',()=>switchTab('text'));
@@ -846,8 +974,15 @@
 
   // נושא הדיווח הנוכחי (מק״ט/תיאור/כמות) לפי המצב
   function subjectFor(kind){
-    if(kind==='text' || cardMode){ const sku=$('txtSku').value.trim(); return {sku:sku, desc:lookupDesc(sku)||'', qty:$('qtyText').value.trim()}; }
-    return {sku:$('overlayText').value.trim(), desc:'', qty:$('qtyPhoto').value.trim()};
+    if(kind==='text' || cardMode){
+      const sku=$('txtSku').value.trim();
+      const o={type:reportType, sku:sku, desc:lookupDesc(sku)||'', po:'', qtyRecv:'', descRecv:'', note:''};
+      if(reportType==='אי-התאמה'){ o.po=(poDigits()?('PO'+poDigits()):''); o.desc=$('ordDesc').value.trim()||o.desc; o.qty=$('ordText').value.trim(); o.descRecv=$('recvDesc').value.trim(); o.qtyRecv=$('recvText').value.trim(); o.note=$('noteText').value.trim(); }
+      else if(reportType==='פריט פגום'){ o.qty=$('qtyText').value.trim(); o.note=$('noteText').value.trim(); o.po=(poDigits()?('PO'+poDigits()):''); }
+      else { o.qty=$('qtyText').value.trim(); }
+      return o;
+    }
+    return {type:'חוסר מלאי', sku:$('overlayText').value.trim(), desc:'', qty:$('qtyPhoto').value.trim(), po:'', qtyRecv:'', descRecv:'', note:''};
   }
 
   // שליחה ישירה (ללא בדיקת כפילות)
@@ -859,15 +994,27 @@
   async function submitReport(kind){
     const subj=subjectFor(kind);
     if(!subj.sku){ setStatus('נא למלא מק״ט.'); return; }
+    if(subj.type==='פריט פגום'){
+      if(!subj.note){ setStatus('נא לפרט מה הבעיה בפריט.'); try{$('noteText').focus();}catch(e){} return; }
+      if(poDigits().length>0 && poDigits().length!==9){ setStatus('מספר הזמנה — או להשאיר ריק, או למלא 9 ספרות.'); return; }
+    }
+    if(subj.type==='אי-התאמה'){
+      if(poDigits().length!==9){ setStatus('מספר הזמנה חייב להכיל 9 ספרות.'); try{ (poBoxes.filter(b=>!b.value)[0]||poBoxes[0]).focus(); }catch(e){} return; }
+      if(!subj.qty || !subj.qtyRecv){ setStatus('נא למלא כמה הוזמן וכמה התקבל.'); return; }
+    }
     if(!apiOn()){ setStatus('אין חיבור למערכת — לא ניתן לשלוח. פנה למפתח.'); return; }
     currentAlertId=newAlertId();
     setStatus('שולח לקניינים…');
     try{
-      const r=await apiSend({ id:currentAlertId, sku:subj.sku, desc:subj.desc, qty:subj.qty,
-        urgency:URG[urgency].label, reporter:(localStorage.getItem(K.reporter)||''),
+      const r=await apiSend({ id:currentAlertId, type:subj.type, sku:subj.sku, desc:subj.desc, qty:subj.qty,
+        po:subj.po||'', qtyRecv:subj.qtyRecv||'', descRecv:subj.descRecv||'', note:subj.note||'',
+        urgency:(subj.type==='אי-התאמה'?'':URG[urgency].label), reporter:(localStorage.getItem(K.reporter)||''),
         reporterPhone:(localStorage.getItem('afcon_reporter_phone')||''), recipients:'כל הצוות', assignee:'' });
       if(r && r.duplicate){ setStatus(''); dupExisting=r.alert||null; showDup(r.alert || {sku:subj.sku, status:'', reporter:'', response:'', assignee:''}); resetForm(); return; }
-      if(r && r.ok){ addHist('מק״ט: '+subj.sku); reportDone(subj); return; }
+      if(r && r.ok){
+        if(defPhotos.length){ setStatus('מעלה תמונות…'); try{ await apiPost('addPhotos',{id:currentAlertId, photos:defPhotos}); }catch(_){ } }
+        addHist((subj.type||'דיווח')+' · מק״ט '+subj.sku); reportDone(subj); return;
+      }
       setStatus('לא ניתן היה לשלוח כרגע — נסה שוב בעוד רגע.');
     }catch(e){ setStatus('לא ניתן היה לשלוח כרגע — נסה שוב בעוד רגע.'); }
   }
@@ -907,9 +1054,18 @@
     if($('qtyText')) $('qtyText').value='';
     if($('overlayText')) $('overlayText').value='';
     if($('qtyPhoto')) $('qtyPhoto').value='';
+    if($('poText')) $('poText').value='';
+    try{ poClear(); }catch(e){}
+    try{ defPhotos=[]; renderDefPhotos(); }catch(e){}
+    if($('ordText')) $('ordText').value='';
+    if($('recvText')) $('recvText').value='';
+    if($('ordDesc')) $('ordDesc').value='';
+    if($('recvDesc')) $('recvDesc').value='';
+    if($('noteText')) $('noteText').value='';
     if(typeof kpVal!=='undefined') kpVal='';
     if($('descText')) $('descText').textContent='';
     urgency='low'; try{ paintUrg(); }catch(e){}
+    try{ applyType('חוסר מלאי'); }catch(e){}
     try{ refreshDesc(); }catch(e){}
     if(typeof currentImg!=='undefined'){ currentImg=null; hide($('previewWrap')); if($('sendPhoto')) $('sendPhoto').disabled=true; }
   }
@@ -917,7 +1073,7 @@
     setStatus('');
     resetForm();
     show($('sentWrap'));
-    $('sentInfo').innerHTML='מק״ט <b>'+esc(subj.sku)+'</b>'+(subj.desc?(' — '+esc(subj.desc)):'')+' נשלח לקניינים ונכנס ללוח לטיפול. ✓';
+    $('sentInfo').innerHTML='<b>'+esc(subj.type||'דיווח')+'</b> · מק״ט <b>'+esc(subj.sku)+'</b>'+(subj.desc?(' — '+esc(subj.desc)):'')+' נשלח לקניינים ונכנס ללוח לטיפול. ✓';
   }
 
   // דיאלוג כפילות
@@ -1083,18 +1239,24 @@
       saveSeen(feedbackKeys(res.alerts)); setInboxBadge(0);
       if(!mine.length){ L.innerHTML='<div class="hist-empty">עדיין לא שלחת דיווחים.</div>'; return; }
       const PILL={'ממתין':['#fbbf24','#3a2f0b'],'בטיפול':['#60a5fa','#0b2239'],'טופל':['#34d399','#06281b']};
+      const TICON={'חוסר מלאי':'🟠','פריט פגום':'🔴','אי-התאמה':'🔵'};
       L.innerHTML=mine.map(x=>{
         const when=x.created?new Date(x.created).toLocaleString('he-IL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
         const st=x.status||'ממתין'; const pc=PILL[st]||PILL['ממתין'];
         const who=(x.assignee||'').trim();
+        const ty=String(x.type||'חוסר מלאי'); const tic=TICON[ty]||'•';
+        const isMis=(ty==='אי-התאמה');
         return '<div class="hist-row" style="align-items:flex-start;flex-direction:column;gap:6px">'
           +'<div style="display:flex;justify-content:space-between;width:100%;align-items:center;gap:8px">'
-          +'<span style="font-weight:700">מק״ט '+esc(x.sku||'—')+(x.desc?(' · '+esc(x.desc)):'')+'</span>'
+          +'<span style="font-weight:700">'+tic+' מק״ט '+esc(x.sku||'—')+(x.desc?(' · '+esc(x.desc)):'')+'</span>'
           +'<span style="font-size:12px;font-weight:700;color:'+pc[0]+';background:'+pc[1]+';border:1px solid '+pc[0]+';border-radius:20px;padding:3px 10px;flex-shrink:0">'+esc(st)+'</span>'
           +'</div>'
-          +'<span class="hist-meta2">✅ התקבל במערכת'+(when?(' · '+when):'')+(x.qty?(' · נותרו '+esc(x.qty)):'')+'</span>'
+          +'<span class="hist-meta2">'+esc(ty)+'  ·  ✅ התקבל'+(when?(' · '+when):'')
+            +(isMis?((x.po?(' · הזמנה '+esc(x.po)):'')+' · הוזמן '+esc(x.qty||'—')+' · התקבל '+esc(x.qtyRecv||'—')):(x.qty?(' · '+(ty==='פריט פגום'?'פגומות ':'נותרו ')+esc(x.qty)):''))+'</span>'
+          +(x.note?('<span class="hist-meta2" style="color:#d6d3d1">📝 '+esc(x.note)+'</span>'):'')
           +'<span class="hist-meta2">'+(who?('🧑‍💼 מטפל: '+esc(who)):'⏳ ממתין לשיוך קניין')+'</span>'
           +(x.response?('<span class="hist-meta2" style="color:#34d399">💬 תשובת הקניין: '+esc(x.response)+'</span>'):'')
+          +(x.photo?('<span style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">'+String(x.photo).split(',').filter(Boolean).map(function(fid){fid=fid.trim();return '<a href="https://drive.google.com/file/d/'+fid+'/view" target="_blank" rel="noopener"><img src="https://lh3.googleusercontent.com/d/'+fid+'=w200" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid #44403c"></a>';}).join('')+'</span>'):'')
           +'</div>';
       }).join('');
     }catch(e){ L.innerHTML='<div class="hist-empty">לא ניתן להתחבר.<br><span style="font-size:12px;opacity:.8;direction:ltr;display:inline-block;margin-top:6px">סיבה: '+esc(String((e&&e.message)||e||'לא ידוע'))+'</span></div>'; }
@@ -1274,6 +1436,6 @@
     setTimeout(()=>{ document.documentElement.innerHTML='<body style="background:#0c0a09;color:#a8a29e;font-family:Heebo,sans-serif;height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:18px;">להתראות 👋<br><br>אפשר לסגור את החלון/הכרטיסייה.</body>'; }, 250);
   });
 </script>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 44</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 50</div>
 </body>
 </html>

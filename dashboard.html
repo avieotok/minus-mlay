@@ -69,6 +69,13 @@
   .meta{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:11px;font-size:12.5px;color:var(--faint)}
   .meta b{color:var(--muted);font-weight:600}
   .resp{margin-top:10px;background:var(--ink);border:1px solid var(--line2);border-radius:11px;padding:10px 12px;font-size:13px;color:var(--green2);display:flex;gap:7px;line-height:1.5}
+  .dcmp{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}
+  .dcmp th{color:var(--faint);font-weight:700;padding:6px;text-align:center;border-bottom:1px solid var(--line2)}
+  .dcmp th:nth-child(2){color:#fbbf24}.dcmp th:nth-child(3){color:#60a5fa}
+  .dcmp td{padding:7px 6px;text-align:center;border-bottom:1px solid var(--line2);color:var(--text)}
+  .dcmp td:first-child{color:var(--muted);font-weight:700}
+  .dphotos{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .dphotos img{width:92px;height:92px;object-fit:cover;border-radius:10px;border:1px solid var(--line2);display:block}
   .acts{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
   .btn{flex:1;min-width:96px;border:1.5px solid var(--line2);background:var(--surface2);color:var(--text);border-radius:11px;padding:11px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif}
   .btn:active{transform:scale(.98)}
@@ -177,6 +184,12 @@
         <button class="chip" data-u="דחוף">⚠️ דחוף</button>
         <button class="chip" data-u="אזל לגמרי">🔴 אזל</button>
         <button class="chip" data-u="כמות נמוכה">🟠 כמות נמוכה</button>
+      </div>
+      <div class="chips" id="typeChips">
+        <button class="chip on" data-t="all">כל הסוגים</button>
+        <button class="chip" data-t="חוסר מלאי">🟠 חוסר מלאי</button>
+        <button class="chip" data-t="פריט פגום">🔴 פגום</button>
+        <button class="chip" data-t="אי-התאמה">🔵 אי-התאמה</button>
       </div>
       <input class="search" id="search" placeholder="חיפוש מק״ט / תיאור / מדווח…">
     </div>
@@ -361,7 +374,7 @@
     'טופל':{c:'#34d399',bg:'rgba(34,197,94,.12)'}
   };
 
-  let ALERTS=[], BUYERS=[], REPORTERS=[], fStatus='all', fUrg='all', fSearch='', fMine=false, auto=true, timer=null, busy=false, seen=null;
+  let ALERTS=[], BUYERS=[], REPORTERS=[], fStatus='all', fUrg='all', fType='all', fSearch='', fMine=false, auto=true, timer=null, busy=false, seen=null;
   const me=()=> (localStorage.getItem(K.me)||'').trim();
   const isBoss=()=> localStorage.getItem(K.boss)==='1';
 
@@ -472,8 +485,9 @@
     else { r=r.filter(a=>String(a.status)!=='טופל'); if(fStatus!=='all') r=r.filter(a=>String(a.status)===fStatus); }
     if(fMine) r=r.filter(a=>String(a.assignee||'')===me());
     if(fUrg!=='all') r=r.filter(a=>String(a.urgency)===fUrg);
+    if(fType!=='all') r=r.filter(a=>String(a.type||'חוסר מלאי')===fType);
     if(fSearch){ const q=fSearch.toLowerCase();
-      r=r.filter(a=>([a.sku,a.desc,a.reporter,a.response].join(' ')).toLowerCase().indexOf(q)>=0); }
+      r=r.filter(a=>([a.sku,a.desc,a.reporter,a.response,a.po,a.note,a.type].join(' ')).toLowerCase().indexOf(q)>=0); }
     if(fStatus==='history' || fStatus==='טופל'){
       r.sort((a,b)=>((b.ackAt||b.updated||b.created||'').localeCompare(a.ackAt||a.updated||a.created||'')));
     } else {
@@ -508,20 +522,31 @@
       const sp=SPILL[a.status]||SPILL['ממתין']; const rail=UCOLOR[a.urgency]||'#57534e';
       const mineNow=a.assignee && String(a.assignee)===me();
       const assignTxt = a.assignee ? (esc(a.assignee)+(mineNow?' <span class="mine-tag">• שלי</span>':'')) : '<span style="color:#a8a29e">לא משויך</span>';
+      const ty=String(a.type||'חוסר מלאי');
+      const TT={'חוסר מלאי':{t:'🟠 חוסר מלאי',c:'#fbbf24'},'פריט פגום':{t:'🔴 פריט פגום',c:'#f87171'},'אי-התאמה':{t:'🔵 אי-התאמה',c:'#60a5fa'}};
+      const td=TT[ty]||{t:ty,c:'#a8a29e'};
+      const isMis=(ty==='אי-התאמה'), isDef=(ty==='פריט פגום');
       return '<div class="card" data-id="'+esc(a.id)+'">'
         +'<span class="rail" style="background:'+rail+'"></span>'
+        +'<div style="margin-bottom:7px"><span class="pill" style="color:'+td.c+';background:transparent;border-color:'+td.c+'">'+esc(td.t)+'</span></div>'
         +'<div class="row1"><div><div class="sku">מק״ט '+esc(a.sku||'—')+'</div>'
         +(a.desc?('<div class="desc">'+esc(a.desc)+'</div>'):'')+'</div>'
         +'<span class="pill" style="color:'+sp.c+';background:'+sp.bg+';border-color:'+sp.c+'">'+esc(a.status||'')+'</span></div>'
         +'<div class="meta">'
         +'<span><b>אחראי:</b> '+assignTxt+'</span>'
-        +'<span><b>דחיפות:</b> '+esc(a.urgency||'—')+'</span>'
-        +(a.qty?('<span><b>נותרו:</b> '+esc(a.qty)+'</span>'):'')
+        +(a.urgency?('<span><b>דחיפות:</b> '+esc(a.urgency)+'</span>'):'')
+        +(isMis?('<span><b>הזמנה:</b> '+esc(a.po||'—')+'</span>')
+               :((a.qty)?('<span><b>'+(isDef?'פגומות':'נותרו')+':</b> '+esc(a.qty)+'</span>'):''))
         +'<span><b>דווח:</b> '+esc(a.reporter||'—')+'</span>'
         +(a.created?('<span>🕒 '+fmt(a.created)+'</span>'):'')
         +'</div>'
+        +(isMis?('<table class="dcmp"><tr><th></th><th>הוזמן</th><th>התקבל</th></tr>'
+            +'<tr><td>תיאור</td><td>'+esc(a.desc||'—')+'</td><td>'+esc(a.descRecv||'—')+'</td></tr>'
+            +'<tr><td>כמות</td><td>'+esc(a.qty||'—')+'</td><td>'+esc(a.qtyRecv||'—')+'</td></tr></table>'):'')
+        +(a.note?('<div class="resp" style="color:#d6d3d1">📝 <span>'+esc(a.note)+'</span></div>'):'')
         +(a.log?('<div class="resp" style="color:#fbbf24;background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.25)">↪️ <span>'+esc(fmtLog(a.log))+'</span></div>'):'')
         +(a.response?('<div class="resp">💬 <span>'+esc(a.response)+'</span></div>'):'')
+        +(a.photo?('<div class="dphotos">'+String(a.photo).split(',').filter(Boolean).map(function(fid){fid=fid.trim();return '<a href="https://drive.google.com/file/d/'+fid+'/view" target="_blank" rel="noopener"><img src="https://lh3.googleusercontent.com/d/'+fid+'=w400" loading="lazy" alt="תמונה"></a>';}).join('')+'</div>'):'')
         +(boss ? '' : (
           '<div class="acts">'
           +'<button class="btn prog'+(a.status==='בטיפול'?' on':'')+'" data-act="בטיפול">🟠 קח לטיפול</button>'
@@ -608,6 +633,8 @@
     fStatus=b.dataset.s; document.querySelectorAll('#statusChips .chip').forEach(x=>x.classList.toggle('on',x===b)); render(); });
   $('urgChips').addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b) return;
     fUrg=b.dataset.u; document.querySelectorAll('#urgChips .chip').forEach(x=>x.classList.toggle('on',x===b)); render(); });
+  $('typeChips').addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b) return;
+    fType=b.dataset.t; document.querySelectorAll('#typeChips .chip').forEach(x=>x.classList.toggle('on',x===b)); render(); });
   $('search').addEventListener('input',e=>{ fSearch=e.target.value.trim(); render(); });
 
   // KPI cards as quick filters
@@ -631,9 +658,9 @@
     const data=filtered();
     if(!data.length){ toast('אין נתונים לייצוא בתצוגה הנוכחית'); return; }
     const inHist = (fStatus==='history' || fStatus==='טופל');
-    const rows=[['מק״ט','תיאור','כמות','דחיפות','דווח ע״י','נשלח אל','סטטוס','קניין אחראי','העברות טיפול','טופל ע״י','תאריך טיפול','תגובת הקניין','נוצר','עודכן']];
-    data.forEach(a=>rows.push([a.sku,a.desc,a.qty,a.urgency,a.reporter,a.recipients,a.status,a.assignee,fmtLog(a.log),a.ackBy,(a.status==='טופל'?fmt(a.ackAt||a.updated):''),a.response,fmt(a.created),fmt(a.updated)]));
-    const ws=XLSX.utils.aoa_to_sheet(rows); ws['!cols']=[{wch:11},{wch:22},{wch:8},{wch:12},{wch:14},{wch:18},{wch:9},{wch:14},{wch:30},{wch:14},{wch:15},{wch:28},{wch:16},{wch:16}];
+    const rows=[['סוג','מק״ט','תיאור שהוזמן','מספר הזמנה','כמות שהוזמנה','כמות שהתקבלה','תיאור שהתקבל','דחיפות','הערת מדווח','דווח ע״י','סטטוס','קניין אחראי','העברות טיפול','טופל ע״י','תאריך טיפול','תגובת הקניין','תמונות','נוצר','עודכן']];
+    data.forEach(a=>rows.push([(a.type||'חוסר מלאי'),a.sku,a.desc,a.po,a.qty,a.qtyRecv,a.descRecv,a.urgency,a.note,a.reporter,a.status,a.assignee,fmtLog(a.log),a.ackBy,(a.status==='טופל'?fmt(a.ackAt||a.updated):''),a.response,(a.photo?String(a.photo).split(',').filter(Boolean).map(f=>'https://drive.google.com/file/d/'+f.trim()+'/view').join('  '):''),fmt(a.created),fmt(a.updated)]));
+    const ws=XLSX.utils.aoa_to_sheet(rows); ws['!cols']=[{wch:12},{wch:11},{wch:22},{wch:14},{wch:13},{wch:13},{wch:22},{wch:12},{wch:24},{wch:14},{wch:9},{wch:14},{wch:30},{wch:14},{wch:15},{wch:28},{wch:40},{wch:16},{wch:16}];
     const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws, inHist?'היסטוריה':'דיווחים');
     const tag = inHist?'history' : (fStatus==='all'?'all':fStatus);
     XLSX.writeFile(wb,'afcon-'+tag+'-'+new Date().toISOString().slice(0,10)+'.xlsx');
