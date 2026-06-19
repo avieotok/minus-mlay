@@ -190,19 +190,19 @@
       <div style="font-size:12px;color:var(--faint);margin-top:2px">© אבידן קוטאי · כל הזכויות שמורות</div>
     </div>
 
-    <div class="field"><label>מי אתה? (בחר מרשימת הקניינים)</label><select id="mName"><option value="">— בחר —</option></select></div>
-    <p id="idLock" class="hidden" style="color:#22c55e;font-size:12.5px;margin:-8px 0 14px">🔒 השם נבחר וננעל. לשינוי — בהגדרות מתקדמות (מפתח).</p>
-    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:14px;font-size:14.5px;font-weight:700"><input type="checkbox" id="mBoss" style="width:22px;height:22px;accent-color:#22c55e;flex:0 0 auto"><span>אני מנהל — צפייה ומעקב בלבד (בלי כפתורי טיפול)</span></label>
-    <button class="prim" id="mSave">שמור</button>
-    <div class="note" id="mNote"></div>
-
-    <button class="ghost" id="advBtn">🔒 הגדרות מתקדמות (מפתח)</button>
+    <button class="ghost" id="advBtn">🔒 הגדרות (מפתח)</button>
     <div id="advPinRow" style="display:none;gap:8px;margin-top:10px">
       <input id="advPin" type="tel" inputmode="numeric" placeholder="סיסמת מפתח" style="flex:1;background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--text);font-family:'Heebo',sans-serif;font-size:16px">
       <button class="prim" id="advPinOk" style="max-width:110px">אישור</button>
     </div>
 
     <div id="advBox" class="hidden" style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px">
+      <div class="field"><label>מי אתה? (בחר מרשימת הקניינים)</label><select id="mName"><option value="">— בחר —</option></select></div>
+      <p id="idLock" class="hidden" style="color:#22c55e;font-size:12.5px;margin:-8px 0 14px">🔒 השם נבחר וננעל. לשינוי — אפס זהות למטה.</p>
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:14px;font-size:14.5px;font-weight:700"><input type="checkbox" id="mBoss" style="width:22px;height:22px;accent-color:#22c55e;flex:0 0 auto"><span>אני מנהל — צפייה ומעקב בלבד (בלי כפתורי טיפול)</span></label>
+      <button class="prim" id="mSave">שמור זהות / מנהל</button>
+      <div class="note" id="mNote"></div>
+      <div style="border-top:1px solid var(--line);margin:14px 0;padding-top:4px"></div>
       <div class="field"><label>כתובת המערכת (Web App URL)</label><input id="mUrl" placeholder="https://script.google.com/macros/s/..."></div>
       <div class="field"><label>טוקן סודי</label><input id="mTok" placeholder="אותו סוד שבקוד השרת"></div>
       <div class="field"><label>קישור לגיליון (לא חובה — לכפתור "פתח גיליון")</label><input id="mSheet" placeholder="https://docs.google.com/spreadsheets/..."></div>

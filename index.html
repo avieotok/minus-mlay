@@ -223,7 +223,7 @@
     </div>
 
     <!-- Fixed details -->
-    <div class="panel">
+    <div class="panel" style="display:none">
       <div class="panel-head" id="setHead"><span>⚙️ פרטים קבועים (שם שולח)</span><span style="color:#78716c">▾</span></div>
       <div class="panel-body hidden" id="setBody">
         <label class="field"><span class="label">השם שלך (בחר מהרשימה)</span>
@@ -354,12 +354,9 @@
 
   <div class="recip-overlay hidden" id="dupWrap">
     <div class="recip-card">
-      <div class="recip-title">⚠️ כבר קיים דיווח פתוח</div>
+      <div class="recip-title">⛔ המק״ט כבר דווח</div>
       <div id="dupInfo" style="background:#0c0a09;border:1px solid #3f3f46;border-radius:12px;padding:14px 16px;font-size:14px;color:#e7e5e4;line-height:1.7;margin-bottom:12px"></div>
-      <button class="send" id="dupBump" style="background:#f59e0b;color:#0c0a09">🔁 סמן שעדיין נחוץ (עדכון לקיים)</button>
-      <button class="scan-btn" id="dupNew" style="margin-top:10px">שלח דיווח חדש בכל זאת</button>
-      <div id="dupMsg" style="color:#f87171;font-size:13px;text-align:center;min-height:2px;margin-top:8px"></div>
-      <button class="recip-cancel" id="dupCancel">ביטול</button>
+      <button class="recip-cancel" id="dupCancel">סגור</button>
     </div>
   </div>
 
@@ -539,7 +536,7 @@
     renderNames(); }
   $('nameTabBuyers').addEventListener('click',()=>nameTab('buyers'));
   $('nameTabReporters').addEventListener('click',()=>nameTab('reporters'));
-  $('resetIdent').addEventListener('click',()=>{ if(confirm('לאפס את הזהות שנבחרה במכשיר זה? יהיה אפשר לבחור שם מחדש.')){ resetIdentity(); setStatus('הזהות אופסה — ניתן לבחור שם חדש ב⚙️ פרטים קבועים.'); } });
+  $('resetIdent').addEventListener('click',()=>{ if(confirm('לאפס את הזהות שנבחרה במכשיר זה? יהיה אפשר לבחור שם מחדש.')){ resetIdentity(); setStatus('הזהות אופסה — בפתיחה הבאה ייפתח חלון בחירת שם.'); } });
   $('nameAdd').addEventListener('click',()=>{ const v=$('nameNew').value.trim(); if(!v){ $('nameNote').textContent='הקלד שם.'; return; }
     const arr=curNames().slice(); if(arr.indexOf(v)>=0){ $('nameNote').textContent='השם כבר קיים.'; return; }
     arr.push(v); setCurNames(arr); $('nameNew').value=''; renderNames(); saveNames(); });
@@ -864,19 +861,13 @@
     } else {
       html += '<div style="margin-top:11px;padding:10px 13px;background:#0c0a09;border:1px dashed #44403c;border-radius:10px;color:#a8a29e;font-size:13px">הקניין עדיין לא הגיב על הפריט הזה.</div>';
     }
+    html += '<div style="margin-top:11px;font-size:13px;color:#fbbf24">ℹ️ אין צורך לדווח שוב — הקריאה כבר נמצאת אצל הקניינים.</div>';
     $('dupInfo').innerHTML = html;
     show($('dupWrap'));
   }
   function closeDup(){ hide($('dupWrap')); }
   $('sentOk').addEventListener('click',()=>hide($('sentWrap')));
   $('dupCancel').addEventListener('click', closeDup);
-  $('dupNew').addEventListener('click',()=>{ closeDup(); submitReport(pendingKind); });
-  $('dupBump').addEventListener('click', async ()=>{
-    if(!dupExisting){ closeDup(); return; }
-    $('dupMsg').textContent='מעדכן…';
-    try{ await apiPost('bump',{id:dupExisting.id}); closeDup(); setStatus('סומן שהפריט עדיין נחוץ — עודכן הדיווח הקיים ✓'); }
-    catch(e){ $('dupMsg').textContent='העדכון נכשל — נסה שוב.'; }
-  });
 
   function openRecipients(kind){ pendingKind=kind; queue=[]; sentNames=[]; totalSel=0;
     addItem((pendingKind==='text'||cardMode) ? $('txtSku').value.trim() : $('overlayText').value.trim());
