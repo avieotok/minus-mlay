@@ -1065,7 +1065,7 @@
           +(x.response?('<span class="hist-meta2" style="color:#34d399">💬 תשובת הקניין: '+esc(x.response)+'</span>'):'')
           +'</div>';
       }).join('');
-    }catch(e){ L.innerHTML='<div class="hist-empty">לא ניתן להתחבר (בדוק כתובת/טוקן/רשת).</div>'; }
+    }catch(e){ L.innerHTML='<div class="hist-empty">לא ניתן להתחבר.<br><span style="font-size:12px;opacity:.8;direction:ltr;display:inline-block;margin-top:6px">סיבה: '+esc(String((e&&e.message)||e||'לא ידוע'))+'</span></div>'; }
   }
   $('inboxRefresh').addEventListener('click', loadInbox);
 
@@ -1242,6 +1242,6 @@
     setTimeout(()=>{ document.documentElement.innerHTML='<body style="background:#0c0a09;color:#a8a29e;font-family:Heebo,sans-serif;height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:18px;">להתראות 👋<br><br>אפשר לסגור את החלון/הכרטיסייה.</body>'; }, 250);
   });
 </script>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 32</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 33</div>
 </body>
 </html>
