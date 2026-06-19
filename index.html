@@ -232,7 +232,7 @@
         <label class="field"><span class="label">השם שלך (בחר מהרשימה)</span>
           <select class="input" id="reporter"><option value="">— בחר —</option></select></label>
         <p class="hist-empty" id="repHint">אם שמך לא ברשימה — פנה למפתח להוספה. נשמר במכשיר זה.</p>
-        <p class="hist-empty hidden" id="repLock" style="color:#22c55e">🔒 השם נבחר וננעל למכשיר זה. לשינוי — פנה למפתח.</p>
+        <p class="hist-empty hidden" id="repLock" style="color:#22c55e">🔒 השם נבחר וננעל למכשיר זה. לשינוי — הקש על השם בראש המסך והזן סיסמת מפתח.</p>
       </div>
     </div>
 
@@ -533,9 +533,18 @@
     if($('repHint')) $('repHint').classList.toggle('hidden',locked);
     updateMeBar();
   }
-  function updateMeBar(){ const el=$('meBar'); if(!el) return; const n=(localStorage.getItem(K.reporter)||'').trim(); el.textContent = n ? ('👤 '+n) : ''; }
+  function updateMeBar(){ const el=$('meBar'); if(!el) return; const n=(localStorage.getItem(K.reporter)||'').trim();
+    if(n){ el.innerHTML='👤 '+esc(n)+' <span style="color:#78716c;text-decoration:underline;font-weight:600">· החלף שם</span>'; el.style.cursor='pointer'; }
+    else { el.textContent=''; el.style.cursor='default'; } }
   $('reporter').addEventListener('change',e=>{ const v=e.target.value.trim(); if(!v) return; localStorage.setItem(K.reporter,v); fillReporter(); setStatus('השם נבחר ✓'); });
   function resetIdentity(){ localStorage.removeItem(K.reporter); fillReporter(); maybeGate(); }
+  $('meBar').addEventListener('click', ()=>{
+    if(!(localStorage.getItem(K.reporter)||'').trim()) return;
+    const p=prompt('להחלפת שם — הזן סיסמת מפתח:');
+    if(p===null) return;
+    if(p==='30172'){ resetIdentity(); updateMeBar(); setStatus('בחר את שמך החדש.'); }
+    else { setStatus('סיסמה שגויה — השם לא שונה.'); }
+  });
   async function loadRoster(){
     if(!apiOn()) return;
     try{ const r=await apiGet('roster'); if(r&&r.ok){ BUYERS=Array.isArray(r.buyers)?r.buyers:[]; REPORTERS=Array.isArray(r.reporters)?r.reporters:[]; fillReporter(); fillGate(); maybeGate(); renderNames&&renderNames(); } }catch(e){}
@@ -1265,6 +1274,6 @@
     setTimeout(()=>{ document.documentElement.innerHTML='<body style="background:#0c0a09;color:#a8a29e;font-family:Heebo,sans-serif;height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:18px;">להתראות 👋<br><br>אפשר לסגור את החלון/הכרטיסייה.</body>'; }, 250);
   });
 </script>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 43</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 44</div>
 </body>
 </html>

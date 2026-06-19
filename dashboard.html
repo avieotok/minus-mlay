@@ -503,18 +503,14 @@
     });
     const list=$('list'), items=filtered();
     if(!items.length){ list.innerHTML='<div class="empty"><div class="big">📭</div>אין דיווחים שתואמים לסינון.</div>'; return; }
-    const bar = devOpen ? ('<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#1c1917;border:1px solid #44403c;border-radius:12px;padding:10px 13px;margin-bottom:12px">'
-      +'<label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13.5px"><input type="checkbox" id="selAll" style="width:18px;height:18px;accent-color:#e2231a"> בחר הכל</label>'
-      +'<span style="flex:1"></span>'
-      +'<button class="del" id="delSel">🗑 מחק נבחרות (<span id="selN">0</span>)</button>'
-      +'</div>') : '';
+    const bar = '';
     list.innerHTML = bar + items.map(a=>{
       const sp=SPILL[a.status]||SPILL['ממתין']; const rail=UCOLOR[a.urgency]||'#57534e';
       const mineNow=a.assignee && String(a.assignee)===me();
       const assignTxt = a.assignee ? (esc(a.assignee)+(mineNow?' <span class="mine-tag">• שלי</span>':'')) : '<span style="color:#a8a29e">לא משויך</span>';
       return '<div class="card" data-id="'+esc(a.id)+'">'
         +'<span class="rail" style="background:'+rail+'"></span>'
-        +'<div class="row1">'+(devOpen?('<input type="checkbox" class="selbox" data-sel="'+esc(a.id)+'" style="width:20px;height:20px;accent-color:#e2231a;margin-left:9px;flex:0 0 auto">'):'')+'<div><div class="sku">מק״ט '+esc(a.sku||'—')+'</div>'
+        +'<div class="row1"><div><div class="sku">מק״ט '+esc(a.sku||'—')+'</div>'
         +(a.desc?('<div class="desc">'+esc(a.desc)+'</div>'):'')+'</div>'
         +'<span class="pill" style="color:'+sp.c+';background:'+sp.bg+';border-color:'+sp.c+'">'+esc(a.status||'')+'</span></div>'
         +'<div class="meta">'
@@ -537,7 +533,6 @@
           +'<div class="editor"><textarea placeholder="כתוב תגובה — לדוגמה: הוזמן מהספק, מגיע יום ג׳">'+esc(a.response||'')+'</textarea>'
           +'<button class="save">שמור תגובה ועדכן</button></div>'
         ))
-        +(devOpen ? ('<div class="devrow"><button class="del" data-del="'+esc(a.id)+'">🗑 מחק רשומה (מפתח)</button></div>') : '')
         +'</div>';
     }).join('');
     if(devOpen){ list.querySelectorAll('.selbox').forEach(b=>{ b.checked=selDel.has(b.dataset.sel); }); updSelN(); }
