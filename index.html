@@ -417,6 +417,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.19.1/umd/index.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="catalog.js"></script>
 <script>
   const $ = id => document.getElementById(id);
   const REQUEST_LINE = 'אבקש את התייחסותכם לחוסר לפריט הנ״ל';
@@ -710,14 +711,16 @@
   renderHist();
 
   // item catalog from Excel/CSV (sku -> description)
-  function loadCatalog(){ try{return JSON.parse(localStorage.getItem('afcon_catalog')||'{}');}catch(e){return{};} }
+  const BUILTIN_CATALOG = (typeof window!=='undefined' && window.DEFAULT_CATALOG) ? window.DEFAULT_CATALOG : {};
+  function loadCatalog(){ let stored={}; try{ stored=JSON.parse(localStorage.getItem('afcon_catalog')||'{}'); }catch(e){ stored={}; } return Object.assign({}, BUILTIN_CATALOG, stored); }
   let CATALOG=loadCatalog();
   // משיכת הקטלוג המרכזי מהגיליון (המפתח דוחף אותו לכולם)
   async function syncCatalog(){
     if(!apiOn()) return;
     try{ const r=await apiGet('catalog');
       if(r && r.ok && r.items && Object.keys(r.items).length){
-        CATALOG=r.items; localStorage.setItem('afcon_catalog', JSON.stringify(CATALOG)); setCatCount(); refreshDesc();
+        const merged=Object.assign({}, BUILTIN_CATALOG, r.items);
+        CATALOG=merged; localStorage.setItem('afcon_catalog', JSON.stringify(r.items)); setCatCount(); refreshDesc();
       }
     }catch(e){}
   }
@@ -773,7 +776,7 @@
   setCatCount();
   $('catHead').addEventListener('click',()=>$('catBody').classList.toggle('hidden'));
   $('catLoad').addEventListener('click',()=>$('catFile').click());
-  $('catClear').addEventListener('click',()=>{ CATALOG={}; localStorage.removeItem('afcon_catalog'); setCatCount(); refreshDesc(); setStatus('הקטלוג נוקה.'); });
+  $('catClear').addEventListener('click',()=>{ CATALOG=Object.assign({}, BUILTIN_CATALOG); localStorage.removeItem('afcon_catalog'); setCatCount(); refreshDesc(); setStatus('הקטלוג נוקה (נשאר הקטלוג המוטמע).'); });
   $('catFile').addEventListener('change',e=>{
     const file=e.target.files[0]; if(!file) return;
     if(typeof XLSX==='undefined'){ setStatus('מנוע האקסל עדיין נטען — נסה שוב בעוד רגע.'); e.target.value=''; return; }
@@ -787,7 +790,7 @@
         const h=((rows[0]&&rows[0][0]||'')+' '+(rows[0]&&rows[0][1]||'')).toString().toLowerCase();
         if(/sku|מק|קוד|תיאור|desc|שם|name|item|barcode|ברקוד/.test(h)) start=1;
         for(let i=start;i<rows.length;i++){ const sku=normSku(rows[i]&&rows[i][0]); const desc=normSku(rows[i]&&rows[i][1]); if(sku&&desc) map[sku]=desc; }
-        CATALOG=map; localStorage.setItem('afcon_catalog', JSON.stringify(map)); setCatCount(); refreshDesc();
+        CATALOG=Object.assign({}, BUILTIN_CATALOG, map); localStorage.setItem('afcon_catalog', JSON.stringify(map)); setCatCount(); refreshDesc();
         setStatus('נטענו '+Object.keys(map).length+' פריטים מהקובץ.');
       }catch(err){ setStatus('שגיאה בקריאת הקובץ. ודא: עמודה A = מק״ט, עמודה B = תיאור.'); }
       e.target.value='';
@@ -1256,6 +1259,6 @@
     setTimeout(()=>{ document.documentElement.innerHTML='<body style="background:#0c0a09;color:#a8a29e;font-family:Heebo,sans-serif;height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:18px;">להתראות 👋<br><br>אפשר לסגור את החלון/הכרטיסייה.</body>'; }, 250);
   });
 </script>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 40</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 41</div>
 </body>
 </html>
