@@ -327,32 +327,13 @@
       document.head.appendChild(s);
     });
   }
-  async function apiGet(action, params){
-    const u=new URL(apiUrl()); u.searchParams.set('token',apiToken()); u.searchParams.set('action',action);
-    if(params) for(const k in params){ if(params[k]!=null) u.searchParams.set(k,params[k]); }
-    u.searchParams.set('_', Date.now());
-    try{
-      const r=await fetch(u.toString(),{method:'GET',redirect:'follow',cache:'no-store'});
-      const txt=await r.text(); const j=JSON.parse(txt);
-      if(j && j.busy){ throw new Error('busy'); }
-      return j;
-    }catch(e){ return await apiGetJsonp(action, params); }
-  }
+  async function apiGet(action, params){ return apiGetJsonp(action, params); }
   async function apiPost(action, payload){
+    if(action!=='catalogSet' && action!=='rosterSet'){ return apiGetJsonp(action, payload||{}); }
     // קטלוג/שמות (רשימות גדולות) ב-POST בלבד
-    if(action==='catalogSet' || action==='rosterSet'){
-      const body=Object.assign({token:apiToken(),action:action}, payload||{});
-      const r=await fetch(apiUrl(),{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)});
-      const txt=await r.text(); return JSON.parse(txt);
-    }
-    // שאר הפעולות: POST קודם, ואם נכשל — JSONP/GET
-    try{
-      const body=Object.assign({token:apiToken(),action:action}, payload||{});
-      const r=await fetch(apiUrl(),{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)});
-      const txt=await r.text(); const j=JSON.parse(txt);
-      if(j && j.busy){ throw new Error('busy'); }
-      return j;
-    }catch(e){ return await apiGetJsonp(action, payload||{}); }
+    const body=Object.assign({token:apiToken(),action:action}, payload||{});
+    const r=await fetch(apiUrl(),{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)});
+    const txt=await r.text(); return JSON.parse(txt);
   }
   function esc(s){ return (s||'').toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
