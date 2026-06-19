@@ -855,8 +855,18 @@
         setStatus('');
         if(r.alert){ dupExisting=r.alert; showDup(r.alert); }
         else { dupExisting=null; showDup({sku:subj.sku, status:'', reporter:'', response:''}); }
-      } else { setStatus('לא ניתן היה לשלוח כרגע — נסה שוב בעוד רגע.'); }
-    }catch(e){ setStatus('לא ניתן היה לשלוח — נסה שוב בעוד רגע.'); }
+      } else { await dupFallback(subj.sku); }
+    }catch(e){ await dupFallback(subj.sku); }
+  }
+
+  // אם השליחה לא הצליחה — נבדוק ישירות מול השרת אם המק״ט כבר קיים, ונציג הודעה נכונה
+  async function dupFallback(sku){
+    try{
+      const res=await apiGet('check',{sku:sku});
+      if(res && res.ok && res.duplicate && res.alert){ setStatus(''); dupExisting=res.alert; showDup(res.alert); return; }
+      if(res && res.ok && res.duplicate){ setStatus(''); dupExisting=null; showDup({sku:sku, status:'', reporter:'', response:''}); return; }
+    }catch(e){}
+    setStatus('לא ניתן היה לשלוח כרגע — נסה שוב בעוד רגע.');
   }
 
   // מסך אישור אחרי שליחה + איפוס הטופס
