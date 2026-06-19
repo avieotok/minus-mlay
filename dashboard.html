@@ -166,11 +166,10 @@
         <button class="chip" data-m="mine">רק שלי</button>
       </div>
       <div class="chips" id="statusChips">
-        <button class="chip on" data-s="all">הכול</button>
+        <button class="chip on" data-s="all">פעילות</button>
         <button class="chip" data-s="ממתין">ממתין</button>
         <button class="chip" data-s="בטיפול">בטיפול</button>
-        <button class="chip" data-s="טופל">טופל</button>
-        <button class="chip" data-s="history">🗄️ היסטוריה</button>
+        <button class="chip" data-s="history">🗄️ היסטוריה (טופלו)</button>
       </div>
       <div class="chips" id="urgChips">
         <button class="chip on" data-u="all">כל הדחיפויות</button>
@@ -389,11 +388,9 @@
   function fmt(iso){ if(!iso) return ''; try{ return new Date(iso).toLocaleString('he-IL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }catch(e){ return ''; } }
   function isOpen(a){ return String(a.status)!=='טופל'; }
   function isToday(iso){ if(!iso) return false; const d=new Date(iso); const n=new Date(); return d.toDateString()===n.toDateString(); }
-  // רשומה שטופלה ועברו 30 יום מאז → עוברת להיסטוריה. לא‑מטופלת נשארת פעילה תמיד.
+  // כל רשומה שטופלה עוברת מיד להיסטוריה. לא‑מטופלת נשארת פעילה.
   function isArchived(a){
-    if(String(a.status)!=='טופל') return false;
-    const t=a.updated||a.ackAt||a.created; if(!t) return false;
-    return (Date.now()-new Date(t).getTime())/86400000 > 30;
+    return String(a.status)==='טופל';
   }
   let devOpen=false; // ננעל מחדש בכל טעינת דף — נפתח רק עם 30172
   let selDel=new Set(); // רשומות שסומנו למחיקה (מצב מפתח)
@@ -451,15 +448,19 @@
 
   function filtered(){
     let r=ALERTS.slice();
-    if(fStatus==='history'){ r=r.filter(isArchived); }
-    else { r=r.filter(a=>!isArchived(a)); if(fStatus!=='all') r=r.filter(a=>String(a.status)===fStatus); }
+    if(fStatus==='history' || fStatus==='טופל'){ r=r.filter(a=>String(a.status)==='טופל'); }
+    else { r=r.filter(a=>String(a.status)!=='טופל'); if(fStatus!=='all') r=r.filter(a=>String(a.status)===fStatus); }
     if(fMine) r=r.filter(a=>String(a.assignee||'')===me());
     if(fUrg!=='all') r=r.filter(a=>String(a.urgency)===fUrg);
     if(fSearch){ const q=fSearch.toLowerCase();
       r=r.filter(a=>([a.sku,a.desc,a.reporter,a.response].join(' ')).toLowerCase().indexOf(q)>=0); }
-    r.sort((a,b)=>{ const oa=isOpen(a)?1:0, ob=isOpen(b)?1:0; if(oa!==ob) return ob-oa;
-      const ua=URANK[a.urgency]||0, ub=URANK[b.urgency]||0; if(ua!==ub) return ub-ua;
-      return (b.created||'').localeCompare(a.created||''); });
+    if(fStatus==='history' || fStatus==='טופל'){
+      r.sort((a,b)=>((b.ackAt||b.updated||b.created||'').localeCompare(a.ackAt||a.updated||a.created||'')));
+    } else {
+      r.sort((a,b)=>{ const oa=isOpen(a)?1:0, ob=isOpen(b)?1:0; if(oa!==ob) return ob-oa;
+        const ua=URANK[a.urgency]||0, ub=URANK[b.urgency]||0; if(ua!==ub) return ub-ua;
+        return (b.created||'').localeCompare(a.created||''); });
+    }
     return r;
   }
 
@@ -595,7 +596,7 @@
     if(f==='ממתין'){ setStatusChip('ממתין'); setUrgChip('all'); }
     else if(f==='בטיפול'){ setStatusChip('בטיפול'); setUrgChip('all'); }
     else if(f==='urgent'){ setStatusChip('all'); setUrgChip('דחוף'); }
-    else if(f==='today'){ setStatusChip('טופל'); setUrgChip('all'); }
+    else if(f==='today'){ setStatusChip('history'); setUrgChip('all'); }
     render();
   });
 
@@ -606,12 +607,15 @@
   // export
   $('exportBtn').addEventListener('click',()=>{
     if(typeof XLSX==='undefined'){ toast('מנוע האקסל נטען — נסה שוב'); return; }
-    if(!ALERTS.length){ toast('אין נתונים לייצוא'); return; }
-    const rows=[['מק״ט','תיאור','כמות','דחיפות','דווח ע״י','נשלח אל','סטטוס','קניין אחראי','טופל ע״י','תאריך טיפול','בארכיון','תגובה','נוצר','עודכן']];
-    ALERTS.forEach(a=>rows.push([a.sku,a.desc,a.qty,a.urgency,a.reporter,a.recipients,a.status,a.assignee,a.ackBy,(a.status==='טופל'?fmt(a.ackAt||a.updated):''),(isArchived(a)?'כן':'לא'),a.response,fmt(a.created),fmt(a.updated)]));
-    const ws=XLSX.utils.aoa_to_sheet(rows); ws['!cols']=[{wch:9},{wch:22},{wch:8},{wch:12},{wch:14},{wch:18},{wch:9},{wch:14},{wch:14},{wch:15},{wch:9},{wch:26},{wch:15},{wch:15}];
-    const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'דיווחים');
-    XLSX.writeFile(wb,'afcon-dashboard-'+new Date().toISOString().slice(0,10)+'.xlsx');
+    const data=filtered();
+    if(!data.length){ toast('אין נתונים לייצוא בתצוגה הנוכחית'); return; }
+    const inHist = (fStatus==='history' || fStatus==='טופל');
+    const rows=[['מק״ט','תיאור','כמות','דחיפות','דווח ע״י','נשלח אל','סטטוס','קניין אחראי','טופל ע״י','תאריך טיפול','תגובת הקניין','נוצר','עודכן']];
+    data.forEach(a=>rows.push([a.sku,a.desc,a.qty,a.urgency,a.reporter,a.recipients,a.status,a.assignee,a.ackBy,(a.status==='טופל'?fmt(a.ackAt||a.updated):''),a.response,fmt(a.created),fmt(a.updated)]));
+    const ws=XLSX.utils.aoa_to_sheet(rows); ws['!cols']=[{wch:11},{wch:22},{wch:8},{wch:12},{wch:14},{wch:18},{wch:9},{wch:14},{wch:14},{wch:15},{wch:28},{wch:16},{wch:16}];
+    const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws, inHist?'היסטוריה':'דיווחים');
+    const tag = inHist?'history' : (fStatus==='all'?'all':fStatus);
+    XLSX.writeFile(wb,'afcon-'+tag+'-'+new Date().toISOString().slice(0,10)+'.xlsx');
   });
   $('sheetBtn').addEventListener('click',()=>{ const u=(localStorage.getItem(K.sheet)||'').trim();
     if(u) window.open(u,'_blank'); else { toast('הוסף קישור לגיליון בהגדרות'); openModal(); } });
