@@ -137,6 +137,7 @@
     </div>
     <div class="tabs">
       <button class="tab active" id="tabText">✍️ דיווח</button>
+      <button class="tab" id="tabInbox">📥 הדיווחים שלי<span id="inboxBadge" style="display:none;background:#e2231a;color:#fff;border-radius:999px;min-width:18px;height:18px;line-height:18px;text-align:center;font-size:11px;font-weight:800;margin-inline-start:6px;padding:0 5px">●</span></button>
       <button class="tab tab-about" id="tabAbout">ℹ️ אודות</button>
     </div>
     <div id="opsWrap">
@@ -424,7 +425,7 @@
     urgent: {label:'דחוף',       bg:'#b91c1c', fg:'#ffffff', emoji:'⚠️'}
   };
   const K={boss:'afcon_boss', reporter:'afcon_reporter', hist:'afcon_history',
-           api:'afcon_api_url', token:'afcon_api_token'};
+           api:'afcon_api_url', token:'afcon_api_token', seen:'afcon_seen_feedback'};
   // חיבור מוטמע מראש — האפליקציה מחוברת אוטומטית בלי הגדרה ידנית
   const EMBED_API='https://script.google.com/macros/s/AKfycbw3W-sDXuw9QePymMZoCqz2fBJoAnuEiabCntGn6PxN7WBx1cRG7VZj1E9CxbecmeacqQ/exec';
   const EMBED_TOKEN='afcon2026';
@@ -594,12 +595,15 @@
 
   // tabs
   $('tabText').addEventListener('click',()=>switchTab('text'));
+  $('tabInbox').addEventListener('click',()=>switchTab('inbox'));
   $('tabAbout').addEventListener('click',()=>switchTab('about'));
   function switchTab(t){
     $('tabText').classList.toggle('active', t==='text');
+    $('tabInbox').classList.toggle('active', t==='inbox');
     $('tabAbout').classList.toggle('active', t==='about');
     hide($('opsWrap')); hide($('inboxMode')); hide($('aboutMode')); closeScanner();
     if(t==='about'){ show($('aboutMode')); return; }
+    if(t==='inbox'){ show($('inboxMode')); loadInbox(); return; }
     show($('opsWrap')); cardMode=false; $('textMode').style.display='flex'; setStatus('');
   }
 
@@ -1023,6 +1027,7 @@
       } } }catch(e){}
   }
   checkVersion(); setInterval(checkVersion, 45000);
+  checkFeedback(); setInterval(checkFeedback, 30000);
   $('apiTest').addEventListener('click', async ()=>{
     const url=$('apiUrlInp').value.trim(), tok=$('apiTokenInp').value.trim();
     if(!url){ $('apiMsg').textContent='הזן כתובת.'; return; }
@@ -1043,6 +1048,7 @@
       const res=await apiGet('all');
       if(!res || !res.ok){ L.innerHTML='<div class="hist-empty">שגיאה בטעינה (בדוק טוקן).</div>'; return; }
       const mine=(res.alerts||[]).filter(x=>String(x.reporter||'').trim()===meName);
+      saveSeen(feedbackKeys(res.alerts)); setInboxBadge(0);
       if(!mine.length){ L.innerHTML='<div class="hist-empty">עדיין לא שלחת דיווחים.</div>'; return; }
       const PILL={'ממתין':['#fbbf24','#3a2f0b'],'בטיפול':['#60a5fa','#0b2239'],'טופל':['#34d399','#06281b']};
       L.innerHTML=mine.map(x=>{
@@ -1062,6 +1068,52 @@
     }catch(e){ L.innerHTML='<div class="hist-empty">לא ניתן להתחבר (בדוק כתובת/טוקן/רשת).</div>'; }
   }
   $('inboxRefresh').addEventListener('click', loadInbox);
+
+  // ===== מנגנון פידבק: התראה כשהקניין הגיב/שינה סטטוס =====
+  // "חתימת פידבק" לכל דיווח: רק כשהקניין פעל (סטטוס מתקדם או תשובה)
+  function feedbackKeys(alerts){
+    const me=(localStorage.getItem(K.reporter)||'').trim();
+    const keys=[];
+    (alerts||[]).forEach(x=>{
+      if(String(x.reporter||'').trim()!==me) return;
+      const st=String(x.status||'ממתין');
+      const resp=String(x.response||'').trim();
+      const who=String(x.assignee||'').trim();
+      if(st!=='ממתין' || resp || who){
+        keys.push(String(x.id||x.sku)+'|'+st+'|'+who+'|'+resp);
+      }
+    });
+    return keys;
+  }
+  function loadSeen(){ try{ return JSON.parse(localStorage.getItem(K.seen)||'[]'); }catch(e){ return []; } }
+  function saveSeen(arr){ try{ localStorage.setItem(K.seen, JSON.stringify(arr||[])); }catch(e){} }
+  function setInboxBadge(n){
+    const b=$('inboxBadge'); if(!b) return;
+    if(n>0){ b.textContent=n>9?'9+':String(n); b.style.display='inline-block'; }
+    else { b.style.display='none'; }
+  }
+  // בודק מול השרת אם יש תגובות חדשות שטרם נראו, ומדליק את הנקודה
+  async function checkFeedback(){
+    if(!apiOn()) return;
+    const me=(localStorage.getItem(K.reporter)||'').trim();
+    if(!me) return;
+    try{
+      const res=await apiGet('all');
+      if(!res || !res.ok) return;
+      const keys=feedbackKeys(res.alerts);
+      const seen=loadSeen();
+      const fresh=keys.filter(k=>seen.indexOf(k)===-1);
+      // אם הטאב פתוח כרגע — לא צריך נקודה (כבר רואים)
+      const inboxOpen = $('inboxMode') && !$('inboxMode').classList.contains('hidden');
+      if(inboxOpen){ saveSeen(keys); setInboxBadge(0); }
+      else { setInboxBadge(fresh.length); }
+    }catch(e){}
+  }
+  // כשנכנסים לטאב — מסמנים הכל כנראה ומכבים את הנקודה
+  async function markInboxSeen(){
+    if(!apiOn()) return;
+    try{ const res=await apiGet('all'); if(res&&res.ok){ saveSeen(feedbackKeys(res.alerts)); setInboxBadge(0); } }catch(e){}
+  }
 
   // copy text
   $('copyText').addEventListener('click',async ()=>{
@@ -1190,6 +1242,6 @@
     setTimeout(()=>{ document.documentElement.innerHTML='<body style="background:#0c0a09;color:#a8a29e;font-family:Heebo,sans-serif;height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:18px;">להתראות 👋<br><br>אפשר לסגור את החלון/הכרטיסייה.</body>'; }, 250);
   });
 </script>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 31</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 32</div>
 </body>
 </html>
