@@ -136,7 +136,7 @@
     </div>
     <div class="tabs">
       <button class="tab active" id="tabText">✍️ דיווח</button>
-      <button class="tab" id="tabInbox">📥 התקבלו</button>
+      <button class="tab" id="tabInbox">📥 הדיווחים שלי</button>
       <button class="tab tab-about" id="tabAbout">ℹ️ אודות</button>
     </div>
     <div id="opsWrap">
@@ -248,7 +248,7 @@
 
     <div id="inboxMode" class="hidden">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <div style="font-family:'Rubik',sans-serif;font-weight:800;font-size:18px">📥 התראות פתוחות</div>
+        <div style="font-family:'Rubik',sans-serif;font-weight:800;font-size:18px">📥 הדיווחים שלי</div>
         <button class="scan-btn" id="inboxRefresh" style="width:auto;padding:9px 14px">🔄 רענן</button>
       </div>
       <div id="inboxList"></div>
@@ -977,38 +977,36 @@
     catch(e){ $('apiMsg').textContent='לא ניתן להתחבר — ודא שזו כתובת Web App ושפורסמה לגישת Anyone.'; }
   });
 
-  // ===== תיבת "התקבלו" — התראות פתוחות מהמערכת =====
+  // ===== "הדיווחים שלי" — מעקב המחסנאי אחרי הדיווחים ששלח =====
   async function loadInbox(){
     const L=$('inboxList');
-    if(!apiOn()){ L.innerHTML='<div class="hist-empty">אין חיבור למערכת. החיבור מוגדר באודות תחת סיסמת מפתח.</div>'; return; }
+    const meName=(localStorage.getItem(K.reporter)||'').trim();
+    if(!apiOn()){ L.innerHTML='<div class="hist-empty">אין חיבור למערכת.</div>'; return; }
+    if(!meName){ L.innerHTML='<div class="hist-empty">בחר קודם את שמך כדי לראות את הדיווחים שלך.</div>'; return; }
     L.innerHTML='<div class="hist-empty">טוען…</div>';
     try{
-      const res=await apiGet('open');
+      const res=await apiGet('all');
       if(!res || !res.ok){ L.innerHTML='<div class="hist-empty">שגיאה בטעינה (בדוק טוקן).</div>'; return; }
-      const a=res.alerts||[];
-      if(!a.length){ L.innerHTML='<div class="hist-empty">אין התראות פתוחות 🎉</div>'; return; }
-      L.innerHTML=a.map(x=>{
+      const mine=(res.alerts||[]).filter(x=>String(x.reporter||'').trim()===meName);
+      if(!mine.length){ L.innerHTML='<div class="hist-empty">עדיין לא שלחת דיווחים.</div>'; return; }
+      const PILL={'ממתין':['#fbbf24','#3a2f0b'],'בטיפול':['#60a5fa','#0b2239'],'טופל':['#34d399','#06281b']};
+      L.innerHTML=mine.map(x=>{
         const when=x.created?new Date(x.created).toLocaleString('he-IL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
-        return '<div class="hist-row" style="align-items:flex-start">'
-          +'<span class="hist-txt">מק״ט '+esc(x.sku||'—')+(x.desc?(' · '+esc(x.desc)):'')
-          +'<span class="hist-meta2">'+esc(x.urgency||'')+(x.qty?(' · נותרו '+esc(x.qty)):'')+(x.reporter?(' · '+esc(x.reporter)):'')+(when?(' · '+when):'')+'</span>'
-          +(x.response?('<span class="hist-meta2" style="color:#34d399">💬 '+esc(x.response)+'</span>'):'')
-          +'</span>'
-          +'<span style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">'
-          +'<button class="hist-stat'+(x.status==='בטיפול'?' done':'')+'" data-id="'+esc(x.id)+'" data-s="בטיפול">בטיפול</button>'
-          +'<button class="hist-stat" data-id="'+esc(x.id)+'" data-s="טופל">✓ טופל</button>'
-          +'</span></div>';
+        const st=x.status||'ממתין'; const pc=PILL[st]||PILL['ממתין'];
+        const who=(x.assignee||'').trim();
+        return '<div class="hist-row" style="align-items:flex-start;flex-direction:column;gap:6px">'
+          +'<div style="display:flex;justify-content:space-between;width:100%;align-items:center;gap:8px">'
+          +'<span style="font-weight:700">מק״ט '+esc(x.sku||'—')+(x.desc?(' · '+esc(x.desc)):'')+'</span>'
+          +'<span style="font-size:12px;font-weight:700;color:'+pc[0]+';background:'+pc[1]+';border:1px solid '+pc[0]+';border-radius:20px;padding:3px 10px;flex-shrink:0">'+esc(st)+'</span>'
+          +'</div>'
+          +'<span class="hist-meta2">✅ התקבל במערכת'+(when?(' · '+when):'')+(x.qty?(' · נותרו '+esc(x.qty)):'')+'</span>'
+          +'<span class="hist-meta2">'+(who?('🧑‍💼 מטפל: '+esc(who)):'⏳ ממתין לשיוך קניין')+'</span>'
+          +(x.response?('<span class="hist-meta2" style="color:#34d399">💬 תשובת הקניין: '+esc(x.response)+'</span>'):'')
+          +'</div>';
       }).join('');
     }catch(e){ L.innerHTML='<div class="hist-empty">לא ניתן להתחבר (בדוק כתובת/טוקן/רשת).</div>'; }
   }
   $('inboxRefresh').addEventListener('click', loadInbox);
-  $('inboxList').addEventListener('click', async e=>{
-    const b=e.target.closest('.hist-stat'); if(!b) return;
-    const who=(localStorage.getItem(K.reporter)||'').trim();
-    b.textContent='…';
-    try{ await apiPost('status',{id:b.dataset.id, status:b.dataset.s, by:who}); loadInbox(); }
-    catch(err){ b.textContent='שגיאה'; }
-  });
 
   // copy text
   $('copyText').addEventListener('click',async ()=>{
