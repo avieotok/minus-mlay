@@ -127,6 +127,7 @@
     <div>
       <div class="title">אפקון</div>
       <div class="sub">התראת מלאי</div>
+      <div id="meBar" style="font-size:12.5px;color:#22c55e;font-weight:700;margin-top:2px"></div>
     </div>
   </div>
 
@@ -501,7 +502,9 @@
     sel.disabled=locked;
     if($('repLock')) $('repLock').classList.toggle('hidden',!locked);
     if($('repHint')) $('repHint').classList.toggle('hidden',locked);
+    updateMeBar();
   }
+  function updateMeBar(){ const el=$('meBar'); if(!el) return; const n=(localStorage.getItem(K.reporter)||'').trim(); el.textContent = n ? ('👤 '+n) : ''; }
   $('reporter').addEventListener('change',e=>{ const v=e.target.value.trim(); if(!v) return; localStorage.setItem(K.reporter,v); fillReporter(); setStatus('השם נבחר ✓'); });
   function resetIdentity(){ localStorage.removeItem(K.reporter); fillReporter(); maybeGate(); }
   async function loadRoster(){
@@ -831,8 +834,8 @@
         reportDone(subj);
       } else if(r && r.duplicate && r.alert){
         setStatus(''); dupExisting=r.alert; showDup(r.alert);
-      } else { setStatus('השליחה נכשלה — נסה שוב.'); }
-    }catch(e){ setStatus('השליחה נכשלה — בדוק חיבור ונסה שוב.'); }
+      } else { setStatus('לא ניתן היה לשלוח כרגע — בדוק חיבור ונסה שוב.'); }
+    }catch(e){ setStatus('לא ניתן היה לשלוח — בדוק חיבור ונסה שוב.'); }
   }
 
   // מסך אישור אחרי שליחה + איפוס הטופס
@@ -961,6 +964,7 @@
   $('gateOk').addEventListener('click',()=>{ const v=$('gateSel').value.trim(); if(!v){ $('gateMsg').textContent='בחר את שמך מהרשימה.'; return; } localStorage.setItem(K.reporter,v); $('idGate').style.display='none'; fillReporter(); setStatus('ברוך הבא, '+v); });
   $('gateDev').addEventListener('click',()=>{ const p=prompt('סיסמת מפתח:'); if(p==='30172'){ $('idGate').style.display='none'; switchTab('about'); const box=$('qrLock'); if(box){ box.style.display='flex'; renderQRs(); renderNames(); } if(apiOn()) loadRoster(); } });
   maybeGate();
+  updateMeBar();
   if(apiOn()){ syncCatalog(); loadRoster(); }
   let LOADED_VER=null;
   async function checkVersion(){

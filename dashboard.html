@@ -116,6 +116,16 @@
 </style>
 </head>
 <body>
+<div id="setGate" style="position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9998;display:none;align-items:center;justify-content:center;padding:24px">
+  <div style="background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px;max-width:340px;width:100%;text-align:center;display:flex;flex-direction:column;gap:14px">
+    <div style="font-family:'Rubik',sans-serif;font-weight:800;font-size:18px">🔒 הגדרות מערכת</div>
+    <div style="color:var(--muted);font-size:13.5px">אזור למפתח בלבד. הזן סיסמה כדי להמשיך.</div>
+    <input id="setPin" type="tel" inputmode="numeric" placeholder="סיסמה" style="background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:13px;color:var(--text);font-family:'Heebo',sans-serif;font-size:16px;text-align:center">
+    <div id="setPinMsg" style="color:#f87171;font-size:12.5px;min-height:14px"></div>
+    <button class="prim" id="setPinOk">כניסה</button>
+    <button class="ghost" id="setPinCancel">ביטול</button>
+  </div>
+</div>
 <div id="idGate" style="position:fixed;inset:0;background:#0c0a09;z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center">
   <div style="font-family:'Rubik',sans-serif;font-weight:900;font-size:24px;color:#fafaf9">מי אתה?</div>
   <div style="color:#a8a29e;font-size:14.5px;max-width:340px;line-height:1.7">בחר את שמך מהרשימה כדי להיכנס ללוח. הבחירה נשמרת וננעלת למכשיר זה.</div>
@@ -131,6 +141,7 @@
       <div>
         <div class="ttl">לוח בקרת מלאי</div>
         <div class="sub"><span class="dot" id="dot"></span><span id="status">לא מחובר</span></div>
+        <div id="meBar" style="font-size:12.5px;color:var(--green2);font-weight:700;margin-top:2px"></div>
       </div>
       <div class="top-actions">
         <button class="ico" id="refreshBtn" title="רענן">🔄</button>
@@ -260,6 +271,13 @@
         <button class="ghost" id="pubVer" style="border-color:var(--green);color:var(--green2)">📢 פרסם גרסה לכולם</button>
         <div class="note" id="pubNote"></div>
       </div>
+
+      <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:8px;color:#f87171">🧹 איפוס כל ההתראות</div>
+        <p style="font-size:12.5px;color:var(--faint);line-height:1.6;margin-bottom:10px">מוחק את <b>כל</b> ההתראות מהמערכת לצמיתות (ממתינות, בטיפול וטופלו). השמות והקטלוג יישארו. פעולה זו אינה הפיכה.</p>
+        <button class="ghost" id="clearAll" style="border-color:#7f1d1d;color:#f87171">🧹 אפס את כל ההתראות</button>
+        <div class="note" id="clearNote"></div>
+      </div>
     </div>
 
     <button class="ghost" id="mClose">סגור</button>
@@ -345,7 +363,9 @@
     sel.innerHTML=opts; sel.value=cur;
     sel.disabled=!!cur;
     if($('idLock')) $('idLock').classList.toggle('hidden',!cur);
+    updateMeBar();
   }
+  function updateMeBar(){ const el=$('meBar'); if(!el) return; const n=me(); el.textContent = n ? ('👤 '+n+(isBoss()?' · מנהל':'')) : ''; }
   function buyerOptions(){ return '<option value="">העבר לקניין…</option>'+BUYERS.map(b=>'<option value="'+esc(b)+'">'+esc(b)+'</option>').join(''); }
 
   function fmt(iso){ if(!iso) return ''; try{ return new Date(iso).toLocaleString('he-IL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }catch(e){ return ''; } }
@@ -581,7 +601,12 @@
   // settings modal
   function openModal(){ fillIdentity(); $('mName').value=me(); $('mUrl').value=apiUrl(); $('mTok').value=apiToken(); $('mSheet').value=localStorage.getItem(K.sheet)||''; $('mBoss').checked=isBoss(); $('mNote').textContent=''; $('advNote').textContent=''; $('catNote').textContent=''; $('advBox').classList.add('hidden'); $('modal').classList.add('open'); if(apiOn()) loadRoster(); }
   function closeModal(){ $('modal').classList.remove('open'); }
-  $('gearBtn').addEventListener('click', openModal);
+  function openSettingsUnlocked(){ openModal(); $('advPinRow').style.display='none'; $('advBox').classList.remove('hidden'); devOpen=true; render(); renderQRs(); renderNames(); if(apiOn()) loadRoster(); }
+  $('gearBtn').addEventListener('click', ()=>{ $('setPin').value=''; $('setPinMsg').textContent=''; $('setGate').style.display='flex'; setTimeout(()=>$('setPin').focus(),50); });
+  function trySettingsPin(){ const v=($('setPin').value||'').trim(); if(v===DEV_PIN){ $('setGate').style.display='none'; openSettingsUnlocked(); } else { $('setPinMsg').textContent='סיסמה שגויה'; $('setPin').value=''; } }
+  $('setPinOk').addEventListener('click', trySettingsPin);
+  $('setPin').addEventListener('keydown', e=>{ if(e.key==='Enter') trySettingsPin(); });
+  $('setPinCancel').addEventListener('click', ()=>{ $('setGate').style.display='none'; });
   $('mClose').addEventListener('click', closeModal);
   $('modal').addEventListener('click',e=>{ if(e.target===$('modal')) closeModal(); });
 
@@ -701,9 +726,18 @@
     try{ const r=await apiPost('versionSet'); if(r&&r.ok){ LOADED_VER=Number(r.version); $('pubNote').textContent='✓ פורסם — כל המכשירים יתעדכנו תוך דקה'; } else $('pubNote').textContent='הפרסום נכשל.'; }
     catch(e){ $('pubNote').textContent='הפרסום נכשל — בדוק חיבור.'; }
   });
+  const ca=$('clearAll'); if(ca) ca.addEventListener('click', async ()=>{
+    if(!confirm('לאפס את כל ההתראות במערכת? כל הדיווחים (ממתינים, בטיפול וטופלו) יימחקו לצמיתות.')) return;
+    const typed=prompt('פעולה בלתי הפיכה. הקלד את המילה: מחק');
+    if((typed||'').trim()!=='מחק'){ $('clearNote').textContent='בוטל.'; return; }
+    $('clearNote').textContent='מאפס…';
+    try{ const r=await apiPost('clearAll'); if(r&&r.ok){ selDel.clear(); await load(); $('clearNote').textContent='✓ נמחקו '+(r.cleared||0)+' התראות'; } else $('clearNote').textContent='האיפוס נכשל.'; }
+    catch(e){ $('clearNote').textContent='האיפוס נכשל — בדוק חיבור.'; }
+  });
   $('gateOk').addEventListener('click',()=>{ const v=$('gateSel').value.trim(); if(!v){ $('gateMsg').textContent='בחר את שמך מהרשימה.'; return; } localStorage.setItem(K.me,v); $('idGate').style.display='none'; fillIdentity(); load(); });
   $('gateDev').addEventListener('click',()=>{ const p=prompt('סיסמת מפתח:'); if(p==='30172'){ $('idGate').style.display='none'; openModal(); } });
   maybeGate();
+  updateMeBar();
   if(apiOn()){ load(); loadRoster(); } else renderEmptyConfig();
   document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&apiOn()) load(); });
 </script>
