@@ -300,8 +300,9 @@
   const $ = id => document.getElementById(id);
   const K = { api:'afcon_api_url', token:'afcon_api_token', me:'afcon_me', sheet:'afcon_sheet', boss:'afcon_boss' };
   // חיבור מוטמע מראש — הלוח מחובר אוטומטית בלי הגדרה ידנית
-  const EMBED_API='https://script.google.com/macros/s/AKfycbxM6pw13Hiz8j_upkO2rXKGb2nGZ0q5MnXoAlrS2Ts7pfZxWKPtjQyrgkhK_Alq6FgH-w/exec';
+  const EMBED_API='https://script.google.com/macros/s/AKfycbw3W-sDXuw9QePymMZoCqz2fBJoAnuEiabCntGn6PxN7WBx1cRG7VZj1E9CxbecmeacqQ/exec';
   const EMBED_TOKEN='afcon2026';
+  try{ if(localStorage.getItem(K.api)!==EMBED_API){ localStorage.setItem(K.api, EMBED_API); } if(localStorage.getItem(K.token)!==EMBED_TOKEN){ localStorage.setItem(K.token, EMBED_TOKEN); } }catch(e){}
 
   function apiUrl(){ return (localStorage.getItem(K.api)||EMBED_API||'').trim(); }
   function apiToken(){ return (localStorage.getItem(K.token)||EMBED_TOKEN||'').trim(); }

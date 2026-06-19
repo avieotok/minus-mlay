@@ -427,8 +427,9 @@
   const K={boss:'afcon_boss', reporter:'afcon_reporter', hist:'afcon_history',
            api:'afcon_api_url', token:'afcon_api_token'};
   // חיבור מוטמע מראש — האפליקציה מחוברת אוטומטית בלי הגדרה ידנית
-  const EMBED_API='https://script.google.com/macros/s/AKfycbxM6pw13Hiz8j_upkO2rXKGb2nGZ0q5MnXoAlrS2Ts7pfZxWKPtjQyrgkhK_Alq6FgH-w/exec';
+  const EMBED_API='https://script.google.com/macros/s/AKfycbw3W-sDXuw9QePymMZoCqz2fBJoAnuEiabCntGn6PxN7WBx1cRG7VZj1E9CxbecmeacqQ/exec';
   const EMBED_TOKEN='afcon2026';
+  try{ if(localStorage.getItem(K.api)!==EMBED_API){ localStorage.setItem(K.api, EMBED_API); } if(localStorage.getItem(K.token)!==EMBED_TOKEN){ localStorage.setItem(K.token, EMBED_TOKEN); } }catch(e){}
   const APP_URL='https://avieotok.github.io/minus-mlay';
   // יצירת שני קודי QR — למחסנאים וללוח הקניינים
   function renderQRs(){
