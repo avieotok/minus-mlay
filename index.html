@@ -60,6 +60,7 @@
   .hist-meta2 { color: #78716c; font-size: 12px; font-weight: 400; }
   .hist-stat { background:transparent; border:1.5px solid #f59e0b; color:#f59e0b; border-radius:20px; padding:5px 12px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; font-family:'Heebo',sans-serif; flex-shrink:0; }
   .hist-stat.done { background:#0f1f14; border-color:#22c55e; color:#34d399; }
+  .hist-sent { color:#78716c; font-size:12px; font-weight:600; white-space:nowrap; flex-shrink:0; font-family:'Heebo',sans-serif; }
   .hist-empty { color: #78716c; font-size: 13px; padding: 6px 0; }
   .exit-btn { display: flex; align-items: center; justify-content: center; gap: 9px; background: transparent; border: 1.5px solid #7f1d1d; color: #f87171; border-radius: 14px; padding: 14px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: 'Heebo', sans-serif; width: 100%; margin-top: 4px; }
   .scan-overlay { position: fixed; inset: 0; background: #000; z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -260,9 +261,9 @@
         <div style="font-size:12px;color:#78716c">© אבידן קוטאי · כל הזכויות שמורות</div>
         <div style="width:74px;height:74px;border-radius:16px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden"><img id="aboutLogo" style="width:100%;height:100%;object-fit:contain;padding:8px" alt="לוגו"></div>
         <div style="font-family:'Rubik',sans-serif;font-weight:900;font-size:22px">אפקון — התראת מלאי</div>
-        <div style="color:#a8a29e;font-size:14.5px;line-height:1.8;max-width:400px">אפליקציה לדיווח מהיר על חוסרים במחסן. בוחרים שם מהרשימה, סורקים ברקוד או מקלידים מק״ט (התיאור מושלם אוטומטית), קובעים דרגת דחיפות וכמות — והדיווח נשלח ישירות לקנייני שרשרת האספקה. אפשר גם לצלם את הפריט וליצור תמונה ממותגת עם לוגו אפקון לשליחה בוואטסאפ. בטאב "הדיווחים שלי" עוקבים אחר תגובות הקניין וסטטוס הטיפול (ממתין · בטיפול · טופל), עם התראה אדומה ברגע שמתקבלת תגובה חדשה.</div>
+        <div style="color:#a8a29e;font-size:14.5px;line-height:1.8;max-width:400px">אפליקציה לדיווח מהיר על חוסרים במחסן. בוחרים שם מהרשימה, סורקים ברקוד או מקלידים מק״ט (התיאור מושלם אוטומטית), קובעים דרגת דחיפות וכמות — והדיווח נשלח ישירות לקנייני שרשרת האספקה. בטאב "הדיווחים שלי" עוקבים אחר תגובות הקניין וסטטוס הטיפול (ממתין · בטיפול · טופל), עם התראה אדומה ברגע שמתקבלת תגובה חדשה.</div>
         <div style="display:flex;gap:18px;flex-wrap:wrap;justify-content:center;font-size:13px;color:#d6d3d1;margin-top:2px">
-          <span>📷 צילום ממותג</span><span>🚦 דרגת דחיפות</span><span>📊 ברקוד</span><span>💬 תגובות הקניין</span><span>🔔 התראות</span>
+          <span>🚦 דרגת דחיפות</span><span>📊 ברקוד</span><span>💬 תגובות הקניין</span><span>🔔 התראות</span>
         </div>
         <div style="height:1px;background:#292524;width:100%;margin:8px 0"></div>
         <button class="ghost-btn" id="qrUnlock" style="max-width:320px">🔒 הגדרות מערכת ו‑QR (מפתח)</button>
@@ -691,10 +692,9 @@
     $('todayCount').textContent=h.filter(e=>new Date(e.t).toDateString()===today).length;
     const L=$('histList');
     if(!h.length){ L.innerHTML='<div class="hist-empty">אין דיווחים עדיין</div>'; return; }
-    L.innerHTML=h.slice(0,15).map(e=>{ const d=new Date(e.t).toLocaleString('he-IL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); const done=!!e.done;
-      return '<div class="hist-row"><span class="hist-txt">'+esc(e.txt||'—')+'<span class="hist-meta2">'+esc(e.u)+' · '+d+'</span></span><button class="hist-stat'+(done?' done':'')+'" data-t="'+e.t+'">'+(done?'✓ טופל':'ממתין')+'</button></div>'; }).join('');
+    L.innerHTML=h.slice(0,15).map(e=>{ const d=new Date(e.t).toLocaleString('he-IL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+      return '<div class="hist-row"><span class="hist-txt">'+esc(e.txt||'—')+'<span class="hist-meta2">'+esc(e.u)+' · '+d+'</span></span><span class="hist-sent">✓ נשלח</span></div>'; }).join('');
   }
-  $('histList').addEventListener('click',e=>{ const b=e.target.closest('.hist-stat'); if(!b) return; const t=+b.dataset.t; const h=loadHist(); const it=h.find(x=>x.t===t); if(it){ it.done=!it.done; saveHist(h); renderHist(); } });
   $('clearHist').addEventListener('click',()=>{ if(confirm('למחוק את כל ההיסטוריה?')){ localStorage.removeItem(K.hist); renderHist(); } });
   renderHist();
 
@@ -1242,6 +1242,6 @@
     setTimeout(()=>{ document.documentElement.innerHTML='<body style="background:#0c0a09;color:#a8a29e;font-family:Heebo,sans-serif;height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:18px;">להתראות 👋<br><br>אפשר לסגור את החלון/הכרטיסייה.</body>'; }, 250);
   });
 </script>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 36</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 38</div>
 </body>
 </html>
