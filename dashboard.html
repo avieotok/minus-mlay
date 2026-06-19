@@ -377,6 +377,20 @@
   };
 
   let ALERTS=[], BUYERS=[], REPORTERS=[], fStatus='all', fUrg='all', fType='all', fSearch='', fMine=false, auto=true, timer=null, busy=false, seen=null;
+  const photoCache={};
+  function photoBlock(a){
+    if(!a.photo || !(Number(a.photo)>0)) return '';
+    const id=String(a.id);
+    if(photoCache[id]) return '<div class="dphotos">'+photoCache[id].map(d=>'<a href="'+d+'" target="_blank" rel="noopener"><img src="'+d+'" loading="lazy" alt="תמונה"></a>').join('')+'</div>';
+    return '<div class="dphotos" data-pid="'+esc(id)+'"><span style="color:#a8a29e;font-size:12.5px">📷 טוען תמונות…</span></div>';
+  }
+  async function fetchPendingPhotos(){
+    const els=document.querySelectorAll('#list .dphotos[data-pid]');
+    for(const el of els){ const id=el.getAttribute('data-pid'); if(!id||photoCache[id]) continue;
+      try{ const r=await apiGet('photos',{id:id}); if(r&&r.ok&&Array.isArray(r.photos)){ photoCache[id]=r.photos; } else { continue; } }catch(e){ continue; }
+      el.removeAttribute('data-pid'); el.innerHTML=(photoCache[id]||[]).map(d=>'<a href="'+d+'" target="_blank" rel="noopener"><img src="'+d+'" loading="lazy" alt="תמונה"></a>').join('');
+    }
+  }
   const me=()=> (localStorage.getItem(K.me)||'').trim();
   const isBoss=()=> localStorage.getItem(K.boss)==='1';
 
@@ -549,7 +563,7 @@
         +(a.note?('<div class="resp" style="color:#d6d3d1">📝 <span>'+esc(a.note)+'</span></div>'):'')
         +(a.log?('<div class="resp" style="color:#fbbf24;background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.25)">↪️ <span>'+esc(fmtLog(a.log))+'</span></div>'):'')
         +(a.response?('<div class="resp">💬 <span>'+esc(a.response)+'</span></div>'):'')
-        +(a.photo?('<div class="dphotos">'+String(a.photo).split(',').filter(Boolean).map(function(fid){fid=fid.trim();return '<a href="https://drive.google.com/file/d/'+fid+'/view" target="_blank" rel="noopener"><img src="https://lh3.googleusercontent.com/d/'+fid+'=w400" loading="lazy" alt="תמונה"></a>';}).join('')+'</div>'):'')
+        +photoBlock(a)
         +(boss ? '' : (
           '<div class="acts">'
           +'<button class="btn prog'+(a.status==='בטיפול'?' on':'')+'" data-act="בטיפול">🟠 קח לטיפול</button>'
@@ -564,6 +578,7 @@
         +'</div>';
     }).join('');
     if(devOpen){ list.querySelectorAll('.selbox').forEach(b=>{ b.checked=selDel.has(b.dataset.sel); }); updSelN(); }
+    fetchPendingPhotos();
   }
 
   function renderEmptyConfig(){
@@ -662,7 +677,7 @@
     if(!data.length){ toast('אין נתונים לייצוא בתצוגה הנוכחית'); return; }
     const inHist = (fStatus==='history' || fStatus==='טופל');
     const rows=[['סוג','מק״ט','תיאור שהוזמן','מספר הזמנה','כמות שהוזמנה','כמות שהתקבלה','תיאור שהתקבל','דחיפות','הערת מדווח','דווח ע״י','סטטוס','קניין אחראי','העברות טיפול','טופל ע״י','תאריך טיפול','תגובת הקניין','תמונות','נוצר','עודכן']];
-    data.forEach(a=>rows.push([(a.type||'חוסר מלאי'),a.sku,a.desc,a.po,a.qty,a.qtyRecv,a.descRecv,a.urgency,a.note,a.reporter,a.status,a.assignee,fmtLog(a.log),a.ackBy,(a.status==='טופל'?fmt(a.ackAt||a.updated):''),a.response,(a.photo?String(a.photo).split(',').filter(Boolean).map(f=>'https://drive.google.com/file/d/'+f.trim()+'/view').join('  '):''),fmt(a.created),fmt(a.updated)]));
+    data.forEach(a=>rows.push([(a.type||'חוסר מלאי'),a.sku,a.desc,a.po,a.qty,a.qtyRecv,a.descRecv,a.urgency,a.note,a.reporter,a.status,a.assignee,fmtLog(a.log),a.ackBy,(a.status==='טופל'?fmt(a.ackAt||a.updated):''),a.response,(Number(a.photo)>0?('📷 '+a.photo):''),fmt(a.created),fmt(a.updated)]));
     const ws=XLSX.utils.aoa_to_sheet(rows); ws['!cols']=[{wch:12},{wch:11},{wch:22},{wch:14},{wch:13},{wch:13},{wch:22},{wch:12},{wch:24},{wch:14},{wch:9},{wch:14},{wch:30},{wch:14},{wch:15},{wch:28},{wch:40},{wch:16},{wch:16}];
     const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws, inHist?'היסטוריה':'דיווחים');
     const tag = inHist?'history' : (fStatus==='all'?'all':fStatus);

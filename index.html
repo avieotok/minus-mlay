@@ -1259,10 +1259,22 @@
           +(x.note?('<span class="hist-meta2" style="color:#d6d3d1">📝 '+esc(x.note)+'</span>'):'')
           +'<span class="hist-meta2">'+(who?('🧑‍💼 מטפל: '+esc(who)):'⏳ ממתין לשיוך קניין')+'</span>'
           +(x.response?('<span class="hist-meta2" style="color:#34d399">💬 תשובת הקניין: '+esc(x.response)+'</span>'):'')
-          +(x.photo?('<span style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">'+String(x.photo).split(',').filter(Boolean).map(function(fid){fid=fid.trim();return '<a href="https://drive.google.com/file/d/'+fid+'/view" target="_blank" rel="noopener"><img src="https://lh3.googleusercontent.com/d/'+fid+'=w200" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid #44403c"></a>';}).join('')+'</span>'):'')
+          +(Number(x.photo)>0?('<span class="inboxPhotos" data-pid="'+esc(x.id)+'" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px"><span class="hist-meta2">📷 טוען תמונות…</span></span>'):'')
           +'</div>';
       }).join('');
+      fetchInboxPhotos();
     }catch(e){ L.innerHTML='<div class="hist-empty">לא ניתן להתחבר.<br><span style="font-size:12px;opacity:.8;direction:ltr;display:inline-block;margin-top:6px">סיבה: '+esc(String((e&&e.message)||e||'לא ידוע'))+'</span></div>'; }
+  }
+  const whPhotoCache={};
+  async function fetchInboxPhotos(){
+    const els=document.querySelectorAll('.inboxPhotos[data-pid]');
+    for(const el of els){ const id=el.getAttribute('data-pid'); if(!id) continue;
+      let photos=whPhotoCache[id];
+      if(!photos){ try{ const r=await apiGet('photos',{id:id}); if(r&&r.ok&&Array.isArray(r.photos)){ photos=whPhotoCache[id]=r.photos; } }catch(e){ continue; } }
+      if(!photos) continue;
+      el.removeAttribute('data-pid');
+      el.innerHTML=photos.map(d=>'<a href="'+d+'" target="_blank" rel="noopener"><img src="'+d+'" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid #44403c"></a>').join('');
+    }
   }
   $('inboxRefresh').addEventListener('click', loadInbox);
 
@@ -1439,6 +1451,6 @@
     setTimeout(()=>{ document.documentElement.innerHTML='<body style="background:#0c0a09;color:#a8a29e;font-family:Heebo,sans-serif;height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:18px;">להתראות 👋<br><br>אפשר לסגור את החלון/הכרטיסייה.</body>'; }, 250);
   });
 </script>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 51</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 52</div>
 </body>
 </html>
