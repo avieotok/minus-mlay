@@ -623,7 +623,7 @@
   // camera
   let stream=null, currentImg=null;
   const video=$('video'), canvas=$('canvas'), ctx=canvas.getContext('2d');
-  function show(el){el.classList.remove('hidden')} function hide(el){el.classList.add('hidden')}
+  function show(el){ if(el) el.classList.remove('hidden') } function hide(el){ if(el) el.classList.add('hidden') }
   $('shootBtn').addEventListener('click', startCamera);
   async function startCamera(){ setStatus('');
     try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
@@ -857,7 +857,7 @@
       const r=await apiSend({ id:currentAlertId, sku:subj.sku, desc:subj.desc, qty:subj.qty,
         urgency:URG[urgency].label, reporter:(localStorage.getItem(K.reporter)||''),
         reporterPhone:(localStorage.getItem('afcon_reporter_phone')||''), recipients:'כל הצוות', assignee:'' });
-      if(r && r.duplicate){ setStatus(''); dupExisting=r.alert||null; showDup(r.alert || {sku:subj.sku, status:'', reporter:'', response:'', assignee:''}); return; }
+      if(r && r.duplicate){ setStatus(''); dupExisting=r.alert||null; showDup(r.alert || {sku:subj.sku, status:'', reporter:'', response:'', assignee:''}); resetForm(); return; }
       if(r && r.ok){ addHist('מק״ט: '+subj.sku); reportDone(subj); return; }
       setStatus('לא ניתן היה לשלוח כרגע — נסה שוב בעוד רגע.');
     }catch(e){ setStatus('לא ניתן היה לשלוח כרגע — נסה שוב בעוד רגע.'); }
@@ -893,14 +893,20 @@
   }
 
   // מסך אישור אחרי שליחה + איפוס הטופס
-  function reportDone(subj){
-    setStatus('');
+  function resetForm(){
     if($('txtSku')) $('txtSku').value='';
     if($('qtyText')) $('qtyText').value='';
     if($('overlayText')) $('overlayText').value='';
     if($('qtyPhoto')) $('qtyPhoto').value='';
-    refreshDesc && refreshDesc();
+    if(typeof kpVal!=='undefined') kpVal='';
+    if($('descText')) $('descText').textContent='';
+    urgency='low'; try{ paintUrg(); }catch(e){}
+    try{ refreshDesc(); }catch(e){}
     if(typeof currentImg!=='undefined'){ currentImg=null; hide($('previewWrap')); if($('sendPhoto')) $('sendPhoto').disabled=true; }
+  }
+  function reportDone(subj){
+    setStatus('');
+    resetForm();
     show($('sentWrap'));
     $('sentInfo').innerHTML='מק״ט <b>'+esc(subj.sku)+'</b>'+(subj.desc?(' — '+esc(subj.desc)):'')+' נשלח לקניינים ונכנס ללוח לטיפול. ✓';
   }
@@ -1259,6 +1265,6 @@
     setTimeout(()=>{ document.documentElement.innerHTML='<body style="background:#0c0a09;color:#a8a29e;font-family:Heebo,sans-serif;height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:18px;">להתראות 👋<br><br>אפשר לסגור את החלון/הכרטיסייה.</body>'; }, 250);
   });
 </script>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 41</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 42</div>
 </body>
 </html>
