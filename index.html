@@ -462,8 +462,8 @@
   function apiToken(){ return (localStorage.getItem(K.token)||EMBED_TOKEN||'').trim(); }
   function apiOn(){ return !!apiUrl(); }
   function newAlertId(){ return 'A'+Date.now()+Math.floor(Math.random()*1000); }
-  // JSONP — עוקף לחלוטין את חסימת ה-CORS של Apps Script
-  function apiGet(action, params){
+  // JSONP — גיבוי לעקיפת CORS אם fetch נכשל
+  function apiGetJsonp(action, params){
     return new Promise(function(resolve, reject){
       let url;
       try{ url=new URL(apiUrl()); }catch(e){ reject(e); return; }
@@ -478,15 +478,34 @@
       function cleanup(){ try{ delete window[cb]; }catch(e){ window[cb]=undefined; } if(s&&s.parentNode) s.parentNode.removeChild(s); }
       window[cb]=function(data){ done=true; cleanup(); resolve(data); };
       s.onerror=function(){ if(!done){ cleanup(); reject(new Error('jsonp error')); } };
-      setTimeout(function(){ if(!done){ cleanup(); reject(new Error('jsonp timeout')); } }, 15000);
+      setTimeout(function(){ if(!done){ cleanup(); reject(new Error('jsonp timeout')); } }, 12000);
       s.src=url.toString();
       document.head.appendChild(s);
     });
   }
-  // שליחה דרך GET/JSONP גם היא — כדי לעקוף CORS לחלוטין
-  function apiSend(payload){ return apiGet('create', payload||{}); }
+  // ניסיון ראשון: fetch רגיל (עבד לטעינת נתונים). אם נכשל — JSONP
+  async function apiGet(action, params){
+    const u=new URL(apiUrl());
+    u.searchParams.set('token', apiToken());
+    u.searchParams.set('action', action);
+    if(params) for(const k in params){ if(params[k]!=null) u.searchParams.set(k, params[k]); }
+    u.searchParams.set('_', Date.now());
+    try{
+      const r=await fetch(u.toString(), {method:'GET', redirect:'follow', cache:'no-store'});
+      const txt=await r.text();
+      const j=JSON.parse(txt);
+      if(j && j.busy){ throw new Error('busy'); }
+      return j;
+    }catch(e){
+      return await apiGetJsonp(action, params);
+    }
+  }
+  // שליחה דרך POST (עבד ליצירה). אם נכשל — JSONP/GET
+  async function apiSend(payload){
+    try{ const r=await apiPost('create', payload||{}); if(r) return r; }catch(e){}
+    return await apiGetJsonp('create', payload||{});
+  }
   async function apiPost(action, payload){
-    // משמש רק לפעולות שאינן GET; נשלח כ-text/plain כדי לא להפעיל preflight
     const body=Object.assign({token:apiToken(), action:action}, payload||{});
     let lastErr=null;
     for(let attempt=0; attempt<3; attempt++){
@@ -1208,6 +1227,6 @@
     setTimeout(()=>{ document.documentElement.innerHTML='<body style="background:#0c0a09;color:#a8a29e;font-family:Heebo,sans-serif;height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:18px;">להתראות 👋<br><br>אפשר לסגור את החלון/הכרטיסייה.</body>'; }, 250);
   });
 </script>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 26</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 27</div>
 </body>
 </html>
