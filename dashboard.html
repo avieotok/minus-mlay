@@ -386,6 +386,9 @@
   function buyerOptions(){ return '<option value="">העבר לקניין…</option>'+BUYERS.map(b=>'<option value="'+esc(b)+'">'+esc(b)+'</option>').join(''); }
 
   function fmt(iso){ if(!iso) return ''; try{ return new Date(iso).toLocaleString('he-IL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }catch(e){ return ''; } }
+  function fmtLog(s){ s=String(s==null?'':s); if(!s) return '';
+    return s.split(' | ').map(function(part){ var m=part.match(/^(.*?)\s*\((.*)\)\s*$/);
+      return m ? (m[1].trim()+' ('+fmt(m[2])+')') : part.trim(); }).join('  ;  '); }
   function isOpen(a){ return String(a.status)!=='טופל'; }
   function isToday(iso){ if(!iso) return false; const d=new Date(iso); const n=new Date(); return d.toDateString()===n.toDateString(); }
   // כל רשומה שטופלה עוברת מיד להיסטוריה. לא‑מטופלת נשארת פעילה.
@@ -504,6 +507,7 @@
         +'<span><b>דווח:</b> '+esc(a.reporter||'—')+'</span>'
         +(a.created?('<span>🕒 '+fmt(a.created)+'</span>'):'')
         +'</div>'
+        +(a.log?('<div class="resp" style="color:#fbbf24;background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.25)">↪️ <span>'+esc(fmtLog(a.log))+'</span></div>'):'')
         +(a.response?('<div class="resp">💬 <span>'+esc(a.response)+'</span></div>'):'')
         +(boss ? '' : (
           '<div class="acts">'
@@ -610,9 +614,9 @@
     const data=filtered();
     if(!data.length){ toast('אין נתונים לייצוא בתצוגה הנוכחית'); return; }
     const inHist = (fStatus==='history' || fStatus==='טופל');
-    const rows=[['מק״ט','תיאור','כמות','דחיפות','דווח ע״י','נשלח אל','סטטוס','קניין אחראי','טופל ע״י','תאריך טיפול','תגובת הקניין','נוצר','עודכן']];
-    data.forEach(a=>rows.push([a.sku,a.desc,a.qty,a.urgency,a.reporter,a.recipients,a.status,a.assignee,a.ackBy,(a.status==='טופל'?fmt(a.ackAt||a.updated):''),a.response,fmt(a.created),fmt(a.updated)]));
-    const ws=XLSX.utils.aoa_to_sheet(rows); ws['!cols']=[{wch:11},{wch:22},{wch:8},{wch:12},{wch:14},{wch:18},{wch:9},{wch:14},{wch:14},{wch:15},{wch:28},{wch:16},{wch:16}];
+    const rows=[['מק״ט','תיאור','כמות','דחיפות','דווח ע״י','נשלח אל','סטטוס','קניין אחראי','העברות טיפול','טופל ע״י','תאריך טיפול','תגובת הקניין','נוצר','עודכן']];
+    data.forEach(a=>rows.push([a.sku,a.desc,a.qty,a.urgency,a.reporter,a.recipients,a.status,a.assignee,fmtLog(a.log),a.ackBy,(a.status==='טופל'?fmt(a.ackAt||a.updated):''),a.response,fmt(a.created),fmt(a.updated)]));
+    const ws=XLSX.utils.aoa_to_sheet(rows); ws['!cols']=[{wch:11},{wch:22},{wch:8},{wch:12},{wch:14},{wch:18},{wch:9},{wch:14},{wch:30},{wch:14},{wch:15},{wch:28},{wch:16},{wch:16}];
     const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws, inHist?'היסטוריה':'דיווחים');
     const tag = inHist?'history' : (fStatus==='all'?'all':fStatus);
     XLSX.writeFile(wb,'afcon-'+tag+'-'+new Date().toISOString().slice(0,10)+'.xlsx');
