@@ -832,10 +832,12 @@
       if(r && r.ok){
         addHist('מק״ט: '+subj.sku);
         reportDone(subj);
-      } else if(r && r.duplicate && r.alert){
-        setStatus(''); dupExisting=r.alert; showDup(r.alert);
-      } else { setStatus('לא ניתן היה לשלוח כרגע — בדוק חיבור ונסה שוב.'); }
-    }catch(e){ setStatus('לא ניתן היה לשלוח — בדוק חיבור ונסה שוב.'); }
+      } else if(r && (r.duplicate || r.error==='duplicate')){
+        setStatus('');
+        if(r.alert){ dupExisting=r.alert; showDup(r.alert); }
+        else { dupExisting=null; showDup({sku:subj.sku, status:'', reporter:'', response:''}); }
+      } else { setStatus('לא ניתן היה לשלוח כרגע — נסה שוב בעוד רגע.'); }
+    }catch(e){ setStatus('לא ניתן היה לשלוח — נסה שוב בעוד רגע.'); }
   }
 
   // מסך אישור אחרי שליחה + איפוס הטופס
