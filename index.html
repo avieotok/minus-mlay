@@ -1736,7 +1736,7 @@
     setTimeout(()=>{ document.documentElement.innerHTML='<body style="background:#0c0a09;color:#a8a29e;font-family:Heebo,sans-serif;height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:18px;">להתראות 👋<br><br>אפשר לסגור את החלון/הכרטיסייה.</body>'; }, 250);
   });
 </script>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 65</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 66</div>
 <!-- ===== כלי עזר (מודול עצמאי — זהה בשתי האפליקציות) ===== -->
 <style>
   #tkModal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;display:none;align-items:flex-start;justify-content:center}
@@ -1897,6 +1897,7 @@
       var cb='tkcb'+Date.now()+Math.floor(Math.random()*100000);
       var qs='?action='+encodeURIComponent(action)+'&token='+encodeURIComponent(c.token)+'&callback='+cb;
       var pr=params||{}; for(var k in pr){ qs+='&'+encodeURIComponent(k)+'='+encodeURIComponent(pr[k]); }
+      qs+='&_='+Date.now();
       var s=document.createElement('script'); var done=false;
       window[cb]=function(data){ done=true; try{ delete window[cb]; }catch(e){} try{ s.remove(); }catch(e){} resolve(data); };
       s.onerror=function(){ if(!done){ try{ delete window[cb]; }catch(e){} try{ s.remove(); }catch(e){} resolve(null); } };
@@ -2057,12 +2058,15 @@
     if(!apiCfg().url){ alert('אין חיבור למערכת — לא ניתן לשתף.'); return; }
     if(!confirm('לשתף את "'+(c.supplier||'הספק')+'" עם כל החברים? כולם יקבלו את הטלפון.')) return;
     var kid='K'+Date.now()+Math.floor(Math.random()*100000);
-    srvPost({ action:'contactAdd', id:kid, supplier:c.supplier||'', c1:c.c1||'', c2:c.c2||'', p1:c.p1||'', p2:c.p2||'', addr:c.addr||'', sharedBy:myName() });
-    // מעבירים מהאישי למשותף — מסירים מהמכשיר ומרעננים מהשרת
-    PHONES=PHONES.filter(function(x){return x.id!==c.id;}); savePhones();
-    SHAREDC.push({ id:kid, supplier:c.supplier||'', c1:c.c1||'', c2:c.c2||'', p1:c.p1||'', p2:c.p2||'', addr:c.addr||'', sharedBy:myName() });
-    renderPhones();
-    setTimeout(loadShared, 1200);
+    srvGet('contactAdd', { id:kid, supplier:c.supplier||'', c1:c.c1||'', c2:c.c2||'', p1:c.p1||'', p2:c.p2||'', addr:c.addr||'', sharedBy:myName() }).then(function(r){
+      if(r && r.ok){
+        PHONES=PHONES.filter(function(x){return x.id!==c.id;}); savePhones(); // מעבירים מהאישי למשותף רק אחרי הצלחה
+        loadShared(); // מביאים מהשרת את המצב האמיתי
+        alert('שותף בהצלחה ✓ כל החברים יקבלו את "'+(c.supplier||'הספק')+'" כשייכנסו לספר הטלפונים.');
+      } else {
+        alert('⚠️ השיתוף נכשל ולא נשמר בשרת.\n\nבדוק/י:\n1. שיש חיבור לאינטרנט.\n2. שקובץ השרת (Code.gs) נפרס מחדש עם פונקציות הספקים.\n\nהספק נשאר אצלך כ"אישי" — אפשר לנסות לשתף שוב.');
+      }
+    });
   }
   $('tkPhList').addEventListener('click', function(e){
     var card=e.target.closest('.tk-card'); if(!card) return; var id=card.getAttribute('data-id');
