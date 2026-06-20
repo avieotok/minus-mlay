@@ -64,6 +64,7 @@
   .panel-head { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px; cursor: pointer; font-weight: 700; font-size: 14.5px; }
   .panel-body { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 12px; }
   .badge-count { background: #f59e0b; color: #0c0a09; font-size: 12px; font-weight: 800; padding: 2px 9px; border-radius: 20px; }
+  #soundBar { display:none; background:linear-gradient(90deg,#f59e0b,#fbbf24); color:#1c1917; font-weight:800; font-size:14px; text-align:center; padding:12px; border-radius:12px; margin-bottom:14px; cursor:pointer; font-family:'Rubik',sans-serif; }
   .hist-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid #292524; font-size: 13px; }
   .gchatbtn{margin-top:6px;background:#06281b;border:1px solid #166534;color:#34d399;border-radius:10px;padding:8px 12px;font-size:13.5px;font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer;align-self:flex-start}
   .gchatbtn.unread{background:#2a0b0b;border-color:#e2231a;color:#fca5a5}
@@ -205,6 +206,7 @@
       <button class="tab" id="tabNews">📢 ידיעון<span id="newsBadge" style="display:none;background:#fbbf24;color:#1c1917;border-radius:999px;min-width:9px;height:9px;margin-inline-start:6px;vertical-align:middle;padding:0 4px;font-size:0">●</span></button>
       <button class="tab tab-about" id="tabAbout">ℹ️ אודות</button>
     </div>
+    <div id="soundBar" onclick="">🔔 הקש להפעלת צלילי התראה ‹ כדי לשמוע כשנכנסת הודעה</div>
     <div id="opsWrap">
 
     <div class="urg-label">סוג דיווח</div>
@@ -860,6 +862,7 @@
   $('tabText').addEventListener('click',()=>switchTab('text'));
   $('tabInbox').addEventListener('click',()=>switchTab('inbox'));
   $('tabNews').addEventListener('click',()=>switchTab('news'));
+  if($('soundBar')) $('soundBar').addEventListener('click',()=>{ ensureAudioWh(); beep(); try{ if('Notification' in window && Notification.permission==='default') Notification.requestPermission(); }catch(e){} localStorage.setItem('afcon_sound_on','1'); showSoundBarWh(); setStatus('צלילי התראה הופעלו ✓'); });
   $('tabAbout').addEventListener('click',()=>switchTab('about'));
   function switchTab(t){
     $('tabText').classList.toggle('active', t==='text');
@@ -1335,6 +1338,7 @@
   checkVersion(); setInterval(checkVersion, 45000);
   checkFeedback(); setInterval(checkFeedback, 30000);
   loadNewsWh(); setInterval(loadNewsWh, 45000);
+  if(typeof showSoundBarWh==='function') showSoundBarWh();
   $('apiTest').addEventListener('click', async ()=>{
     const url=$('apiUrlInp').value.trim(), tok=$('apiTokenInp').value.trim();
     if(!url){ $('apiMsg').textContent='הזן כתובת.'; return; }
@@ -1553,7 +1557,16 @@
   const BASE_TITLE_WH='אפקון — פורטל שרשרת האספקה';
   function updateTitleWh(n){ document.title=(n>0?('🔴 ('+n+') '):'')+BASE_TITLE_WH; }
   let whAudioCtx=null;
-  function beep(){ try{ whAudioCtx=whAudioCtx||new (window.AudioContext||window.webkitAudioContext)(); const o=whAudioCtx.createOscillator(),g=whAudioCtx.createGain(); o.connect(g); g.connect(whAudioCtx.destination); o.type='sine'; o.frequency.value=880; g.gain.setValueAtTime(0.0001,whAudioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.13,whAudioCtx.currentTime+0.02); g.gain.exponentialRampToValueAtTime(0.0001,whAudioCtx.currentTime+0.3); o.start(); o.stop(whAudioCtx.currentTime+0.32); }catch(e){} }
+  function ensureAudioWh(){ try{ const C=window.AudioContext||window.webkitAudioContext; if(!C) return null; whAudioCtx=whAudioCtx||new C(); if(whAudioCtx.state==='suspended') whAudioCtx.resume(); return whAudioCtx; }catch(e){ return null; } }
+  function vibeWh(p){ try{ if(navigator.vibrate) navigator.vibrate(p); }catch(e){} }
+  function beep(){ const ctx=ensureAudioWh(); if(!ctx) return; const t0=ctx.currentTime;
+    [[880,0],[1175,0.18],[1568,0.36]].forEach(function(p){ const f=p[0],off=p[1]; const o=ctx.createOscillator(),g=ctx.createGain(); o.connect(g); g.connect(ctx.destination);
+      o.type='sine'; o.frequency.value=f; g.gain.setValueAtTime(0.0001,t0+off); g.gain.exponentialRampToValueAtTime(0.3,t0+off+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t0+off+0.32); o.start(t0+off); o.stop(t0+off+0.34); });
+    vibeWh([300,120,300,120,400]);
+  }
+  document.addEventListener('click', function(){ ensureAudioWh(); }, true);
+  function soundOnWh(){ return localStorage.getItem('afcon_sound_on')==='1'; }
+  function showSoundBarWh(){ const b=$('soundBar'); if(b) b.style.display=soundOnWh()?'none':'block'; }
   let WH_LAST=[], whPrevAtt=0, whReconciled=false;
   function refreshAttention(alerts){
     WH_LAST=alerts||WH_LAST;
@@ -1721,6 +1734,6 @@
     setTimeout(()=>{ document.documentElement.innerHTML='<body style="background:#0c0a09;color:#a8a29e;font-family:Heebo,sans-serif;height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:18px;">להתראות 👋<br><br>אפשר לסגור את החלון/הכרטיסייה.</body>'; }, 250);
   });
 </script>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 61</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 62</div>
 </body>
 </html>

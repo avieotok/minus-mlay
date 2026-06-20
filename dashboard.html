@@ -116,6 +116,7 @@
   .btn.unread{border-color:#e2231a !important;color:#fca5a5 !important;box-shadow:0 0 0 1px rgba(226,35,26,.35)}
   @keyframes upulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
   .vtabs{display:flex;gap:8px;margin-bottom:16px}
+  #soundBar{display:none;background:linear-gradient(90deg,#f59e0b,#fbbf24);color:#1c1917;font-weight:800;font-size:14px;text-align:center;padding:12px;border-radius:12px;margin-bottom:14px;cursor:pointer;font-family:'Rubik',sans-serif;box-shadow:0 2px 12px rgba(245,158,11,.3)}
   .vtab{flex:1;background:var(--surface);border:1px solid var(--line);color:var(--muted);border-radius:12px;padding:12px;font-size:15px;font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer;position:relative}
   .vtab.on{background:var(--red);border-color:var(--red);color:#fff}
   .vbadge{display:none;background:#fbbf24;color:#1c1917;border-radius:999px;min-width:9px;height:9px;margin-inline-start:6px;vertical-align:middle;font-size:0;padding:0 4px}
@@ -261,6 +262,7 @@
   </div>
 
   <main>
+    <div id="soundBar">🔔 הקש להפעלת צלילי התראה ‹ כדי לשמוע כשנכנסת קריאה</div>
     <div class="vtabs">
       <button class="vtab on" id="vtBoard">📋 פניות</button>
       <button class="vtab" id="vtKpi">📊 מחוונים</button>
@@ -540,22 +542,27 @@
   const isBoss=()=> localStorage.getItem(K.boss)==='1';
 
   // התראה ("צלצול") כשנכנסת קריאה חדשה
-  function beep(){
-    try{ const C=window.AudioContext||window.webkitAudioContext; if(!C) return;
-      const ctx=beep._ctx||(beep._ctx=new C()); if(ctx.state==='suspended') ctx.resume();
-      const o=ctx.createOscillator(), g=ctx.createGain(); o.connect(g); g.connect(ctx.destination);
-      o.type='sine'; o.frequency.value=880; g.gain.setValueAtTime(0.0001,ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.25,ctx.currentTime+0.02);
-      g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.45);
-      o.start(); o.stop(ctx.currentTime+0.47);
-    }catch(e){}
+  let AC=null;
+  function ensureAudio(){ try{ const C=window.AudioContext||window.webkitAudioContext; if(!C) return null; AC=AC||new C(); if(AC.state==='suspended') AC.resume(); return AC; }catch(e){ return null; } }
+  function vibe(p){ try{ if(navigator.vibrate) navigator.vibrate(p); }catch(e){} }
+  function chime(kind){
+    const ctx=ensureAudio(); if(!ctx) return; const t0=ctx.currentTime;
+    const seq = (kind==='call') ? [[880,0],[1175,0.18],[1568,0.36]] : [[880,0],[1245,0.16]];
+    seq.forEach(function(p){ const f=p[0],off=p[1]; const o=ctx.createOscillator(),g=ctx.createGain(); o.connect(g); g.connect(ctx.destination);
+      o.type='sine'; o.frequency.value=f; g.gain.setValueAtTime(0.0001,t0+off); g.gain.exponentialRampToValueAtTime(0.32,t0+off+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t0+off+0.32); o.start(t0+off); o.stop(t0+off+0.34); });
+    vibe(kind==='call'?[300,120,300,120,400]:[200,100,200]);
   }
+  function beep(){ chime('msg'); }
   function ring(n){
     toast('📥 '+(n>1?(n+' קריאות חדשות'):'נכנסה קריאה חדשה'));
-    beep();
+    chime('call'); setTimeout(function(){ chime('call'); }, 850);
     try{ if('Notification' in window && Notification.permission==='granted')
-      new Notification('אפקון — קריאה חדשה', { body:(n>1?(n+' קריאות חדשות לטיפול'):'נכנסה קריאה חדשה לטיפול') }); }catch(e){}
+      new Notification('אפקון — קריאה חדשה', { body:(n>1?(n+' קריאות חדשות לטיפול'):'נכנסה קריאה חדשה לטיפול'), tag:'afcon-call', renotify:true }); }catch(e){}
   }
+  // שחרור שמע בכל מגע ראשון (נדרש בנייד)
+  document.addEventListener('click', function(){ ensureAudio(); }, true);
+  function soundOn(){ return localStorage.getItem('afcon_sound_on')==='1'; }
+  function showSoundBar(){ const b=$('soundBar'); if(b) b.style.display=soundOn()?'none':'block'; }
 
   // ===== הודעות צ'אט שלא נקראו (כדי שלא יפספסו) =====
   let CSEEN={}; try{ CSEEN=JSON.parse(localStorage.getItem('afcon_chat_seen')||'{}')||{}; }catch(e){ CSEEN={}; }
@@ -990,6 +997,7 @@
   $('vtBoard').addEventListener('click',()=>setView('board'));
   $('vtKpi').addEventListener('click',()=>setView('kpi'));
   $('vtNews').addEventListener('click',()=>setView('news'));
+  $('soundBar').addEventListener('click',()=>{ ensureAudio(); chime('call'); try{ if('Notification' in window && Notification.permission==='default') Notification.requestPermission(); }catch(e){} localStorage.setItem('afcon_sound_on','1'); showSoundBar(); toast('צלילי התראה הופעלו ✓'); });
   $('ncOpen').addEventListener('click',()=>{ $('ncForm').classList.toggle('open'); });
   $('ncCancel').addEventListener('click',()=>{ $('ncForm').classList.remove('open'); $('ncTitle').value=''; $('ncBody').value=''; $('ncPin').checked=false; pendingNewsImg=''; $('ncPending').innerHTML=''; });
   $('ncCats').addEventListener('click',e=>{ const b=e.target.closest('.nc-cat'); if(!b) return; newsCat=b.dataset.cat; $('ncCats').querySelectorAll('.nc-cat').forEach(x=>x.classList.toggle('on',x===b)); });
@@ -1248,6 +1256,7 @@
   $('gateDev').addEventListener('click',()=>{ const p=prompt('סיסמת מפתח:'); if(p==='30172'){ $('idGate').style.display='none'; openModal(); } });
   maybeGate();
   updateMeBar();
+  showSoundBar();
   if(apiOn()){ load(); loadRoster(); loadNews(); } else renderEmptyConfig();
   document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&apiOn()) load(); });
 </script>
