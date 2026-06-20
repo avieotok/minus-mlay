@@ -69,6 +69,40 @@
   .gchatbtn.unread{background:#2a0b0b;border-color:#e2231a;color:#fca5a5}
   .ubadge{display:inline-block;background:#e2231a;color:#fff;border-radius:999px;font-size:11px;font-weight:800;padding:1px 7px;margin-inline-start:4px;animation:upulse 1.4s ease-in-out infinite}
   @keyframes upulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+  .news-compose{margin-bottom:16px}
+  .nc-open{width:100%;background:#1c1917;border:1px dashed #44403c;color:#34d399;border-radius:13px;padding:14px;font-size:15px;font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer}
+  .nc-form{display:none;background:#1c1917;border:1px solid #292524;border-radius:14px;padding:14px;flex-direction:column;gap:10px;margin-top:10px}
+  .nc-form.open{display:flex}
+  .nc-cats{display:flex;gap:7px;flex-wrap:wrap}
+  .nc-cat{background:#0c0a09;border:1px solid #44403c;color:#a8a29e;border-radius:999px;padding:7px 13px;font-size:13px;font-weight:700;cursor:pointer}
+  .nc-cat.on{background:rgba(226,35,26,.12);border-color:#e2231a;color:#fca5a5}
+  .nc-title,.nc-body{background:#0c0a09;border:1px solid #44403c;border-radius:11px;padding:11px 13px;color:#fafaf9;font-size:15px;font-family:'Heebo',sans-serif}
+  .nc-title:focus,.nc-body:focus{outline:none;border-color:#e2231a}
+  .nc-body{min-height:90px;resize:vertical;line-height:1.55}
+  .nc-pending{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+  .nc-row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .nc-pin{font-size:13.5px;color:#a8a29e;font-weight:700;display:flex;align-items:center;gap:5px;cursor:pointer}
+  .nc-photo{background:#211e1c;border:1px solid #44403c;color:#fafaf9;border-radius:11px;padding:8px 13px;font-size:13.5px;font-weight:700;cursor:pointer}
+  .nc-cancel{background:none;border:1px solid #44403c;color:#a8a29e;border-radius:11px;padding:8px 14px;font-size:13.5px;font-weight:700;cursor:pointer}
+  .nc-send{background:#e2231a;border:none;color:#fff;border-radius:11px;padding:9px 20px;font-size:14.5px;font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer}
+  .news-item{background:#1c1917;border:1px solid #292524;border-radius:14px;padding:14px 16px;margin-bottom:12px}
+  .news-item.pinned{border-color:rgba(251,191,36,.5)}
+  .ni-top{display:flex;align-items:center;gap:8px;margin-bottom:7px;flex-wrap:wrap}
+  .ni-cat{font-size:12px;font-weight:800;border-radius:999px;padding:2px 10px;border:1px solid}
+  .ni-cat.general{color:#93c5fd;border-color:#3b82f6}
+  .ni-cat.supplier{color:#6ee7b7;border-color:#10b981}
+  .ni-cat.urgent{color:#fca5a5;border-color:#e2231a}
+  .ni-cat.procedure{color:#fcd34d;border-color:#f59e0b}
+  .ni-pin{color:#fbbf24;font-size:13px;font-weight:800}
+  .ni-title{font-size:16.5px;font-weight:800;font-family:'Rubik',sans-serif;color:#fafaf9;margin-bottom:4px}
+  .ni-body{font-size:14.5px;color:#fafaf9;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+  .ni-meta{font-size:12px;color:#78716c;margin-top:8px;font-weight:600}
+  .ni-img{margin-top:10px}
+  .ni-img img{max-width:240px;max-height:240px;border-radius:10px;border:1px solid #44403c;cursor:pointer;display:block}
+  .ni-acts{display:flex;gap:8px;margin-top:9px}
+  .ni-act{background:#211e1c;border:1px solid #44403c;color:#a8a29e;border-radius:9px;padding:5px 11px;font-size:12.5px;font-weight:700;cursor:pointer}
+  .ni-act.del{color:#fca5a5;border-color:rgba(226,35,26,.4)}
+  .news-empty{text-align:center;color:#78716c;padding:40px 20px;font-size:15px}
   .whchat{display:none;flex-direction:column;gap:8px;width:100%;margin-top:8px}
   .whchat.open{display:flex}
   .wthread{display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto;background:#0c0a09;border:1px solid #3f3f46;border-radius:11px;padding:10px}
@@ -168,6 +202,7 @@
     <div class="tabs">
       <button class="tab active" id="tabText">✍️ דיווח</button>
       <button class="tab" id="tabInbox">📥 הדיווחים שלי<span id="inboxBadge" style="display:none;background:#e2231a;color:#fff;border-radius:999px;min-width:18px;height:18px;line-height:18px;text-align:center;font-size:11px;font-weight:800;margin-inline-start:6px;padding:0 5px">●</span></button>
+      <button class="tab" id="tabNews">📢 ידיעון<span id="newsBadge" style="display:none;background:#fbbf24;color:#1c1917;border-radius:999px;min-width:9px;height:9px;margin-inline-start:6px;vertical-align:middle;padding:0 4px;font-size:0">●</span></button>
       <button class="tab tab-about" id="tabAbout">ℹ️ אודות</button>
     </div>
     <div id="opsWrap">
@@ -249,7 +284,7 @@
       <div id="fldPhotos" style="display:none">
         <span class="label">תמונות (המוצר + המק״ט)</span>
         <input type="file" id="defFile" accept="image/*" capture="environment" multiple class="hidden">
-        <button type="button" class="scan-btn" id="defPhotoBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fafaf9" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> צלם / צרף תמונה</button>
+        <button type="button" class="scan-btn" id="defPhotoBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fafaf9" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> צלם / צרף / הדבק תמונה</button>
         <div id="defPhotoStrip" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"></div>
       </div>
       <button class="send" id="sendText">
@@ -315,6 +350,36 @@
         <button class="scan-btn" id="inboxRefresh" style="width:auto;padding:9px 14px">🔄 רענן</button>
       </div>
       <div id="inboxList"></div>
+    </div>
+
+    <div id="newsMode" class="hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-family:'Rubik',sans-serif;font-weight:800;font-size:18px">📢 ידיעון</div>
+        <button class="scan-btn" id="newsRefresh" style="width:auto;padding:9px 14px">🔄 רענן</button>
+      </div>
+      <div class="news-compose">
+        <button class="nc-open" id="ncOpen">➕ פרסם הודעה בידיעון</button>
+        <div class="nc-form" id="ncForm">
+          <div class="nc-cats" id="ncCats">
+            <button class="nc-cat on" data-cat="general">📢 כללי</button>
+            <button class="nc-cat" data-cat="supplier">🚚 ספק/סחורה</button>
+            <button class="nc-cat" data-cat="urgent">⚠️ חשוב</button>
+            <button class="nc-cat" data-cat="procedure">📋 נוהל</button>
+          </div>
+          <input class="nc-title" id="ncTitle" placeholder="כותרת ההודעה">
+          <textarea class="nc-body" id="ncBody" placeholder="תוכן ההודעה…"></textarea>
+          <div class="nc-pending" id="ncPending"></div>
+          <div class="nc-row">
+            <label class="nc-pin"><input type="checkbox" id="ncPin"> 📌 הצמד לראש</label>
+            <button class="nc-photo" id="ncPhotoBtn" type="button" title="אפשר גם להדביק תמונה (Ctrl+V)">📷 תמונה</button>
+            <input type="file" id="ncFile" accept="image/*" style="display:none">
+            <span style="flex:1"></span>
+            <button class="nc-cancel" id="ncCancel" type="button">ביטול</button>
+            <button class="nc-send" id="ncSend" type="button">פרסם</button>
+          </div>
+        </div>
+      </div>
+      <div id="newsList"></div>
     </div>
 
     <div id="aboutMode" class="hidden">
@@ -772,17 +837,40 @@
     setStatus(''); renderDefPhotos(); e.target.value='';
   });
 
+  // הדבקת תמונה (Ctrl+V) — מנותבת לפי ההקשר: צ'אט פנייה / ידיעון / דיווח פגום
+  function pasteImageFile(e){ const items=(e.clipboardData&&e.clipboardData.items)||[]; for(let i=0;i<items.length;i++){ const it=items[i]; if(it.type&&it.type.indexOf('image')===0) return it.getAsFile(); } return null; }
+  document.addEventListener('paste', async e=>{
+    const f=pasteImageFile(e); if(!f) return;
+    const ae=document.activeElement;
+    if(ae && ae.classList && ae.classList.contains('win')){ const row=ae.closest('.hist-row'); if(row){ e.preventDefault();
+      try{ const d=await compressPhoto(f); pendingWhImg[row.dataset.id]=d; const pv=row.querySelector('.wpending');
+        if(pv) pv.innerHTML='<span style="font-size:12.5px;color:#34d399;font-weight:700">📎 תמונה הודבקה <button class="wpx" type="button" style="background:none;border:none;color:#e2231a;font-weight:800;cursor:pointer">✕</button></span><img src="'+d+'" style="height:46px;border-radius:8px;border:1px solid #44403c;margin-inline-start:8px">';
+      }catch(_){ setStatus('בעיה בעיבוד התמונה'); } } return; }
+    if(whNewsActive || (ae && ae.closest && ae.closest('#ncForm'))){ e.preventDefault(); if(!$('ncForm').classList.contains('open')) $('ncForm').classList.add('open');
+      try{ pendingNewsImgWh=await compressPhoto(f);
+        $('ncPending').innerHTML='<span style="font-size:12.5px;color:#34d399;font-weight:700">📎 תמונה הודבקה <button id="ncPx" type="button" style="background:none;border:none;color:#e2231a;font-weight:800;cursor:pointer">✕</button></span><img src="'+pendingNewsImgWh+'" style="height:48px;border-radius:8px;border:1px solid #44403c;margin-inline-start:8px">';
+        const px=$('ncPx'); if(px) px.addEventListener('click',()=>{ pendingNewsImgWh=''; $('ncPending').innerHTML=''; });
+      }catch(_){ setStatus('בעיה בעיבוד התמונה'); } return; }
+    const fld=$('fldPhotos'); const onReport=$('opsWrap') && !$('opsWrap').classList.contains('hidden');
+    if(onReport && fld && fld.style.display!=='none' && defPhotos.length<MAX_PHOTOS){ e.preventDefault();
+      try{ const d=await compressPhoto(f); defPhotos.push(d); renderDefPhotos(); setStatus('תמונה הודבקה ✓'); }catch(_){ setStatus('בעיה בעיבוד התמונה'); } return; }
+  });
+
   // tabs
   $('tabText').addEventListener('click',()=>switchTab('text'));
   $('tabInbox').addEventListener('click',()=>switchTab('inbox'));
+  $('tabNews').addEventListener('click',()=>switchTab('news'));
   $('tabAbout').addEventListener('click',()=>switchTab('about'));
   function switchTab(t){
     $('tabText').classList.toggle('active', t==='text');
     $('tabInbox').classList.toggle('active', t==='inbox');
+    $('tabNews').classList.toggle('active', t==='news');
     $('tabAbout').classList.toggle('active', t==='about');
-    hide($('opsWrap')); hide($('inboxMode')); hide($('aboutMode')); closeScanner();
+    whNewsActive = (t==='news');
+    hide($('opsWrap')); hide($('inboxMode')); hide($('newsMode')); hide($('aboutMode')); closeScanner();
     if(t==='about'){ show($('aboutMode')); return; }
     if(t==='inbox'){ show($('inboxMode')); loadInbox(); return; }
+    if(t==='news'){ show($('newsMode')); markNewsSeenWh(); loadNewsWh(); return; }
     show($('opsWrap')); cardMode=false; $('textMode').style.display='flex'; setStatus('');
   }
 
@@ -1246,6 +1334,7 @@
   }
   checkVersion(); setInterval(checkVersion, 45000);
   checkFeedback(); setInterval(checkFeedback, 30000);
+  loadNewsWh(); setInterval(loadNewsWh, 45000);
   $('apiTest').addEventListener('click', async ()=>{
     const url=$('apiUrlInp').value.trim(), tok=$('apiTokenInp').value.trim();
     if(!url){ $('apiMsg').textContent='הזן כתובת.'; return; }
@@ -1290,7 +1379,7 @@
           +'<button class="gchatbtn'+(whUnreadFor(x)>0?' unread':'')+'" data-gchat="1">💬 צ׳אט הפנייה'+(whUnreadFor(x)>0?(' <span class="ubadge">'+whUnreadFor(x)+'</span>'):(whCount(x)?(' ('+whCount(x)+')'):''))+'</button>'
           +'<div class="whchat"><div class="wthread">'+whThreadHtml(x)+'</div>'
             +'<div class="wpending"></div>'
-            +'<div class="winrow"><button class="wphoto" type="button" title="צרף תמונה">📷</button>'
+            +'<div class="winrow"><button class="wphoto" type="button" title="צרף או הדבק תמונה (Ctrl+V)">📷</button>'
             +'<input type="file" class="wfile" accept="image/*" style="display:none">'
             +'<textarea class="win" placeholder="כתוב/י הודעה…"></textarea>'
             +'<button class="wsend" type="button">שלח</button></div></div>'
@@ -1366,6 +1455,71 @@
   });
   $('inboxList').addEventListener('change', e=>{
     const cb=e.target; if(cb.classList && cb.classList.contains('wfile')){ const row=cb.closest('.hist-row'); if(row){ onWhFile(row, row.dataset.id, cb.files&&cb.files[0]); cb.value=''; } }
+  });
+
+  // ===== 📢 ידיעון (מחסנאי) =====
+  let NEWS_WH=[], whNewsActive=false, pendingNewsImgWh='', newsCatWh='general';
+  let WNSEEN=null; try{ const raw=localStorage.getItem('afcon_wh_news_seen'); WNSEEN=raw?JSON.parse(raw):null; }catch(e){ WNSEEN=null; }
+  function wnSave(){ try{ localStorage.setItem('afcon_wh_news_seen', JSON.stringify(WNSEEN||[])); }catch(e){} }
+  function unreadNewsWh(){ if(!WNSEEN) return 0; const s=new Set(WNSEEN); return NEWS_WH.filter(n=>!s.has(String(n.id))).length; }
+  function markNewsSeenWh(){ WNSEEN=NEWS_WH.map(n=>String(n.id)); wnSave(); updateNewsBadgeWh(); }
+  function updateNewsBadgeWh(){ const b=$('newsBadge'); if(!b) return; b.style.display=(unreadNewsWh()>0 && !whNewsActive)?'inline-block':'none'; }
+  const NCATS_WH={general:'📢 כללי',supplier:'🚚 ספק/סחורה',urgent:'⚠️ חשוב',procedure:'📋 נוהל'};
+  async function loadNewsWh(){
+    if(!apiOn()) return;
+    try{ const r=await apiGet('news'); if(r&&r.ok&&Array.isArray(r.news)){ NEWS_WH=r.news;
+      if(WNSEEN===null){ WNSEEN=NEWS_WH.map(n=>String(n.id)); wnSave(); }
+      if(whNewsActive) markNewsSeenWh(); updateNewsBadgeWh(); if(whNewsActive) renderNewsWh();
+    } }catch(e){}
+  }
+  async function fetchNewsPhotosWh(){
+    const els=document.querySelectorAll('#newsList .ni-img[data-cphoto]');
+    for(const el of els){ const pid=el.getAttribute('data-cphoto'); if(!pid) continue;
+      if(!whPhotoCache[pid]){ try{ const r=await apiGet('photos',{id:pid}); if(r&&r.ok&&Array.isArray(r.photos)){ whPhotoCache[pid]=r.photos; } else continue; }catch(e){ continue; } }
+      el.removeAttribute('data-cphoto'); el.innerHTML=(whPhotoCache[pid]||[]).map(d=>'<a href="'+d+'" target="_blank" rel="noopener"><img src="'+d+'"></a>').join('');
+    }
+  }
+  function renderNewsWh(){
+    const L=$('newsList'); if(!L) return; const meName=whMe();
+    if(!NEWS_WH.length){ L.innerHTML='<div class="news-empty">📭 אין הודעות בידיעון עדיין.</div>'; return; }
+    L.innerHTML=NEWS_WH.map(n=>{ const cat=String(n.cat||'general'); const canEdit=(String(n.author||'').trim()===meName)||(meName==='יהודה פור');
+      const img=n.photo?('<div class="ni-img" data-cphoto="'+esc(n.photo)+'"><span style="color:#78716c;font-size:12px">📷 טוען…</span></div>'):'';
+      return '<div class="news-item'+(n.pinned?' pinned':'')+'" data-nid="'+esc(n.id)+'">'
+        +'<div class="ni-top">'+(n.pinned?'<span class="ni-pin">📌 נעוץ</span>':'')+'<span class="ni-cat '+cat+'">'+(NCATS_WH[cat]||NCATS_WH.general)+'</span></div>'
+        +(n.title?('<div class="ni-title">'+esc(n.title)+'</div>'):'')
+        +(n.body?('<div class="ni-body">'+esc(n.body)+'</div>'):'')+img
+        +'<div class="ni-meta">'+esc(n.author||'—')+' · '+esc(whFmt(n.created))+'</div>'
+        +(canEdit?('<div class="ni-acts"><button class="ni-act" data-npin="'+(n.pinned?'0':'1')+'">'+(n.pinned?'בטל הצמדה':'📌 הצמד')+'</button><button class="ni-act del" data-ndel="1">🗑️ מחק</button></div>'):'')
+        +'</div>';
+    }).join('');
+    fetchNewsPhotosWh();
+  }
+  async function postNewsWh(payload){ try{ await fetch(apiUrl(),{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({token:apiToken(),action:'newsAdd'},payload))}); }catch(e){} }
+  async function sendNewsWh(){
+    const me=whMe(); if(!me){ setStatus('בחר קודם את שמך'); return; }
+    const title=($('ncTitle').value||'').trim(); const body=($('ncBody').value||'').trim();
+    if(!title && !body){ setStatus('כתוב כותרת או תוכן'); return; }
+    const pin=$('ncPin').checked?'1':''; let photoId='';
+    if(pendingNewsImgWh){ photoId='C'+Date.now()+Math.floor(Math.random()*1000); await uploadPhotos(photoId,[pendingNewsImgWh]); whPhotoCache[photoId]=[pendingNewsImgWh]; }
+    await postNewsWh({author:me, cat:newsCatWh, title:title, body:body, pinned:pin, photo:photoId});
+    $('ncTitle').value=''; $('ncBody').value=''; $('ncPin').checked=false; pendingNewsImgWh=''; $('ncPending').innerHTML=''; $('ncForm').classList.remove('open');
+    setStatus('פורסם בידיעון ✓');
+    setTimeout(()=>{ loadNewsWh(); }, 500);
+  }
+  $('ncOpen').addEventListener('click',()=>$('ncForm').classList.toggle('open'));
+  $('ncCancel').addEventListener('click',()=>{ $('ncForm').classList.remove('open'); $('ncTitle').value=''; $('ncBody').value=''; $('ncPin').checked=false; pendingNewsImgWh=''; $('ncPending').innerHTML=''; });
+  $('ncCats').addEventListener('click',e=>{ const b=e.target.closest('.nc-cat'); if(!b) return; newsCatWh=b.dataset.cat; $('ncCats').querySelectorAll('.nc-cat').forEach(x=>x.classList.toggle('on',x===b)); });
+  $('ncSend').addEventListener('click', sendNewsWh);
+  $('ncPhotoBtn').addEventListener('click',()=>$('ncFile').click());
+  $('ncFile').addEventListener('change', async e=>{ const f=e.target.files&&e.target.files[0]; e.target.value=''; if(!f) return;
+    try{ pendingNewsImgWh=await compressPhoto(f); $('ncPending').innerHTML='<span style="font-size:12.5px;color:#34d399;font-weight:700">📎 תמונה מצורפת <button id="ncPx" type="button" style="background:none;border:none;color:#e2231a;font-weight:800;cursor:pointer">✕</button></span><img src="'+pendingNewsImgWh+'" style="height:48px;border-radius:8px;border:1px solid #44403c;margin-inline-start:8px">';
+      $('ncPx').addEventListener('click',()=>{ pendingNewsImgWh=''; $('ncPending').innerHTML=''; }); }catch(err){ setStatus('בעיה בעיבוד התמונה'); } });
+  $('newsRefresh').addEventListener('click', loadNewsWh);
+  $('newsList').addEventListener('click', e=>{
+    const item=e.target.closest('.news-item'); if(!item) return; const nid=item.dataset.nid;
+    const pinBtn=e.target.closest('[data-npin]');
+    if(pinBtn){ const val=pinBtn.dataset.npin; apiGet('newsPin',{id:nid, pinned:val}).then(()=>{ setStatus(val==='1'?'הוצמד ✓':'הוסרה הצמדה'); setTimeout(loadNewsWh,400); }).catch(()=>setStatus('הפעולה נכשלה')); return; }
+    if(e.target.closest('[data-ndel]')){ if(confirm('למחוק את ההודעה מהידיעון?')){ apiGet('newsDel',{id:nid}).then(()=>{ setStatus('נמחק ✓'); setTimeout(loadNewsWh,400); }).catch(()=>setStatus('המחיקה נכשלה')); } return; }
   });
 
   // ===== מנגנון פידבק: התראה כשהקניין הגיב/שינה סטטוס =====
@@ -1563,6 +1717,6 @@
     setTimeout(()=>{ document.documentElement.innerHTML='<body style="background:#0c0a09;color:#a8a29e;font-family:Heebo,sans-serif;height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:18px;">להתראות 👋<br><br>אפשר לסגור את החלון/הכרטיסייה.</body>'; }, 250);
   });
 </script>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 58</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 60</div>
 </body>
 </html>
