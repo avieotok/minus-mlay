@@ -435,6 +435,12 @@
         <button class="ghost" id="clearPhones" style="border-color:#7f1d1d;color:#f87171">🗑️ מחק את כל ספר הטלפונים המשותף</button>
         <div class="note" id="clearPhNote"></div>
       </div>
+      <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:8px">🗂️ גיבוי הנתונים</div>
+        <p style="font-size:12.5px;color:var(--faint);line-height:1.6;margin-bottom:10px">גיבוי יומי אוטומטי של כל הנתונים נשמר בתיקיית Drive (נשמרים 30 הגיבויים האחרונים). אפשר גם לגבות עכשיו ידנית כדי לבדוק.</p>
+        <button class="ghost" id="backupNow" style="border-color:var(--line2)">🗂️ גבה עכשיו</button>
+        <div class="note" id="backupNote"></div>
+      </div>
     </div>
 
     <button class="ghost" id="mClose">סגור</button>
@@ -1275,6 +1281,11 @@
     $('clearPhNote').textContent='מוחק…';
     try{ const r=await apiPost('contactsClear'); if(r&&r.ok){ $('clearPhNote').textContent='✓ נמחקו '+(r.cleared||0)+' ספקים משותפים'; } else $('clearPhNote').textContent='המחיקה נכשלה.'; }
     catch(e){ $('clearPhNote').textContent='המחיקה נכשלה — בדוק חיבור.'; }
+  });
+  const bk=$('backupNow'); if(bk) bk.addEventListener('click', async ()=>{
+    $('backupNote').textContent='מגבה…';
+    try{ const r=await apiGet('backup'); if(r&&r.ok){ $('backupNote').textContent='✓ נוצר גיבוי: '+(r.name||''); } else $('backupNote').textContent='הגיבוי נכשל. ודא/י שהופעל הגיבוי בעורך (הרצת installBackupTrigger ואישור הרשאות).'; }
+    catch(e){ $('backupNote').textContent='הגיבוי נכשל — בדוק חיבור.'; }
   });
   $('gateOk').addEventListener('click',()=>{ const v=$('gateSel').value.trim(); if(!v){ $('gateMsg').textContent='בחר את שמך מהרשימה.'; return; } localStorage.setItem(K.me,v); $('idGate').style.display='none'; fillIdentity(); load(); });
   $('gateDev').addEventListener('click',()=>{ const p=prompt('סיסמת מפתח:'); if(p==='30172'){ $('idGate').style.display='none'; openModal(); } });
