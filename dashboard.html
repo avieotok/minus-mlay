@@ -1245,11 +1245,11 @@
     catch(e){ $('pubNote').textContent='הפרסום נכשל — בדוק חיבור.'; }
   });
   const ca=$('clearAll'); if(ca) ca.addEventListener('click', async ()=>{
-    if(!confirm('לאפס את כל ההתראות במערכת? כל הדיווחים (ממתינים, בטיפול וטופלו) יימחקו לצמיתות.')) return;
+    if(!confirm('לאפס את כל ההתראות במערכת? כל הדיווחים (ממתינים, בטיפול וטופלו) יימחקו לצמיתות, ומספור הקריאות יתאפס חזרה ל-0001.')) return;
     const typed=prompt('פעולה בלתי הפיכה. הקלד את המילה: מחק');
     if((typed||'').trim()!=='מחק'){ $('clearNote').textContent='בוטל.'; return; }
     $('clearNote').textContent='מאפס…';
-    try{ const r=await apiPost('clearAll'); if(r&&r.ok){ selDel.clear(); await load(); $('clearNote').textContent='✓ נמחקו '+(r.cleared||0)+' התראות'; } else $('clearNote').textContent='האיפוס נכשל.'; }
+    try{ const r=await apiPost('clearAll'); if(r&&r.ok){ selDel.clear(); await load(); $('clearNote').textContent='✓ נמחקו '+(r.cleared||0)+' התראות · המספור אופס'; } else $('clearNote').textContent='האיפוס נכשל.'; }
     catch(e){ $('clearNote').textContent='האיפוס נכשל — בדוק חיבור.'; }
   });
   $('gateOk').addEventListener('click',()=>{ const v=$('gateSel').value.trim(); if(!v){ $('gateMsg').textContent='בחר את שמך מהרשימה.'; return; } localStorage.setItem(K.me,v); $('idGate').style.display='none'; fillIdentity(); load(); });
