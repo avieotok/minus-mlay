@@ -66,6 +66,9 @@
   .badge-count { background: #f59e0b; color: #0c0a09; font-size: 12px; font-weight: 800; padding: 2px 9px; border-radius: 20px; }
   .hist-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid #292524; font-size: 13px; }
   .gchatbtn{margin-top:6px;background:#06281b;border:1px solid #166534;color:#34d399;border-radius:10px;padding:8px 12px;font-size:13.5px;font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer;align-self:flex-start}
+  .gchatbtn.unread{background:#2a0b0b;border-color:#e2231a;color:#fca5a5}
+  .ubadge{display:inline-block;background:#e2231a;color:#fff;border-radius:999px;font-size:11px;font-weight:800;padding:1px 7px;margin-inline-start:4px;animation:upulse 1.4s ease-in-out infinite}
+  @keyframes upulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
   .whchat{display:none;flex-direction:column;gap:8px;width:100%;margin-top:8px}
   .whchat.open{display:flex}
   .wthread{display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto;background:#0c0a09;border:1px solid #3f3f46;border-radius:11px;padding:10px}
@@ -1263,7 +1266,7 @@
       const res=await apiGet('all');
       if(!res || !res.ok){ L.innerHTML='<div class="hist-empty">שגיאה בטעינה (בדוק טוקן).</div>'; return; }
       const mine=(res.alerts||[]).filter(x=>String(x.reporter||'').trim()===meName);
-      saveSeen(feedbackKeys(res.alerts)); setInboxBadge(0);
+      saveSeen(feedbackKeys(res.alerts));
       if(!mine.length){ L.innerHTML='<div class="hist-empty">עדיין לא שלחת דיווחים.</div>'; return; }
       const PILL={'ממתין':['#fbbf24','#3a2f0b'],'בטיפול':['#60a5fa','#0b2239'],'טופל':['#34d399','#06281b']};
       const TICON={'חוסר מלאי':'🟠','פריט פגום':'🔴','אי-התאמה':'🔵'};
@@ -1284,7 +1287,7 @@
           +'<span class="hist-meta2">'+(who?('🧑‍💼 מטפל: '+esc(who)):'⏳ ממתין לשיוך קניין')+'</span>'
           +(x.response?('<span class="hist-meta2" style="color:#34d399">📋 פעולות הקניין: '+esc(x.response)+'</span>'):'')
           +(Number(x.photo)>0?('<span class="inboxPhotos" data-pid="'+esc(x.id)+'" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px"><span class="hist-meta2">📷 טוען תמונות…</span></span>'):'')
-          +'<button class="gchatbtn" data-gchat="1">💬 צ׳אט הפנייה'+(whCount(x)?(' ('+whCount(x)+')'):'')+'</button>'
+          +'<button class="gchatbtn'+(whUnreadFor(x)>0?' unread':'')+'" data-gchat="1">💬 צ׳אט הפנייה'+(whUnreadFor(x)>0?(' <span class="ubadge">'+whUnreadFor(x)+'</span>'):(whCount(x)?(' ('+whCount(x)+')'):''))+'</button>'
           +'<div class="whchat"><div class="wthread">'+whThreadHtml(x)+'</div>'
             +'<div class="wpending"></div>'
             +'<div class="winrow"><button class="wphoto" type="button" title="צרף תמונה">📷</button>'
@@ -1295,6 +1298,7 @@
       }).join('');
       fetchInboxPhotos();
       fetchChatImgsWh();
+      refreshAttention(res.alerts);
     }catch(e){ L.innerHTML='<div class="hist-empty">לא ניתן להתחבר.<br><span style="font-size:12px;opacity:.8;direction:ltr;display:inline-block;margin-top:6px">סיבה: '+esc(String((e&&e.message)||e||'לא ידוע'))+'</span></div>'; }
   }
   const whPhotoCache={};
@@ -1348,13 +1352,14 @@
     const thread=row.querySelector('.wthread');
     if(thread){ const em=thread.querySelector('.hist-empty'); if(em) thread.innerHTML=''; thread.insertAdjacentHTML('beforeend', whMsgHtml({author:me,ts:ts,text:text,photo:photoId})); thread.scrollTop=thread.scrollHeight; }
     if(inp) inp.value=''; delete pendingWhImg[id]; const pv=row.querySelector('.wpending'); if(pv) pv.innerHTML='';
+    markWhSeen(id, row.querySelectorAll('.wmsg').length);
     fetchChatImgsWh();
     try{ await apiPost('msgAdd',{id:id, author:me, text:text, photo:photoId}); }catch(e){ setStatus('שליחה נכשלה — נסה שוב'); }
   }
   function whChatTyping(){ const el=document.activeElement; return !!(el && el.closest && el.closest('#inboxList') && /TEXTAREA|INPUT/.test(el.tagName)); }
   $('inboxList').addEventListener('click', e=>{
     const row=e.target.closest('.hist-row'); if(!row) return; const id=row.dataset.id; if(!id) return;
-    if(e.target.closest('[data-gchat]')){ row.querySelector('.whchat').classList.toggle('open'); return; }
+    if(e.target.closest('[data-gchat]')){ const panel=row.querySelector('.whchat'); panel.classList.toggle('open'); if(panel.classList.contains('open')){ const n=row.querySelectorAll('.wmsg').length; markWhSeen(id, n); const bb=row.querySelector('.gchatbtn .ubadge'); if(bb) bb.remove(); const gb=row.querySelector('.gchatbtn'); if(gb) gb.classList.remove('unread'); } return; }
     if(e.target.closest('.wsend')){ sendWhMsg(row, id); return; }
     if(e.target.closest('.wphoto')){ const f=row.querySelector('.wfile'); if(f) f.click(); return; }
     if(e.target.closest('.wpx')){ delete pendingWhImg[id]; const pv=row.querySelector('.wpending'); if(pv) pv.innerHTML=''; return; }
@@ -1381,6 +1386,32 @@
   }
   function loadSeen(){ try{ return JSON.parse(localStorage.getItem(K.seen)||'[]'); }catch(e){ return []; } }
   function saveSeen(arr){ try{ localStorage.setItem(K.seen, JSON.stringify(arr||[])); }catch(e){} }
+
+  // ===== "אל תפספס": הודעות צ'אט שלא נקראו + צליל + כותרת =====
+  let WCSEEN={}; try{ WCSEEN=JSON.parse(localStorage.getItem('afcon_wh_chat_seen')||'{}')||{}; }catch(e){ WCSEEN={}; }
+  function wcSave(){ try{ localStorage.setItem('afcon_wh_chat_seen', JSON.stringify(WCSEEN)); }catch(e){} }
+  function whUnreadFor(x){ const s=WCSEEN[String(x.id)]; if(s===undefined) return 0; return Math.max(0, whCount(x)-s); }
+  function markWhSeen(id, count){ WCSEEN[String(id)]=count; wcSave(); refreshAttention(WH_LAST); }
+  const BASE_TITLE_WH='אפקון — פורטל שרשרת האספקה';
+  function updateTitleWh(n){ document.title=(n>0?('🔴 ('+n+') '):'')+BASE_TITLE_WH; }
+  let whAudioCtx=null;
+  function beep(){ try{ whAudioCtx=whAudioCtx||new (window.AudioContext||window.webkitAudioContext)(); const o=whAudioCtx.createOscillator(),g=whAudioCtx.createGain(); o.connect(g); g.connect(whAudioCtx.destination); o.type='sine'; o.frequency.value=880; g.gain.setValueAtTime(0.0001,whAudioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.13,whAudioCtx.currentTime+0.02); g.gain.exponentialRampToValueAtTime(0.0001,whAudioCtx.currentTime+0.3); o.start(); o.stop(whAudioCtx.currentTime+0.32); }catch(e){} }
+  let WH_LAST=[], whPrevAtt=0, whReconciled=false;
+  function refreshAttention(alerts){
+    WH_LAST=alerts||WH_LAST;
+    const me=(localStorage.getItem(K.reporter)||'').trim(); if(!me){ updateTitleWh(0); return {freshFb:0,chatUnread:0,inboxOpen:false,keys:[]}; }
+    const mine=(WH_LAST||[]).filter(x=>String(x.reporter||'').trim()===me);
+    let chatUnread=0;
+    mine.forEach(x=>{ const id=String(x.id); if(WCSEEN[id]===undefined){ WCSEEN[id]=whCount(x); } chatUnread+=Math.max(0,whCount(x)-WCSEEN[id]); });
+    wcSave();
+    const keys=feedbackKeys(WH_LAST); const seen=loadSeen(); const freshFb=keys.filter(k=>seen.indexOf(k)===-1).length;
+    const inboxOpen=$('inboxMode') && !$('inboxMode').classList.contains('hidden');
+    const att=(inboxOpen?0:freshFb)+chatUnread;
+    setInboxBadge(att);
+    if(whReconciled && att>whPrevAtt){ beep(); }
+    whPrevAtt=att; whReconciled=true; updateTitleWh(att);
+    return {freshFb, chatUnread, inboxOpen, keys};
+  }
   function setInboxBadge(n){
     const b=$('inboxBadge'); if(!b) return;
     if(n>0){ b.textContent=n>9?'9+':String(n); b.style.display='inline-block'; }
@@ -1394,19 +1425,15 @@
     try{
       const res=await apiGet('all');
       if(!res || !res.ok) return;
-      const keys=feedbackKeys(res.alerts);
-      const seen=loadSeen();
-      const fresh=keys.filter(k=>seen.indexOf(k)===-1);
-      // אם הטאב פתוח כרגע — לא צריך נקודה (כבר רואים); נרענן אם יש חדש
-      const inboxOpen = $('inboxMode') && !$('inboxMode').classList.contains('hidden');
-      if(inboxOpen){ if(fresh.length && !whChatTyping()){ loadInbox(); } else if(!fresh.length){ saveSeen(keys); setInboxBadge(0); } }
-      else { setInboxBadge(fresh.length); }
+      const info=refreshAttention(res.alerts);
+      const inboxOpen = info.inboxOpen;
+      if(inboxOpen){ if(info.freshFb && !whChatTyping()){ loadInbox(); } else if(!info.freshFb){ saveSeen(info.keys); } }
     }catch(e){}
   }
   // כשנכנסים לטאב — מסמנים הכל כנראה ומכבים את הנקודה
   async function markInboxSeen(){
     if(!apiOn()) return;
-    try{ const res=await apiGet('all'); if(res&&res.ok){ saveSeen(feedbackKeys(res.alerts)); setInboxBadge(0); } }catch(e){}
+    try{ const res=await apiGet('all'); if(res&&res.ok){ saveSeen(feedbackKeys(res.alerts)); refreshAttention(res.alerts); } }catch(e){}
   }
 
   // copy text
@@ -1536,6 +1563,6 @@
     setTimeout(()=>{ document.documentElement.innerHTML='<body style="background:#0c0a09;color:#a8a29e;font-family:Heebo,sans-serif;height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:18px;">להתראות 👋<br><br>אפשר לסגור את החלון/הכרטיסייה.</body>'; }, 250);
   });
 </script>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 57</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 58</div>
 </body>
 </html>

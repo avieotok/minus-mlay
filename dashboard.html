@@ -112,6 +112,9 @@
   .cempty{color:var(--faint);font-size:13px;text-align:center;padding:6px}
   .cbadge{display:inline-block;background:var(--blue);color:#fff;border-radius:999px;font-size:11px;font-weight:800;padding:1px 7px;margin-inline-start:3px}
   .cbadge.gb{background:var(--green)}
+  .ubadge{display:inline-block;background:#e2231a;color:#fff;border-radius:999px;font-size:11px;font-weight:800;padding:1px 7px;margin-inline-start:4px;animation:upulse 1.4s ease-in-out infinite}
+  .btn.unread{border-color:#e2231a !important;color:#fca5a5 !important;box-shadow:0 0 0 1px rgba(226,35,26,.35)}
+  @keyframes upulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
   .genchat{margin-top:11px;display:none;flex-direction:column;gap:9px}
   .genchat.open{display:flex}
   .gthread{display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto;background:var(--ink);border:1px solid var(--line2);border-radius:11px;padding:10px}
@@ -445,6 +448,23 @@
       new Notification('אפקון — קריאה חדשה', { body:(n>1?(n+' קריאות חדשות לטיפול'):'נכנסה קריאה חדשה לטיפול') }); }catch(e){}
   }
 
+  // ===== הודעות צ'אט שלא נקראו (כדי שלא יפספסו) =====
+  let CSEEN={}; try{ CSEEN=JSON.parse(localStorage.getItem('afcon_chat_seen')||'{}')||{}; }catch(e){ CSEEN={}; }
+  function cseenSave(){ try{ localStorage.setItem('afcon_chat_seen', JSON.stringify(CSEEN)); }catch(e){} }
+  function unreadFor(a){ const s=CSEEN[String(a.id)]; if(s===undefined) return 0; return Math.max(0, genCount(a)-s); }
+  function totalUnread(){ let t=0; ALERTS.forEach(a=>t+=unreadFor(a)); return t; }
+  const BASE_TITLE='אפקון — פורטל שרשרת האספקה';
+  function updateTitle(){ const t=totalUnread(); document.title=(t>0?('🔴 ('+t+') '):'')+BASE_TITLE; }
+  function markChatSeen(id){ const a=ALERTS.find(x=>String(x.id)===String(id)); CSEEN[String(id)]=a?genCount(a):0; cseenSave(); updateTitle(); }
+  let prevUnread=0, reconciledOnce=false;
+  function reconcileChat(){
+    ALERTS.forEach(a=>{ const id=String(a.id); if(CSEEN[id]===undefined){ CSEEN[id]=genCount(a); } });
+    cseenSave();
+    const t=totalUnread();
+    if(reconciledOnce && t>prevUnread){ try{ beep(); }catch(e){} toast('💬 הודעה חדשה בצ׳אט'); }
+    prevUnread=t; reconciledOnce=true; updateTitle();
+  }
+
   async function loadRoster(){
     if(!apiOn()) return;
     try{ const r=await apiGet('roster'); if(r&&r.ok&&Array.isArray(r.buyers)){ BUYERS=r.buyers; REPORTERS=Array.isArray(r.reporters)?r.reporters:[]; fillIdentity(); fillGate(); maybeGate(); renderNames&&renderNames(); if(ALERTS.length) render(); } }catch(e){}
@@ -488,7 +508,9 @@
   }
   function genThreadHtml(a){ const msgs=parseMsgs(a.chat); if(!msgs.length) return '<div class="cempty">אין הודעות עדיין — פתח/י שיחה</div>';
     return msgs.map(genMsgHtml).join(''); }
-  function genBtn(a){ const cc=genCount(a); return '<button class="btn reply" data-act="gchat">💬 צ׳אט הפנייה'+(cc?(' <span class="cbadge gb">'+cc+'</span>'):'')+'</button>'; }
+  function genBtn(a){ const cc=genCount(a); const un=unreadFor(a);
+    return '<button class="btn reply'+(un>0?' unread':'')+'" data-act="gchat">💬 צ׳אט הפנייה'
+      +(un>0?(' <span class="ubadge">'+un+'</span>'):(cc?(' <span class="cbadge gb">'+cc+'</span>'):''))+'</button>'; }
   function genPanel(a){
     return '<div class="genchat"><div class="gthread">'+genThreadHtml(a)+'</div>'
       +'<div class="gpending"></div>'
@@ -518,6 +540,7 @@
     const thread=card.querySelector('.gthread');
     if(thread){ const em=thread.querySelector('.cempty'); if(em) thread.innerHTML=''; thread.insertAdjacentHTML('beforeend', genMsgHtml({author:me(),ts:ts,text:text,photo:photoId})); thread.scrollTop=thread.scrollHeight; }
     if(inp) inp.value=''; delete pendingChatImg[id]; const pv=card.querySelector('.gpending'); if(pv) pv.innerHTML='';
+    markChatSeen(id);
     fetchChatPhotos();
     try{ await apiPost('msgAdd',{id:id, author:me(), text:text, photo:photoId}); }catch(e){ toast('השליחה נכשלה — נסה שוב'); }
   }
@@ -572,6 +595,7 @@
         const ids=ALERTS.map(a=>String(a.id));
         if(seen===null){ seen=new Set(ids); }
         else { const fresh=ids.filter(id=>!seen.has(id)); ids.forEach(id=>seen.add(id)); if(fresh.length) ring(fresh.length); }
+        reconcileChat();
         $('status').textContent='מעודכן '+new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}); render();
       }
       else { $('status').textContent='שגיאה — בדוק טוקן'; }
@@ -731,7 +755,7 @@
     const btn=e.target.closest('[data-act]');
     if(btn){ const a=btn.dataset.act;
       if(a==='reply'){ card.querySelector('.editor').classList.toggle('open'); return; }
-      if(a==='gchat'){ card.querySelector('.genchat').classList.toggle('open'); return; }
+      if(a==='gchat'){ const panel=card.querySelector('.genchat'); panel.classList.toggle('open'); if(panel.classList.contains('open')){ markChatSeen(id); render(); } return; }
       if(a==='transfer'){ card.querySelector('.transfer').classList.toggle('open'); return; }
       if(a==='reopen'){ reopenAlert(id); return; }
       if(a==='בטיפול'){ if(needMe()) return; const ed=card.querySelector('.editor textarea'); assignTo(id, me(), 'בטיפול', ed?ed.value:''); return; }
