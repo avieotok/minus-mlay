@@ -1266,7 +1266,7 @@
             +(isMis?((x.po?(' · הזמנה '+esc(x.po)):'')+' · הוזמן '+esc(x.qty||'—')+' · התקבל '+esc(x.qtyRecv||'—')):(x.qty?(' · '+(ty==='פריט פגום'?'פגומות ':'נותרו ')+esc(x.qty)):''))+'</span>'
           +(x.note?('<span class="hist-meta2" style="color:#d6d3d1">📝 '+esc(x.note)+'</span>'):'')
           +'<span class="hist-meta2">'+(who?('🧑‍💼 מטפל: '+esc(who)):'⏳ ממתין לשיוך קניין')+'</span>'
-          +(x.response?('<span class="hist-meta2" style="color:#34d399">💬 תשובת הקניין: '+esc(x.response)+'</span>'):'')
+          +(x.response?('<span class="hist-meta2" style="color:#34d399">📋 פעולות הקניין: '+esc(x.response)+'</span>'):'')
           +(Number(x.photo)>0?('<span class="inboxPhotos" data-pid="'+esc(x.id)+'" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px"><span class="hist-meta2">📷 טוען תמונות…</span></span>'):'')
           +'</div>';
       }).join('');
