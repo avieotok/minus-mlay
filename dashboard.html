@@ -848,14 +848,14 @@
     const L=$('newsList'); if(!L) return;
     if(!NEWS.length){ L.innerHTML='<div class="news-empty">📭 אין הודעות בידיעון עדיין.<br>היה/י הראשון/ה לפרסם!</div>'; return; }
     const meName=me();
-    L.innerHTML=NEWS.map(n=>{ const cat=String(n.cat||'general'); const canEdit=(String(n.author||'').trim()===meName)||(meName===MGR);
+    L.innerHTML=NEWS.map(n=>{ const cat=String(n.cat||'general'); const isAuthor=(String(n.author||'').trim()===meName); const canPin=isAuthor||(meName===MGR); const canDel=isAuthor;
       const img=n.photo?('<div class="ni-img" data-cphoto="'+esc(n.photo)+'"><span style="color:var(--faint);font-size:12px">📷 טוען…</span></div>'):'';
       return '<div class="news-item'+(n.pinned?' pinned':'')+'" data-nid="'+esc(n.id)+'">'
         +'<div class="ni-top">'+(n.pinned?'<span class="ni-pin">📌 נעוץ</span>':'')+'<span class="ni-cat '+cat+'">'+(NCATS[cat]||NCATS.general)+'</span></div>'
         +(n.title?('<div class="ni-title">'+esc(n.title)+'</div>'):'')
         +(n.body?('<div class="ni-body">'+esc(n.body)+'</div>'):'')+img
         +'<div class="ni-meta">'+esc(n.author||'—')+' · '+esc(fmt(n.created))+'</div>'
-        +(canEdit?('<div class="ni-acts"><button class="ni-act" data-npin="'+(n.pinned?'0':'1')+'">'+(n.pinned?'בטל הצמדה':'📌 הצמד')+'</button><button class="ni-act del" data-ndel="1">🗑️ מחק</button></div>'):'')
+        +((canPin||canDel)?('<div class="ni-acts">'+(canPin?('<button class="ni-act" data-npin="'+(n.pinned?'0':'1')+'">'+(n.pinned?'בטל הצמדה':'📌 הצמד')+'</button>'):'')+(canDel?'<button class="ni-act del" data-ndel="1">🗑️ מחק</button>':'')+'</div>'):'')
         +'</div>';
     }).join('');
     fetchNewsPhotos();
@@ -868,12 +868,16 @@
     if(needMe()) return;
     const title=($('ncTitle').value||'').trim(); const body=($('ncBody').value||'').trim();
     if(!title && !body){ toast('כתוב/י כותרת או תוכן'); return; }
+    const btn=$('ncSend'); if(btn.disabled) return; btn.disabled=true; btn.textContent='מפרסם…';
     const pin=$('ncPin').checked?'1':''; let photoId='';
-    if(pendingNewsImg){ photoId='C'+Date.now()+Math.floor(Math.random()*1000); await uploadPhotos(photoId,[pendingNewsImg]); if(photoId) photoCache[photoId]=[pendingNewsImg]; }
-    await postNews({author:me(), cat:newsCat, title:title, body:body, pinned:pin, photo:photoId});
-    $('ncTitle').value=''; $('ncBody').value=''; $('ncPin').checked=false; pendingNewsImg=''; $('ncPending').innerHTML=''; $('ncForm').classList.remove('open');
-    toast('פורסם בידיעון ✓');
-    setTimeout(()=>{ loadNews(); markNewsSeen(); }, 500);
+    try{
+      if(pendingNewsImg){ photoId='C'+Date.now()+Math.floor(Math.random()*1000); await uploadPhotos(photoId,[pendingNewsImg]); if(photoId) photoCache[photoId]=[pendingNewsImg]; }
+      const nid='N'+Date.now()+Math.floor(Math.random()*1000);
+      await postNews({id:nid, author:me(), cat:newsCat, title:title, body:body, pinned:pin, photo:photoId});
+      $('ncTitle').value=''; $('ncBody').value=''; $('ncPin').checked=false; pendingNewsImg=''; $('ncPending').innerHTML=''; $('ncForm').classList.remove('open');
+      toast('פורסם בידיעון ✓');
+      setTimeout(()=>{ loadNews(); markNewsSeen(); }, 600);
+    } finally { btn.disabled=false; btn.textContent='פרסם'; }
   }
   $('vtBoard').addEventListener('click',()=>showNews(false));
   $('vtNews').addEventListener('click',()=>showNews(true));

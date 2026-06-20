@@ -1482,14 +1482,14 @@
   function renderNewsWh(){
     const L=$('newsList'); if(!L) return; const meName=whMe();
     if(!NEWS_WH.length){ L.innerHTML='<div class="news-empty">📭 אין הודעות בידיעון עדיין.</div>'; return; }
-    L.innerHTML=NEWS_WH.map(n=>{ const cat=String(n.cat||'general'); const canEdit=(String(n.author||'').trim()===meName)||(meName==='יהודה פור');
+    L.innerHTML=NEWS_WH.map(n=>{ const cat=String(n.cat||'general'); const isAuthor=(String(n.author||'').trim()===meName); const canPin=isAuthor||(meName==='יהודה פור'); const canDel=isAuthor;
       const img=n.photo?('<div class="ni-img" data-cphoto="'+esc(n.photo)+'"><span style="color:#78716c;font-size:12px">📷 טוען…</span></div>'):'';
       return '<div class="news-item'+(n.pinned?' pinned':'')+'" data-nid="'+esc(n.id)+'">'
         +'<div class="ni-top">'+(n.pinned?'<span class="ni-pin">📌 נעוץ</span>':'')+'<span class="ni-cat '+cat+'">'+(NCATS_WH[cat]||NCATS_WH.general)+'</span></div>'
         +(n.title?('<div class="ni-title">'+esc(n.title)+'</div>'):'')
         +(n.body?('<div class="ni-body">'+esc(n.body)+'</div>'):'')+img
         +'<div class="ni-meta">'+esc(n.author||'—')+' · '+esc(whFmt(n.created))+'</div>'
-        +(canEdit?('<div class="ni-acts"><button class="ni-act" data-npin="'+(n.pinned?'0':'1')+'">'+(n.pinned?'בטל הצמדה':'📌 הצמד')+'</button><button class="ni-act del" data-ndel="1">🗑️ מחק</button></div>'):'')
+        +((canPin||canDel)?('<div class="ni-acts">'+(canPin?('<button class="ni-act" data-npin="'+(n.pinned?'0':'1')+'">'+(n.pinned?'בטל הצמדה':'📌 הצמד')+'</button>'):'')+(canDel?'<button class="ni-act del" data-ndel="1">🗑️ מחק</button>':'')+'</div>'):'')
         +'</div>';
     }).join('');
     fetchNewsPhotosWh();
@@ -1499,12 +1499,16 @@
     const me=whMe(); if(!me){ setStatus('בחר קודם את שמך'); return; }
     const title=($('ncTitle').value||'').trim(); const body=($('ncBody').value||'').trim();
     if(!title && !body){ setStatus('כתוב כותרת או תוכן'); return; }
+    const btn=$('ncSend'); if(btn.disabled) return; btn.disabled=true; btn.textContent='מפרסם…';
     const pin=$('ncPin').checked?'1':''; let photoId='';
-    if(pendingNewsImgWh){ photoId='C'+Date.now()+Math.floor(Math.random()*1000); await uploadPhotos(photoId,[pendingNewsImgWh]); whPhotoCache[photoId]=[pendingNewsImgWh]; }
-    await postNewsWh({author:me, cat:newsCatWh, title:title, body:body, pinned:pin, photo:photoId});
-    $('ncTitle').value=''; $('ncBody').value=''; $('ncPin').checked=false; pendingNewsImgWh=''; $('ncPending').innerHTML=''; $('ncForm').classList.remove('open');
-    setStatus('פורסם בידיעון ✓');
-    setTimeout(()=>{ loadNewsWh(); }, 500);
+    try{
+      if(pendingNewsImgWh){ photoId='C'+Date.now()+Math.floor(Math.random()*1000); await uploadPhotos(photoId,[pendingNewsImgWh]); whPhotoCache[photoId]=[pendingNewsImgWh]; }
+      const nid='N'+Date.now()+Math.floor(Math.random()*1000);
+      await postNewsWh({id:nid, author:me, cat:newsCatWh, title:title, body:body, pinned:pin, photo:photoId});
+      $('ncTitle').value=''; $('ncBody').value=''; $('ncPin').checked=false; pendingNewsImgWh=''; $('ncPending').innerHTML=''; $('ncForm').classList.remove('open');
+      setStatus('פורסם בידיעון ✓');
+      setTimeout(()=>{ loadNewsWh(); }, 600);
+    } finally { btn.disabled=false; btn.textContent='פרסם'; }
   }
   $('ncOpen').addEventListener('click',()=>$('ncForm').classList.toggle('open'));
   $('ncCancel').addEventListener('click',()=>{ $('ncForm').classList.remove('open'); $('ncTitle').value=''; $('ncBody').value=''; $('ncPin').checked=false; pendingNewsImgWh=''; $('ncPending').innerHTML=''; });
@@ -1717,6 +1721,6 @@
     setTimeout(()=>{ document.documentElement.innerHTML='<body style="background:#0c0a09;color:#a8a29e;font-family:Heebo,sans-serif;height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:18px;">להתראות 👋<br><br>אפשר לסגור את החלון/הכרטיסייה.</body>'; }, 250);
   });
 </script>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 60</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 61</div>
 </body>
 </html>
