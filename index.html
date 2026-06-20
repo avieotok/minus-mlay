@@ -1736,7 +1736,7 @@
     setTimeout(()=>{ document.documentElement.innerHTML='<body style="background:#0c0a09;color:#a8a29e;font-family:Heebo,sans-serif;height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:18px;">להתראות 👋<br><br>אפשר לסגור את החלון/הכרטיסייה.</body>'; }, 250);
   });
 </script>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 70</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 71</div>
 <!-- ===== כלי עזר (מודול עצמאי — זהה בשתי האפליקציות) ===== -->
 <style>
   #tkModal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;display:none;align-items:flex-start;justify-content:center}
@@ -2025,7 +2025,7 @@
   var PK='afcon_tools_phones';
   function loadPhones(){ try{ return JSON.parse(localStorage.getItem(PK)||'[]')||[]; }catch(e){ return []; } }
   function savePhones(){ try{ localStorage.setItem(PK, JSON.stringify(PHONES)); }catch(e){} }
-  var PHONES=loadPhones(); var SHAREDC=[]; var phEditId=null; var sharedLoaded=false; var sharedState='idle';
+  var PHONES=loadPhones(); var SHAREDC=[]; var phEditId=null; var phEditShared=null; var sharedLoaded=false; var sharedState='idle';
   function telLink(num){ var clean=String(num||'').replace(/[^0-9+]/g,''); return '<a class="tk-tel" href="tel:'+esc(clean)+'">📞 '+esc(num)+'</a>'; }
   function addrLink(a){ return '<a class="tk-addr" href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(a)+'" target="_blank" rel="noopener">📍 '+esc(a)+'</a>'; }
   function cardLines(c){
@@ -2064,7 +2064,7 @@
     html+='<div class="tk-sec">🔗 ספקים משותפים'+st+' <button id="tkPhReload" style="background:none;border:none;color:#60a5fa;font-weight:800;cursor:pointer;font-size:12.5px">↻ רענן</button></div>';
     if(shared.length){ html+=shared.map(function(c){
       var by=c.sharedBy?('<span class="tk-tag">משותף ע״י '+esc(c.sharedBy)+'</span>'):'<span class="tk-tag">משותף</span>';
-      return '<div class="tk-card shared" data-id="'+esc(c.id)+'"><div class="tk-card-h"><span class="tk-card-name">'+esc(c.supplier||'ספק')+'</span>'+by+'</div>'+cardLines(c)+'</div>';
+      return '<div class="tk-card shared" data-id="'+esc(c.id)+'"><div class="tk-card-h"><span class="tk-card-name">'+esc(c.supplier||'ספק')+'</span>'+by+'<button class="tk-card-edit" title="ערוך (לכולם)">✏️</button></div>'+cardLines(c)+'</div>';
     }).join(''); } else { html+='<div class="tk-empty">'+(q?'אין תוצאות משותפות':'אין ספקים משותפים עדיין')+'</div>'; }
     // אישיים
     html+='<div class="tk-sec" style="margin-top:14px">📱 הספקים שלי (במכשיר זה)</div>';
@@ -2075,19 +2075,32 @@
     }).join(''); } else { html+='<div class="tk-empty">'+(q?'אין תוצאות אישיות':'הוסף/י ספק חדש בכפתור למעלה')+'</div>'; }
     box.innerHTML=html;
   }
-  function openPhForm(c){
-    phEditId=c?c.id:null;
+  function openPhForm(c, isShared){
+    phEditId = (c && !isShared) ? c.id : null;
+    phEditShared = (c && isShared) ? c.id : null;
     $('tkPhSupplier').value=c?(c.supplier||''):''; $('tkPhC1').value=c?(c.c1||''):''; $('tkPhC2').value=c?(c.c2||''):'';
     $('tkPhP1').value=c?(c.p1||''):''; $('tkPhP2').value=c?(c.p2||''):''; $('tkPhAddr').value=c?(c.addr||''):'';
     $('tkPhForm').classList.add('open'); $('tkPhSupplier').focus();
   }
-  function closePhForm(){ $('tkPhForm').classList.remove('open'); phEditId=null; }
+  function closePhForm(){ $('tkPhForm').classList.remove('open'); phEditId=null; phEditShared=null; }
   $('tkPhNew').addEventListener('click', function(){ openPhForm(null); });
   $('tkPhCancel').addEventListener('click', closePhForm);
   $('tkPhSearch').addEventListener('input', renderPhones);
   $('tkPhSave').addEventListener('click', function(){
     var rec={ supplier:$('tkPhSupplier').value.trim(), c1:$('tkPhC1').value.trim(), c2:$('tkPhC2').value.trim(), p1:$('tkPhP1').value.trim(), p2:$('tkPhP2').value.trim(), addr:$('tkPhAddr').value.trim() };
     if(!rec.supplier && !rec.p1 && !rec.c1){ alert('יש למלא לפחות שם ספק או טלפון.'); return; }
+    if(phEditShared){ // עריכת ספק משותף → עדכון בשרת לכולם
+      if(!apiCfg().url){ alert('אין חיבור למערכת — לא ניתן לעדכן.'); return; }
+      var sid=phEditShared;
+      var btn=$('tkPhSave'); btn.disabled=true; btn.textContent='שומר…';
+      srvGet('contactUpdate', { id:sid, supplier:rec.supplier, c1:rec.c1, c2:rec.c2, p1:rec.p1, p2:rec.p2, addr:rec.addr }).then(function(r){
+        btn.disabled=false; btn.textContent='שמור';
+        if(r && r.ok){ closePhForm(); loadShared(); alert('עודכן ✓ כל החברים יראו את השינוי.'); }
+        else if(r && r.ok===false){ alert('⚠️ השרת לא מכיר את פעולת העדכון — צריך לפרוס מחדש את Code.gs (גרסה חדשה).'); }
+        else { alert('⚠️ אין תשובה מהשרת. בדוק/י חיבור ונסה/י שוב.'); }
+      });
+      return;
+    }
     if(phEditId){ for(var i=0;i<PHONES.length;i++){ if(PHONES[i].id===phEditId){ rec.id=phEditId; PHONES[i]=rec; break; } } }
     else { rec.id=uid(); PHONES.push(rec); }
     savePhones(); closePhForm(); renderPhones();
@@ -2111,10 +2124,15 @@
   $('tkPhList').addEventListener('click', function(e){
     if(e.target.id==='tkPhReload'){ loadShared(); return; }
     var card=e.target.closest('.tk-card'); if(!card) return; var id=card.getAttribute('data-id');
+    if(card.classList.contains('shared')){
+      var sc=null; for(var j=0;j<SHAREDC.length;j++){ if(String(SHAREDC[j].id)===String(id)){ sc=SHAREDC[j]; break; } }
+      if(sc && e.target.classList.contains('tk-card-edit')){ openPhForm(sc, true); }
+      return;
+    }
     var c=null; for(var i=0;i<PHONES.length;i++){ if(PHONES[i].id===id){ c=PHONES[i]; break; } }
-    if(!c) return; // פעולות רק על ספקים אישיים
+    if(!c) return; // ספק אישי
     if(e.target.classList.contains('tk-card-share')){ shareContact(c); }
-    else if(e.target.classList.contains('tk-card-edit')){ openPhForm(c); }
+    else if(e.target.classList.contains('tk-card-edit')){ openPhForm(c, false); }
     else if(e.target.classList.contains('tk-card-del')){ if(confirm('למחוק את "'+(c.supplier||'הספק')+'" מהמכשיר?')){ PHONES=PHONES.filter(function(x){return x.id!==id;}); savePhones(); renderPhones(); } }
   });
 
