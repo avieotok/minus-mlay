@@ -1301,6 +1301,9 @@
   #tkModal .tk-item.done .tk-itext{text-decoration:line-through;color:#78716c}
   #tkModal .tk-iimg{flex:1}
   #tkModal .tk-iimg img{max-width:100%;max-height:150px;border-radius:8px;border:1px solid #3f3f46;display:block}
+  #tkModal .tk-iaudio{flex:1;display:flex;align-items:center;gap:8px;min-width:0}
+  #tkModal .tk-iaudio audio{flex:1;min-width:0;height:36px}
+  #tkModal .tk-aud-ic{flex:0 0 auto;font-size:16px}
   #tkModal .tk-idel{background:none;border:none;color:#f87171;font-weight:800;cursor:pointer;font-size:14px;flex:0 0 auto}
   #tkModal .tk-empty{color:#78716c;font-size:13.5px;text-align:center;padding:8px}
   #tkModal .tk-additem{display:flex;gap:6px;align-items:stretch}
@@ -1471,13 +1474,14 @@
     LISTS.forEach(function(L){
       var items=(L.items||[]).map(function(it){
         if(it.type==='draw'){ return '<div class="tk-item'+(it.done?' done':'')+'" data-iid="'+it.id+'"><input type="checkbox" '+(it.done?'checked':'')+'><div class="tk-iimg"><img src="'+it.img+'"></div><button class="tk-idel">✕</button></div>'; }
+        if(it.type==='audio'){ return '<div class="tk-item'+(it.done?' done':'')+'" data-iid="'+it.id+'"><input type="checkbox" '+(it.done?'checked':'')+'><div class="tk-iaudio"><span class="tk-aud-ic">🎙️</span><audio controls preload="metadata" src="'+it.audio+'"></audio></div><button class="tk-idel">✕</button></div>'; }
         return '<div class="tk-item'+(it.done?' done':'')+'" data-iid="'+it.id+'"><input type="checkbox" '+(it.done?'checked':'')+'><span class="tk-itext">'+esc(it.text)+'</span><button class="tk-idel">✕</button></div>';
       }).join('');
       if(!items) items='<div class="tk-empty">רשימה ריקה</div>';
       html+='<div class="tk-list" data-id="'+L.id+'">'
         +'<div class="tk-list-head"><input class="tk-list-name" value="'+esc(L.name)+'"><button class="tk-dellist" title="מחק רשימה">🗑️</button></div>'
         +'<div class="tk-items">'+items+'</div>'
-        +'<div class="tk-additem"><input class="tk-iteminput" placeholder="הוסף פריט…"><button class="tk-add" title="הוסף">➕</button><button class="tk-mic" title="הקלטה קולית">🎤</button><button class="tk-drawbtn" title="כתב יד / ציור">✏️</button></div>'
+        +'<div class="tk-additem"><input class="tk-iteminput" placeholder="הוסף נושא…"><button class="tk-add" title="הוסף">➕</button><button class="tk-mic" title="הקלטת שמע">🎤</button><button class="tk-drawbtn" title="כתב יד / ציור">✏️</button></div>'
         +'</div>';
     });
     box.innerHTML=html;
@@ -1489,7 +1493,7 @@
     var listEl=t.closest('.tk-list'); if(!listEl) return; var L=listById(listEl.getAttribute('data-id')); if(!L) return;
     if(t.classList.contains('tk-dellist')){ if(confirm('למחוק את הרשימה "'+L.name+'"?')){ LISTS=LISTS.filter(function(x){return x!==L;}); saveLists(); renderLists(); } return; }
     if(t.classList.contains('tk-add')){ var inp=listEl.querySelector('.tk-iteminput'); addText(L, inp.value); inp.value=''; renderLists(); return; }
-    if(t.classList.contains('tk-mic')){ startVoice(L, t); return; }
+    if(t.classList.contains('tk-mic')){ startAudio(L, t); return; }
     if(t.classList.contains('tk-drawbtn')){ openDraw(L); return; }
     if(t.classList.contains('tk-idel')){ var iid=t.closest('.tk-item').getAttribute('data-iid'); L.items=(L.items||[]).filter(function(x){return x.id!==iid;}); saveLists(); renderLists(); return; }
     if(t.classList.contains('tk-itext')){ var iid2=t.closest('.tk-item').getAttribute('data-iid'); var it=findItem(L,iid2); if(it){ var nv=prompt('עריכת פריט:', it.text); if(nv!==null){ it.text=nv.trim(); saveLists(); renderLists(); } } return; }
@@ -1505,17 +1509,38 @@
   function findItem(L,iid){ var a=L.items||[]; for(var i=0;i<a.length;i++){ if(a[i].id===iid) return a[i]; } return null; }
   function addText(L, txt){ txt=(txt||'').trim(); if(!txt) return; L.items=L.items||[]; L.items.push({id:uid(), type:'text', text:txt, done:false}); saveLists(); }
 
-  /* ---------- הקלטה קולית ---------- */
-  var SR=window.SpeechRecognition||window.webkitSpeechRecognition; var rec=null, recBtn=null;
-  function startVoice(L, btn){
-    if(!SR){ alert('הקלטה קולית אינה נתמכת בדפדפן זה. נסה/י בכרום בנייד.'); return; }
-    if(rec){ try{ rec.stop(); }catch(e){} return; }
-    rec=new SR(); rec.lang='he-IL'; rec.interimResults=false; rec.maxAlternatives=1;
-    recBtn=btn; btn.classList.add('rec');
-    rec.onresult=function(ev){ var txt=''; for(var i=0;i<ev.results.length;i++){ txt+=ev.results[i][0].transcript; } addText(L, txt); };
-    rec.onerror=function(){};
-    rec.onend=function(){ if(recBtn) recBtn.classList.remove('rec'); rec=null; renderLists(); };
-    try{ rec.start(); }catch(e){ rec=null; btn.classList.remove('rec'); }
+  /* ---------- הקלטת שמע אמיתית (מיקרופון → קובץ שמור בפריט, עם נגן ▶️) ---------- */
+  var mediaRec=null, recChunks=[], recBtnA=null, recListA=null;
+  function resetMicBtn(){ if(recBtnA){ recBtnA.classList.remove('rec'); recBtnA.textContent='🎤'; recBtnA.title='הקלטת שמע'; } }
+  function cleanupRec(){ resetMicBtn(); mediaRec=null; recChunks=[]; recBtnA=null; recListA=null; }
+  function startAudio(L, btn){
+    if(mediaRec){ try{ if(mediaRec.state!=='inactive') mediaRec.stop(); }catch(e){} return; } // כבר מקליט → עצור
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder==='undefined'){
+      alert('הקלטת שמע אינה נתמכת בדפדפן זה. נסה/י בכרום/ספארי מעודכן.'); return;
+    }
+    navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+      try{ mediaRec=new MediaRecorder(stream); }catch(e){ try{ mediaRec=new MediaRecorder(stream,{mimeType:'audio/webm'}); }catch(e2){ alert('ההקלטה נכשלה.'); try{ stream.getTracks().forEach(function(t){t.stop();}); }catch(x){} return; } }
+      recChunks=[]; recBtnA=btn; recListA=L;
+      mediaRec.ondataavailable=function(ev){ if(ev.data && ev.data.size>0) recChunks.push(ev.data); };
+      mediaRec.onstop=function(){
+        try{ stream.getTracks().forEach(function(t){ t.stop(); }); }catch(e){}
+        var blob=new Blob(recChunks, { type:(mediaRec && mediaRec.mimeType) ? mediaRec.mimeType : 'audio/webm' });
+        var L2=recListA;
+        var fr=new FileReader();
+        fr.onload=function(){
+          var data=fr.result;
+          if(data && data.length>2600000){ alert('ההקלטה ארוכה/כבדה מדי לשמירה במכשיר. נסה/י הקלטה קצרה יותר.'); cleanupRec(); return; }
+          if(L2){ L2.items=L2.items||[]; L2.items.push({ id:uid(), type:'audio', audio:data, done:false });
+            try{ localStorage.setItem(LK, JSON.stringify(LISTS)); }
+            catch(err){ L2.items.pop(); alert('אין מקום לשמור את ההקלטה במכשיר (האחסון מלא). מחק/י הקלטות ישנות ונסה/י שוב.'); cleanupRec(); renderLists(); return; }
+          }
+          cleanupRec(); renderLists();
+        };
+        fr.readAsDataURL(blob);
+      };
+      try{ mediaRec.start(); }catch(e){ alert('ההקלטה נכשלה.'); cleanupRec(); return; }
+      if(btn){ btn.classList.add('rec'); btn.textContent='⏹'; btn.title='עצור הקלטה'; }
+    }).catch(function(){ alert('לא ניתן לגשת למיקרופון. אשר/י הרשאת מיקרופון ונסה/י שוב.'); });
   }
 
   /* ---------- כתב יד / ציור ---------- */
@@ -1537,7 +1562,7 @@
   var PK='afcon_tools_phones';
   function loadPhones(){ try{ return JSON.parse(localStorage.getItem(PK)||'[]')||[]; }catch(e){ return []; } }
   function savePhones(){ try{ localStorage.setItem(PK, JSON.stringify(PHONES)); }catch(e){} }
-  var PHONES=loadPhones(); var SHAREDC=[]; var phEditId=null; var sharedLoaded=false;
+  var PHONES=loadPhones(); var SHAREDC=[]; var phEditId=null; var sharedLoaded=false; var sharedState='idle';
   function telLink(num){ var clean=String(num||'').replace(/[^0-9+]/g,''); return '<a class="tk-tel" href="tel:'+esc(clean)+'">📞 '+esc(num)+'</a>'; }
   function addrLink(a){ return '<a class="tk-addr" href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(a)+'" target="_blank" rel="noopener">📍 '+esc(a)+'</a>'; }
   function cardLines(c){
@@ -1551,7 +1576,14 @@
   }
   function matchQ(c,q){ return (String(c.supplier||'')+' '+(c.c1||'')+' '+(c.c2||'')+' '+(c.p1||'')+' '+(c.p2||'')).toLowerCase().indexOf(q)>=0; }
   function loadShared(){
-    srvGet('contacts').then(function(r){ if(r&&r.ok&&Array.isArray(r.contacts)){ SHAREDC=r.contacts; } sharedLoaded=true; renderPhones(); });
+    if(!apiCfg().url){ sharedState='nocfg'; sharedLoaded=true; renderPhones(); return; }
+    sharedState='loading'; renderPhones();
+    srvGet('contacts').then(function(r){
+      if(r && r.ok && Object.prototype.toString.call(r.contacts)==='[object Array]'){ SHAREDC=r.contacts; sharedState='ok'; }
+      else if(r && r.ok===false){ sharedState='noaction'; }   // השרת ענה אבל לא מכיר את הפעולה — לא נפרס מחדש
+      else { sharedState='noconn'; }                            // null / timeout / אין תשובה
+      sharedLoaded=true; renderPhones();
+    });
   }
   function renderPhones(){
     var q=($('tkPhSearch').value||'').trim().toLowerCase();
@@ -1559,8 +1591,14 @@
     var shared=SHAREDC.slice().sort(function(a,b){ return String(a.supplier||'').localeCompare(String(b.supplier||''),'he'); });
     if(q){ local=local.filter(function(c){return matchQ(c,q);}); shared=shared.filter(function(c){return matchQ(c,q);}); }
     var box=$('tkPhList'); var html='';
-    // משותפים
-    html+='<div class="tk-sec">🔗 ספקים משותפים'+(sharedLoaded?'':' · טוען…')+'</div>';
+    // משותפים — עם חיווי מצב
+    var st='';
+    if(sharedState==='loading') st=' · טוען…';
+    else if(sharedState==='ok') st=' · '+SHAREDC.length+' ספקים';
+    else if(sharedState==='nocfg') st=' · ⚠️ אין חיבור למערכת מוגדר';
+    else if(sharedState==='noconn') st=' · ⚠️ אין תשובה מהשרת — בדוק/י חיבור לאינטרנט';
+    else if(sharedState==='noaction') st=' · ⚠️ השרת לא עודכן — צריך לפרוס מחדש את Code.gs';
+    html+='<div class="tk-sec">🔗 ספקים משותפים'+st+' <button id="tkPhReload" style="background:none;border:none;color:#60a5fa;font-weight:800;cursor:pointer;font-size:12.5px">↻ רענן</button></div>';
     if(shared.length){ html+=shared.map(function(c){
       var by=c.sharedBy?('<span class="tk-tag">משותף ע״י '+esc(c.sharedBy)+'</span>'):'<span class="tk-tag">משותף</span>';
       return '<div class="tk-card shared" data-id="'+esc(c.id)+'"><div class="tk-card-h"><span class="tk-card-name">'+esc(c.supplier||'ספק')+'</span>'+by+'</div>'+cardLines(c)+'</div>';
@@ -1600,12 +1638,15 @@
         PHONES=PHONES.filter(function(x){return x.id!==c.id;}); savePhones(); // מעבירים מהאישי למשותף רק אחרי הצלחה
         loadShared(); // מביאים מהשרת את המצב האמיתי
         alert('שותף בהצלחה ✓ כל החברים יקבלו את "'+(c.supplier||'הספק')+'" כשייכנסו לספר הטלפונים.');
+      } else if(r && r.ok===false){
+        alert('⚠️ השרת לא מכיר את פעולת השיתוף — צריך לפרוס מחדש את קובץ Code.gs (גרסה חדשה).\nהספק נשאר אצלך כ"אישי".');
       } else {
-        alert('⚠️ השיתוף נכשל ולא נשמר בשרת.\n\nבדוק/י:\n1. שיש חיבור לאינטרנט.\n2. שקובץ השרת (Code.gs) נפרס מחדש עם פונקציות הספקים.\n\nהספק נשאר אצלך כ"אישי" — אפשר לנסות לשתף שוב.');
+        alert('⚠️ אין תשובה מהשרת. ודא/י חיבור לאינטרנט ונסה/י שוב.\nהספק נשאר אצלך כ"אישי".');
       }
     });
   }
   $('tkPhList').addEventListener('click', function(e){
+    if(e.target.id==='tkPhReload'){ loadShared(); return; }
     var card=e.target.closest('.tk-card'); if(!card) return; var id=card.getAttribute('data-id');
     var c=null; for(var i=0;i<PHONES.length;i++){ if(PHONES[i].id===id){ c=PHONES[i]; break; } }
     if(!c) return; // פעולות רק על ספקים אישיים
