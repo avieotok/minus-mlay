@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>אפקון — התראת מלאי</title>
+<title>אפקון — פורטל שרשרת האספקה</title>
 <meta name="theme-color" content="#e22d24">
-<meta name="apple-mobile-web-app-title" content="התראת מלאי מינימום">
+<meta name="apple-mobile-web-app-title" content="פורטל שרשרת האספקה">
 <link rel="apple-touch-icon" href="icon.png">
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjogIteU16rXqNeQ16og157XnNeQ15kg157Xmdeg15nXnteV150iLCAic2hvcnRfbmFtZSI6ICLXlNeq16jXkNeqINee15zXkNeZINee15nXoNeZ157XldedIiwgInN0YXJ0X3VybCI6ICJodHRwczovL2F2aWVvdG9rLmdpdGh1Yi5pby9taW51cy1tbGF5LyIsICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLCAiYmFja2dyb3VuZF9jb2xvciI6ICIjMGMwYTA5IiwgInRoZW1lX2NvbG9yIjogIiNlMjJkMjQiLCAiaWNvbnMiOiBbeyJzcmMiOiAiaHR0cHM6Ly9hdmllb3Rvay5naXRodWIuaW8vbWludXMtbWxheS9pY29uLnBuZyIsICJzaXplcyI6ICI1MTJ4NTEyIiwgInR5cGUiOiAiaW1hZ2UvcG5nIiwgInB1cnBvc2UiOiAiYW55IG1hc2thYmxlIn1dfQ==">
@@ -138,7 +138,7 @@
     <div class="logo-badge"><img id="headerLogo" alt="לוגו"></div>
     <div>
       <div class="title">אפקון</div>
-      <div class="sub">התראת מלאי</div>
+      <div class="sub">פורטל שרשרת האספקה</div>
       <div id="meBar" style="font-size:12.5px;color:#22c55e;font-weight:700;margin-top:2px"></div>
     </div>
   </div>
@@ -303,7 +303,7 @@
       <div style="background:#1c1917;border:1px solid #292524;border-radius:18px;padding:24px 20px;display:flex;flex-direction:column;align-items:center;gap:13px;text-align:center">
         <div style="font-size:12px;color:#78716c">© אבידן קוטאי · כל הזכויות שמורות</div>
         <div style="width:74px;height:74px;border-radius:16px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden"><img id="aboutLogo" style="width:100%;height:100%;object-fit:contain;padding:8px" alt="לוגו"></div>
-        <div style="font-family:'Rubik',sans-serif;font-weight:900;font-size:22px">אפקון — התראת מלאי</div>
+        <div style="font-family:'Rubik',sans-serif;font-weight:900;font-size:22px">אפקון — פורטל שרשרת האספקה</div>
         <div style="color:#a8a29e;font-size:14.5px;line-height:1.8;max-width:400px">אפליקציה לדיווח מהיר על חוסרים במחסן. בוחרים שם מהרשימה, סורקים ברקוד או מקלידים מק״ט (התיאור מושלם אוטומטית), קובעים דרגת דחיפות וכמות — והדיווח נשלח ישירות לקנייני שרשרת האספקה. בטאב "הדיווחים שלי" עוקבים אחר תגובות הקניין וסטטוס הטיפול (ממתין · בטיפול · טופל), עם התראה אדומה ברגע שמתקבלת תגובה חדשה.</div>
         <div style="display:flex;gap:18px;flex-wrap:wrap;justify-content:center;font-size:13px;color:#d6d3d1;margin-top:2px">
           <span>🚦 דרגת דחיפות</span><span>📊 ברקוד</span><span>💬 תגובות הקניין</span><span>🔔 התראות</span>
@@ -1176,7 +1176,7 @@
     const fb=()=>{ const a=document.createElement('a'); a.href=canvas.toDataURL('image/jpeg',0.92); a.download='afcon-alert.jpg'; a.click(); window.open('https://wa.me/?text='+encodeURIComponent(c.caption),'_blank'); names.forEach(n=>addHist(c.hist+' → '+n)); toProg('שמרתי את התמונה ופתחתי וואטסאפ.<br>בחר את: '+esc(names.join(', '))+' וצרף את התמונה.'); };
     if(file && navigator.canShare && navigator.canShare({files:[file]})){
       buzz();
-      navigator.share({files:[file], text:c.caption, title:'אפקון — התראת מלאי'})
+      navigator.share({files:[file], text:c.caption, title:'אפקון — פורטל שרשרת האספקה'})
         .then(()=>{ names.forEach(n=>addHist(c.hist+' → '+n)); toProg('בתפריט השיתוף בחר את:<br><b>'+esc(names.join(', '))+'</b><br>התמונה והטקסט מצורפים.'); })
         .catch(err=>{ if(!(err&&err.name==='AbortError')) fb(); });
     } else { fb(); }
@@ -1460,6 +1460,6 @@
     setTimeout(()=>{ document.documentElement.innerHTML='<body style="background:#0c0a09;color:#a8a29e;font-family:Heebo,sans-serif;height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:18px;">להתראות 👋<br><br>אפשר לסגור את החלון/הכרטיסייה.</body>'; }, 250);
   });
 </script>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 53</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 54</div>
 </body>
 </html>
