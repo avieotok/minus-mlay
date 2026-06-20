@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>אפקון — פורטל שרשרת האספקה</title>
+<title>שרשרת האספקה — קניינים</title>
 <meta name="theme-color" content="#e22d24">
 <meta name="apple-mobile-web-app-title" content="התראת מלאי מינימום">
 <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjogIteU16rXqNeQ16og157XnNeQ15kg157Xmdeg15nXnteV150iLCAic2hvcnRfbmFtZSI6ICLXlNeq16jXkNeqINee15zXkNeZINee15nXoNeZ157XldedIiwgInN0YXJ0X3VybCI6ICJodHRwczovL2F2aWVvdG9rLmdpdGh1Yi5pby9taW51cy1tbGF5L2Rhc2hib2FyZC5odG1sIiwgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMwYzBhMDkiLCAidGhlbWVfY29sb3IiOiAiI2UyMmQyNCIsICJpY29ucyI6IFt7InNyYyI6ICJodHRwczovL2F2aWVvdG9rLmdpdGh1Yi5pby9taW51cy1tbGF5L2ljb24ucG5nIiwgInNpemVzIjogIjUxMng1MTIiLCAidHlwZSI6ICJpbWFnZS9wbmciLCAicHVycG9zZSI6ICJhbnkgbWFza2FibGUifV19">
@@ -18,7 +18,7 @@
     --red:#e2231a; --amber:#f59e0b; --amber2:#fbbf24; --green:#22c55e; --green2:#34d399; --blue:#3b82f6; --blue2:#60a5fa;
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-  body{font-family:'Heebo',sans-serif;background:var(--ink);color:var(--text);min-height:100vh}
+  body{font-family:'Heebo',sans-serif;background:#c4e4f5;color:var(--text);min-height:100vh}
   .wrap{max-width:760px;margin:0 auto}
 
   /* header */
@@ -96,7 +96,7 @@
   .cta{display:inline-block;margin-top:14px;background:var(--red);color:#fff;border:none;border-radius:12px;padding:13px 22px;font-size:15px;font-weight:800;cursor:pointer;font-family:'Heebo',sans-serif}
 
   .foot{display:flex;gap:9px;margin-top:18px}
-  .foot button{flex:1;background:transparent;border:1.5px solid var(--line2);color:var(--muted);border-radius:12px;padding:12px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif}
+  .foot button{flex:1;background:rgba(255,255,255,.55);border:1.5px solid #8bbdd8;color:#13384f;border-radius:12px;padding:12px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif}
 
   /* modal */
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:60;display:none;align-items:flex-end;justify-content:center}
@@ -127,7 +127,7 @@
   #kpiView{display:none}
   main.kpi-mode #kpis,main.kpi-mode .filters,main.kpi-mode #list,main.kpi-mode .foot,main.kpi-mode #bossBar,main.kpi-mode #newsView{display:none}
   main.kpi-mode #kpiView{display:block}
-  .kpi-head{font-family:'Rubik',sans-serif;font-weight:800;font-size:20px;margin-bottom:16px;color:var(--text)}
+  .kpi-head{font-family:'Rubik',sans-serif;font-weight:800;font-size:20px;margin-bottom:16px;color:#0c2d48}
   .kstat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
   .kstat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 14px;text-align:center;position:relative;overflow:hidden}
   .kstat::before{content:'';position:absolute;inset-inline-start:0;top:0;bottom:0;width:4px;background:var(--muted)}
@@ -249,7 +249,7 @@
     <div class="top-in">
       <div class="badge"><img src="icon.png" alt="אפקון" onerror="this.outerHTML='<span style=\'font-family:Rubik;font-weight:900;color:#e2231a;font-size:22px\'>A</span>'"></div>
       <div>
-        <div class="ttl">פורטל שרשרת האספקה</div>
+        <div class="ttl">שרשרת האספקה</div>
         <div class="sub"><span class="dot" id="dot"></span><span id="status">לא מחובר</span></div>
         <div id="meBar" style="font-size:12.5px;color:var(--green2);font-weight:700;margin-top:2px"></div>
       </div>
@@ -577,7 +577,7 @@
   function cseenSave(){ try{ localStorage.setItem('afcon_chat_seen', JSON.stringify(CSEEN)); }catch(e){} }
   function unreadFor(a){ const s=CSEEN[String(a.id)]; if(s===undefined) return 0; return Math.max(0, genCount(a)-s); }
   function totalUnread(){ let t=0; ALERTS.forEach(a=>t+=unreadFor(a)); return t; }
-  const BASE_TITLE='אפקון — פורטל שרשרת האספקה';
+  const BASE_TITLE='שרשרת האספקה — קניינים';
   function updateTitle(){ const t=totalUnread(); document.title=(t>0?('🔴 ('+t+') '):'')+BASE_TITLE; }
   function markChatSeen(id){ const a=ALERTS.find(x=>String(x.id)===String(id)); CSEEN[String(id)]=a?genCount(a):0; cseenSave(); updateTitle(); }
   let prevUnread=0, reconciledOnce=false;

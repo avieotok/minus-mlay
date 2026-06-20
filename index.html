@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>אפקון — פורטל שרשרת האספקה</title>
+<title>שרשרת האספקה — מחסן</title>
 <meta name="theme-color" content="#e22d24">
 <meta name="apple-mobile-web-app-title" content="פורטל שרשרת האספקה">
 <link rel="apple-touch-icon" href="icon.png">
@@ -13,12 +13,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Rubik:wght@700;900&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  body { font-family: 'Heebo', sans-serif; background: #0c0a09; color: #fafaf9; min-height: 100vh; }
+  body { font-family: 'Heebo', sans-serif; background: #cf1c13; color: #fafaf9; min-height: 100vh; }
   .header { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid #292524; max-width: 520px; margin: 0 auto; }
   .logo-badge { width: 46px; height: 46px; border-radius: 11px; background: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
   .logo-badge img { width: 100%; height: 100%; object-fit: contain; padding: 5px; }
   .title { font-family: 'Rubik', sans-serif; font-weight: 900; font-size: 21px; }
-  .sub { font-size: 12.5px; color: #a8a29e; }
+  .sub { font-size: 12.5px; color: rgba(255,255,255,.85); }
   main { max-width: 520px; margin: 0 auto; padding: 16px 20px 32px; display: flex; flex-direction: column; gap: 14px; }
   .tabs { display: flex; gap: 6px; background: #1c1917; padding: 5px; border-radius: 14px; border: 1px solid #292524; }
   .tab { flex: 1; text-align: center; padding: 11px; border-radius: 10px; font-weight: 700; font-size: 14.5px; cursor: pointer; color: #a8a29e; background: transparent; border: none; font-family: 'Heebo', sans-serif; }
@@ -190,9 +190,9 @@
   <div class="header">
     <div class="logo-badge"><img id="headerLogo" alt="לוגו"></div>
     <div>
-      <div class="title">אפקון</div>
-      <div class="sub">פורטל שרשרת האספקה</div>
-      <div id="meBar" style="font-size:12.5px;color:#22c55e;font-weight:700;margin-top:2px"></div>
+      <div class="title">שרשרת האספקה</div>
+      <div class="sub">אפליקציית מחסן</div>
+      <div id="meBar" style="font-size:12.5px;color:#fff;font-weight:700;margin-top:2px"></div>
     </div>
     <button id="tkOpen" title="כלי עזר" style="margin-inline-start:auto;background:#211e1c;border:1px solid #3f3f46;color:#fafaf9;padding:0 13px;height:46px;border-radius:12px;font-size:14px;font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer;flex:0 0 auto;white-space:nowrap">כלי עזר 🧰</button>
   </div>
@@ -1556,7 +1556,7 @@
   function wcSave(){ try{ localStorage.setItem('afcon_wh_chat_seen', JSON.stringify(WCSEEN)); }catch(e){} }
   function whUnreadFor(x){ const s=WCSEEN[String(x.id)]; if(s===undefined) return 0; return Math.max(0, whCount(x)-s); }
   function markWhSeen(id, count){ WCSEEN[String(id)]=count; wcSave(); refreshAttention(WH_LAST); }
-  const BASE_TITLE_WH='אפקון — פורטל שרשרת האספקה';
+  const BASE_TITLE_WH='שרשרת האספקה — מחסן';
   function updateTitleWh(n){ document.title=(n>0?('🔴 ('+n+') '):'')+BASE_TITLE_WH; }
   let whAudioCtx=null;
   function ensureAudioWh(){ try{ const C=window.AudioContext||window.webkitAudioContext; if(!C) return null; whAudioCtx=whAudioCtx||new C(); if(whAudioCtx.state==='suspended') whAudioCtx.resume(); return whAudioCtx; }catch(e){ return null; } }
@@ -1736,7 +1736,7 @@
     setTimeout(()=>{ document.documentElement.innerHTML='<body style="background:#0c0a09;color:#a8a29e;font-family:Heebo,sans-serif;height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:18px;">להתראות 👋<br><br>אפשר לסגור את החלון/הכרטיסייה.</body>'; }, 250);
   });
 </script>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 68</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:rgba(255,255,255,.7);z-index:5;font-family:monospace">build 69</div>
 <!-- ===== כלי עזר (מודול עצמאי — זהה בשתי האפליקציות) ===== -->
 <style>
   #tkModal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;display:none;align-items:flex-start;justify-content:center}
