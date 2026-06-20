@@ -123,6 +123,40 @@
   #newsView{display:none}
   main.news-mode #kpis,main.news-mode .filters,main.news-mode #list,main.news-mode .foot,main.news-mode #bossBar{display:none}
   main.news-mode #newsView{display:block}
+  #kpiView{display:none}
+  main.kpi-mode #kpis,main.kpi-mode .filters,main.kpi-mode #list,main.kpi-mode .foot,main.kpi-mode #bossBar,main.kpi-mode #newsView{display:none}
+  main.kpi-mode #kpiView{display:block}
+  .kpi-head{font-family:'Rubik',sans-serif;font-weight:800;font-size:20px;margin-bottom:16px;color:var(--text)}
+  .kstat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+  .kstat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 14px;text-align:center;position:relative;overflow:hidden}
+  .kstat::before{content:'';position:absolute;inset-inline-start:0;top:0;bottom:0;width:4px;background:var(--muted)}
+  .kstat.s-open::before{background:var(--blue)} .kstat.s-wait::before{background:var(--amber)} .kstat.s-prog::before{background:#f59e0b}
+  .kstat.s-urg::before{background:var(--red)} .kstat.s-stuck::before{background:#dc2626} .kstat.s-done::before{background:var(--green)}
+  .kstat-n{font-family:'Rubik',sans-serif;font-weight:900;font-size:34px;line-height:1;color:var(--text)}
+  .kstat-l{font-size:12.5px;color:var(--muted);margin-top:6px;font-weight:600}
+  .kpi-2col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+  .kpi-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
+  .kpi-ttl{font-family:'Rubik',sans-serif;font-weight:800;font-size:15px;margin-bottom:12px;color:var(--text)}
+  .kpi-sub{font-size:12.5px;color:var(--faint);margin-top:8px}
+  .kbig{font-family:'Rubik',sans-serif;font-weight:900;font-size:40px;color:var(--green2);line-height:1}
+  .kpi-empty{color:var(--faint);font-size:13.5px;padding:10px 0;text-align:center}
+  .kbar-row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+  .kbar-lbl{flex:0 0 120px;font-size:13px;color:var(--text);font-weight:600;text-align:start;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .kbar-track{flex:1;height:14px;background:var(--ink);border-radius:7px;overflow:hidden}
+  .kbar-fill{display:block;height:100%;border-radius:7px;min-width:3px;transition:width .4s}
+  .kbar-val{flex:0 0 30px;text-align:center;font-weight:800;font-size:13.5px;color:var(--text)}
+  .ktrend{display:flex;align-items:flex-end;gap:5px;height:160px;padding-top:14px}
+  .ktcol{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:3px}
+  .ktnum{font-size:11px;font-weight:800;color:var(--muted);height:14px}
+  .ktbar{width:100%;max-width:26px;background:linear-gradient(180deg,var(--blue),var(--blue2));border-radius:5px 5px 0 0;min-height:2px}
+  .ktlbl{font-size:10px;color:var(--faint);white-space:nowrap}
+  .kstuck{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line);font-size:13px}
+  .kstuck:first-child{border-top:none}
+  .kst-tk{flex:0 0 auto;color:var(--amber);font-weight:800;font-size:12.5px}
+  .kst-desc{flex:1;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .kst-age{flex:0 0 auto;color:#fca5a5;font-weight:800}
+  .kst-by{flex:0 0 auto;color:var(--faint);font-size:12px}
+  @media(max-width:640px){ .kstat-grid{grid-template-columns:repeat(2,1fr)} .kpi-2col{grid-template-columns:1fr} .kbar-lbl{flex-basis:90px} .kst-by{display:none} }
   .news-compose{margin-bottom:16px}
   .nc-open{width:100%;background:var(--surface);border:1px dashed var(--line2);color:var(--green2);border-radius:13px;padding:14px;font-size:15px;font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer}
   .nc-form{display:none;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;flex-direction:column;gap:10px}
@@ -229,6 +263,7 @@
   <main>
     <div class="vtabs">
       <button class="vtab on" id="vtBoard">📋 פניות</button>
+      <button class="vtab" id="vtKpi">📊 מחוונים</button>
       <button class="vtab" id="vtNews">📢 ידיעון<span id="newsBadge" class="vbadge">●</span></button>
     </div>
     <div class="kpis" id="kpis">
@@ -298,6 +333,8 @@
       </div>
       <div id="newsList"></div>
     </div>
+
+    <div id="kpiView"></div>
   </main>
 </div>
 
@@ -669,6 +706,7 @@
         else { const fresh=ids.filter(id=>!seen.has(id)); ids.forEach(id=>seen.add(id)); if(fresh.length) ring(fresh.length); }
         reconcileChat();
         $('status').textContent='מעודכן '+new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}); render(); loadNews();
+        if(document.querySelector('main.kpi-mode')) renderKpiDash();
       }
       else { $('status').textContent='שגיאה — בדוק טוקן'; }
     }catch(e){ $('status').textContent='אין חיבור — בדוק כתובת/רשת'; }
@@ -860,9 +898,77 @@
     }).join('');
     fetchNewsPhotos();
   }
-  function showNews(on){ const m=document.querySelector('main'); if(!m) return; newsActive=on; m.classList.toggle('news-mode', on);
-    $('vtBoard').classList.toggle('on', !on); $('vtNews').classList.toggle('on', on);
-    if(on){ markNewsSeen(); loadNews(); renderNews(); } updateNewsBadge(); }
+  function setView(v){ const m=document.querySelector('main'); if(!m) return;
+    newsActive=(v==='news');
+    m.classList.toggle('news-mode', v==='news');
+    m.classList.toggle('kpi-mode', v==='kpi');
+    $('vtBoard').classList.toggle('on', v==='board');
+    $('vtKpi').classList.toggle('on', v==='kpi');
+    $('vtNews').classList.toggle('on', v==='news');
+    if(v==='news'){ markNewsSeen(); loadNews(); renderNews(); }
+    if(v==='kpi'){ renderKpiDash(); }
+    updateNewsBadge();
+  }
+  function showNews(on){ setView(on?'news':'board'); }
+
+  // ===== 📊 דשבורד מנהל =====
+  function hoursBetween(a,b){ try{ return (new Date(b).getTime()-new Date(a).getTime())/3600000; }catch(e){ return 0; } }
+  function fmtDur(h){ if(!isFinite(h)||h<0) return '—'; if(h<1) return Math.round(h*60)+' דק׳'; if(h<24) return (Math.round(h*10)/10)+' שע׳'; return (Math.round(h/24*10)/10)+' ימים'; }
+  function bars(rows, color){ const max=Math.max(1, ...rows.map(r=>r.v)); if(!rows.length) return '<div class="kpi-empty">אין נתונים</div>';
+    return rows.map(r=>'<div class="kbar-row"><span class="kbar-lbl">'+esc(r.k)+'</span><span class="kbar-track"><span class="kbar-fill" style="width:'+Math.round(r.v/max*100)+'%;background:'+(color||'var(--blue)')+'"></span></span><span class="kbar-val">'+r.v+'</span></div>').join('');
+  }
+  function renderKpiDash(){
+    const V=$('kpiView'); if(!V) return;
+    const A=ALERTS||[]; const now=Date.now();
+    const open=A.filter(a=>String(a.status)!=='טופל');
+    const waiting=A.filter(a=>String(a.status)==='ממתין').length;
+    const prog=A.filter(a=>String(a.status)==='בטיפול').length;
+    const urgent=open.filter(a=>a.urgency==='דחוף'||a.urgency==='אזל לגמרי').length;
+    const doneToday=A.filter(a=>String(a.status)==='טופל'&&isToday(a.updated||a.ackAt||a.created)).length;
+    const doneWeek=A.filter(a=>{ if(String(a.status)!=='טופל') return false; const t=a.updated||a.ackAt||a.created; return t&&hoursBetween(t,new Date().toISOString())<=168; }).length;
+    const stuck=open.filter(a=>a.created&&(now-new Date(a.created).getTime())>48*3600000);
+    // ממוצע זמן טיפול (לפניות שטופלו)
+    const doneArr=A.filter(a=>String(a.status)==='טופל'&&a.created&&(a.ackAt||a.updated));
+    let avgH=0; if(doneArr.length){ avgH=doneArr.reduce((s,a)=>s+hoursBetween(a.created, a.ackAt||a.updated),0)/doneArr.length; }
+    // לפי קניין (פתוחות)
+    const byBuyerMap={}; open.forEach(a=>{ const k=(a.assignee||'').trim()||'— לא משויך'; byBuyerMap[k]=(byBuyerMap[k]||0)+1; });
+    const byBuyer=Object.keys(byBuyerMap).map(k=>({k:k,v:byBuyerMap[k]})).sort((x,y)=>y.v-x.v);
+    // לפי סוג (פתוחות)
+    const byTypeMap={}; open.forEach(a=>{ const k=(a.type||'חוסר מלאי'); byTypeMap[k]=(byTypeMap[k]||0)+1; });
+    const byType=Object.keys(byTypeMap).map(k=>({k:k,v:byTypeMap[k]})).sort((x,y)=>y.v-x.v);
+    // מגמה — פניות חדשות ב-14 יום
+    const days=14; const counts=new Array(days).fill(0); const labels=[];
+    const today=new Date(); today.setHours(0,0,0,0);
+    for(let i=0;i<days;i++){ const d=new Date(today); d.setDate(d.getDate()-(days-1-i)); labels.push(d); }
+    A.forEach(a=>{ if(!a.created) return; const d=new Date(a.created); d.setHours(0,0,0,0); const diff=Math.round((today-d)/86400000); const idx=days-1-diff; if(idx>=0&&idx<days) counts[idx]++; });
+    const maxC=Math.max(1, ...counts);
+    const trend='<div class="ktrend">'+counts.map((c,i)=>{ const dd=labels[i]; const lbl=(dd.getDate())+'/'+(dd.getMonth()+1);
+      return '<div class="ktcol" title="'+lbl+': '+c+'"><span class="ktnum">'+(c||'')+'</span><span class="ktbar" style="height:'+Math.round(c/maxC*100)+'%"></span><span class="ktlbl">'+lbl+'</span></div>'; }).join('')+'</div>';
+    // פניות תקועות
+    const stuckSorted=stuck.slice().sort((a,b)=>new Date(a.created)-new Date(b.created));
+    const stuckHtml = stuckSorted.length ? stuckSorted.slice(0,12).map(a=>{ const hrs=hoursBetween(a.created,new Date().toISOString());
+      return '<div class="kstuck"><span class="kst-tk">🎫 '+esc(a.ticket||'—')+'</span><span class="kst-desc">'+esc((a.desc||a.sku||'').slice(0,40))+'</span><span class="kst-age">'+fmtDur(hrs)+'</span><span class="kst-by">'+esc((a.assignee||'לא משויך'))+'</span></div>';
+    }).join('') : '<div class="kpi-empty">🎉 אין פניות תקועות מעל יומיים</div>';
+
+    function stat(num,lbl,cls){ return '<div class="kstat '+(cls||'')+'"><div class="kstat-n">'+num+'</div><div class="kstat-l">'+lbl+'</div></div>'; }
+    V.innerHTML=
+      '<div class="kpi-head">📊 לוח מחוונים — מבט מנהל</div>'
+      +'<div class="kstat-grid">'
+        +stat(open.length,'פניות פתוחות','s-open')
+        +stat(waiting,'ממתינות','s-wait')
+        +stat(prog,'בטיפול','s-prog')
+        +stat(urgent,'דחופות פתוחות','s-urg')
+        +stat(stuck.length,'תקועות (>יומיים)','s-stuck')
+        +stat(doneWeek,'טופלו השבוע','s-done')
+      +'</div>'
+      +'<div class="kpi-2col">'
+        +'<div class="kpi-card"><div class="kpi-ttl">⏱️ ממוצע זמן טיפול</div><div class="kbig">'+fmtDur(avgH)+'</div><div class="kpi-sub">על '+doneArr.length+' פניות שטופלו · '+doneToday+' טופלו היום</div></div>'
+        +'<div class="kpi-card"><div class="kpi-ttl">📦 פתוחות לפי סוג</div>'+bars(byType,'var(--amber)')+'</div>'
+      +'</div>'
+      +'<div class="kpi-card"><div class="kpi-ttl">👤 פניות פתוחות לפי קניין</div>'+bars(byBuyer,'var(--blue)')+'</div>'
+      +'<div class="kpi-card"><div class="kpi-ttl">📈 פניות חדשות — 14 ימים אחרונים</div>'+trend+'</div>'
+      +'<div class="kpi-card"><div class="kpi-ttl">⚠️ פניות תקועות (פתוחות מעל יומיים)</div>'+stuckHtml+'</div>';
+  }
   async function postNews(payload){ try{ await fetch(apiUrl(),{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({token:apiToken(),action:'newsAdd'},payload))}); }catch(e){} }
   async function sendNews(){
     if(needMe()) return;
@@ -879,8 +985,9 @@
       setTimeout(()=>{ loadNews(); markNewsSeen(); }, 600);
     } finally { btn.disabled=false; btn.textContent='פרסם'; }
   }
-  $('vtBoard').addEventListener('click',()=>showNews(false));
-  $('vtNews').addEventListener('click',()=>showNews(true));
+  $('vtBoard').addEventListener('click',()=>setView('board'));
+  $('vtKpi').addEventListener('click',()=>setView('kpi'));
+  $('vtNews').addEventListener('click',()=>setView('news'));
   $('ncOpen').addEventListener('click',()=>{ $('ncForm').classList.toggle('open'); });
   $('ncCancel').addEventListener('click',()=>{ $('ncForm').classList.remove('open'); $('ncTitle').value=''; $('ncBody').value=''; $('ncPin').checked=false; pendingNewsImg=''; $('ncPending').innerHTML=''; });
   $('ncCats').addEventListener('click',e=>{ const b=e.target.closest('.nc-cat'); if(!b) return; newsCat=b.dataset.cat; $('ncCats').querySelectorAll('.nc-cat').forEach(x=>x.classList.toggle('on',x===b)); });
