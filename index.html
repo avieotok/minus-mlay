@@ -6,19 +6,19 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>שרשרת האספקה — מחסן</title>
 <meta name="theme-color" content="#e22d24">
-<meta name="apple-mobile-web-app-title" content="פורטל שרשרת האספקה">
+<meta name="apple-mobile-web-app-title" content="שרשרת האספקה">
 <link rel="apple-touch-icon" href="icon.png">
 <link rel="icon" type="image/png" href="icon.png">
-<link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjogIteU16rXqNeQ16og157XnNeQ15kg157Xmdeg15nXnteV150iLCAic2hvcnRfbmFtZSI6ICLXlNeq16jXkNeqINee15zXkNeZINee15nXoNeZ157XldedIiwgInN0YXJ0X3VybCI6ICJodHRwczovL2F2aWVvdG9rLmdpdGh1Yi5pby9taW51cy1tbGF5LyIsICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLCAiYmFja2dyb3VuZF9jb2xvciI6ICIjMGMwYTA5IiwgInRoZW1lX2NvbG9yIjogIiNlMjJkMjQiLCAiaWNvbnMiOiBbeyJzcmMiOiAiaHR0cHM6Ly9hdmllb3Rvay5naXRodWIuaW8vbWludXMtbWxheS9pY29uLnBuZyIsICJzaXplcyI6ICI1MTJ4NTEyIiwgInR5cGUiOiAiaW1hZ2UvcG5nIiwgInB1cnBvc2UiOiAiYW55IG1hc2thYmxlIn1dfQ==">
+<link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjogIlx1MDVlOVx1MDVlOFx1MDVlOVx1MDVlOFx1MDVlYSBcdTA1ZDRcdTA1ZDBcdTA1ZTFcdTA1ZTRcdTA1ZTdcdTA1ZDQiLCAic2hvcnRfbmFtZSI6ICJcdTA1ZTlcdTA1ZThcdTA1ZTlcdTA1ZThcdTA1ZWEgXHUwNWQ0XHUwNWQwXHUwNWUxXHUwNWU0XHUwNWU3XHUwNWQ0IiwgInN0YXJ0X3VybCI6ICJodHRwczovL2F2aWVvdG9rLmdpdGh1Yi5pby9taW51cy1tbGF5LyIsICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLCAiYmFja2dyb3VuZF9jb2xvciI6ICIjMGMwYTA5IiwgInRoZW1lX2NvbG9yIjogIiNlMjIzMWEiLCAiaWNvbnMiOiBbeyJzcmMiOiAiaHR0cHM6Ly9hdmllb3Rvay5naXRodWIuaW8vbWludXMtbWxheS9pY29uLnBuZyIsICJzaXplcyI6ICI1MTJ4NTEyIiwgInR5cGUiOiAiaW1hZ2UvcG5nIiwgInB1cnBvc2UiOiAiYW55IG1hc2thYmxlIn1dfQ==">
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Rubik:wght@700;900&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  body { font-family: 'Heebo', sans-serif; background: #cf1c13; color: #fafaf9; min-height: 100vh; }
+  body { font-family: 'Heebo', sans-serif; background: #0c0a09; color: #fafaf9; min-height: 100vh; }
   .header { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid #292524; max-width: 520px; margin: 0 auto; }
   .logo-badge { width: 46px; height: 46px; border-radius: 11px; background: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
   .logo-badge img { width: 100%; height: 100%; object-fit: contain; padding: 5px; }
   .title { font-family: 'Rubik', sans-serif; font-weight: 900; font-size: 21px; }
-  .sub { font-size: 12.5px; color: rgba(255,255,255,.85); }
+  .sub { font-size: 12.5px; color: #a8a29e; }
   main { max-width: 520px; margin: 0 auto; padding: 16px 20px 32px; display: flex; flex-direction: column; gap: 14px; }
   .tabs { display: flex; gap: 6px; background: #1c1917; padding: 5px; border-radius: 14px; border: 1px solid #292524; }
   .tab { flex: 1; text-align: center; padding: 11px; border-radius: 10px; font-weight: 700; font-size: 14.5px; cursor: pointer; color: #a8a29e; background: transparent; border: none; font-family: 'Heebo', sans-serif; }
@@ -192,7 +192,7 @@
     <div>
       <div class="title">שרשרת האספקה</div>
       <div class="sub">אפליקציית מחסן</div>
-      <div id="meBar" style="font-size:12.5px;color:#fff;font-weight:700;margin-top:2px"></div>
+      <div id="meBar" style="font-size:12.5px;color:#22c55e;font-weight:700;margin-top:2px"></div>
     </div>
     <button id="tkOpen" title="כלי עזר" style="margin-inline-start:auto;background:#211e1c;border:1px solid #3f3f46;color:#fafaf9;padding:0 13px;height:46px;border-radius:12px;font-size:14px;font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer;flex:0 0 auto;white-space:nowrap">כלי עזר 🧰</button>
   </div>
@@ -1736,7 +1736,7 @@
     setTimeout(()=>{ document.documentElement.innerHTML='<body style="background:#0c0a09;color:#a8a29e;font-family:Heebo,sans-serif;height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:18px;">להתראות 👋<br><br>אפשר לסגור את החלון/הכרטיסייה.</body>'; }, 250);
   });
 </script>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:rgba(255,255,255,.7);z-index:5;font-family:monospace">build 69</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 70</div>
 <!-- ===== כלי עזר (מודול עצמאי — זהה בשתי האפליקציות) ===== -->
 <style>
   #tkModal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;display:none;align-items:flex-start;justify-content:center}
