@@ -1746,7 +1746,7 @@
     setTimeout(()=>{ document.documentElement.innerHTML='<body style="background:#0c0a09;color:#a8a29e;font-family:Heebo,sans-serif;height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:18px;">להתראות 👋<br><br>אפשר לסגור את החלון/הכרטיסייה.</body>'; }, 250);
   });
 </script>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 73</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 76</div>
 <!-- ===== כלי עזר (מודול עצמאי — זהה בשתי האפליקציות) ===== -->
 <style>
   #tkModal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;display:none;align-items:flex-start;justify-content:center}
@@ -1756,9 +1756,34 @@
   #tkModal .tk-head{display:flex;align-items:center;justify-content:space-between;padding:15px 16px;border-bottom:1px solid #292524;background:#1c1917}
   #tkModal .tk-title{font-family:'Rubik','Heebo',sans-serif;font-weight:800;font-size:19px}
   #tkModal .tk-x{background:#292524;border:none;color:#fafaf9;width:34px;height:34px;border-radius:9px;font-size:16px;cursor:pointer}
-  #tkModal .tk-tabs{display:flex;gap:5px;padding:10px;border-bottom:1px solid #292524;background:#161312}
-  #tkModal .tk-tab{flex:1;background:#1c1917;border:1px solid #292524;color:#a8a29e;border-radius:10px;padding:10px 3px;font-size:12.5px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;white-space:nowrap}
+  #tkModal .tk-tabs{display:flex;flex-wrap:wrap;gap:5px;padding:10px;border-bottom:1px solid #292524;background:#161312}
+  #tkModal .tk-tab{flex:1 1 auto;min-width:84px;background:#1c1917;border:1px solid #292524;color:#a8a29e;border-radius:10px;padding:10px 3px;font-size:12.5px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;white-space:nowrap;position:relative}
   #tkModal .tk-tab.on{background:#e2231a;border-color:#e2231a;color:#fff}
+  #tkModal #tkMsgDot{display:none;width:8px;height:8px;background:#e2231a;border-radius:50%;margin-inline-start:5px;vertical-align:middle}
+  #tkModal .tk-msg-compose{background:#1c1917;border:1px solid #292524;border-radius:14px;padding:13px;margin-bottom:14px;display:flex;flex-direction:column;gap:10px}
+  #tkModal #tkMsgBody{background:#0c0a09;border:1px solid #3f3f46;border-radius:11px;padding:11px 13px;color:#fafaf9;font-size:14.5px;font-family:'Heebo',sans-serif;min-height:70px;resize:vertical;line-height:1.5}
+  #tkModal #tkMsgBody:focus{outline:none;border-color:#e2231a}
+  #tkModal .tk-msg-tolbl{font-size:12.5px;color:#a8a29e;font-weight:700}
+  #tkModal .tk-msg-to{display:flex;flex-wrap:wrap;gap:7px}
+  #tkModal .tk-rcp{display:flex;align-items:center;gap:5px;background:#0c0a09;border:1px solid #3f3f46;border-radius:9px;padding:7px 10px;font-size:13px;color:#e7e5e4;cursor:pointer}
+  #tkModal .tk-rcp input{width:16px;height:16px;accent-color:#e2231a}
+  #tkModal .tk-rcp.all{border-color:#166534;color:#34d399}
+  #tkModal #tkMsgSend{background:#e2231a;border:none;color:#fff;border-radius:11px;padding:12px;font-size:15px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer}
+  #tkModal #tkMsgSend:disabled{opacity:.5}
+  #tkModal .tk-mcard{background:#1c1917;border:1px solid #292524;border-radius:13px;padding:12px 13px;margin-bottom:10px}
+  #tkModal .tk-mcard.handled{opacity:.55}
+  #tkModal .tk-mhead{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#a8a29e;margin-bottom:6px;flex-wrap:wrap}
+  #tkModal .tk-mfrom{font-weight:800;color:#fafaf9;font-size:13.5px}
+  #tkModal .tk-mto{background:#0c0a09;border:1px solid #3f3f46;border-radius:7px;padding:1px 7px;font-size:11.5px}
+  #tkModal .tk-mbody{font-size:14.5px;color:#fafaf9;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+  #tkModal .tk-mact{display:flex;gap:8px;margin-top:9px}
+  #tkModal .tk-mact button{border:1px solid #3f3f46;background:#211e1c;color:#fafaf9;border-radius:9px;padding:7px 12px;font-size:12.5px;font-weight:700;cursor:pointer}
+  #tkModal .tk-mact .h{background:#06281b;border-color:#166534;color:#34d399}
+  #tkModal .tk-mact .d{color:#f87171}
+  #tkModal .tk-mhandled{color:#34d399;font-weight:800;font-size:12px}
+  @keyframes tkPulse{0%,100%{box-shadow:0 0 0 0 rgba(226,35,26,.55)}50%{box-shadow:0 0 0 7px rgba(226,35,26,0)}}
+  @keyframes tkDotPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.6);opacity:.4}}
+  #tkModal .tk-tab.tk-blink{animation:tkPulse 1.2s ease-in-out infinite;background:#e2231a;border-color:#e2231a;color:#fff}
   #tkModal .tk-body{flex:1;overflow-y:auto;padding:16px}
   #tkModal .tk-pane[hidden]{display:none}
   #tkModal .tk-newlist{width:100%;background:#06281b;border:1px dashed #166534;color:#34d399;border-radius:13px;padding:13px;font-size:15px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;margin-bottom:14px}
@@ -1839,12 +1864,22 @@
     <div class="tk-head"><span class="tk-title">🧰 כלי עזר</span><button class="tk-x" id="tkClose">✕</button></div>
     <div class="tk-tabs">
       <button class="tk-tab on" data-tk="lists">📝 רשימות</button>
+      <button class="tk-tab" data-tk="msgs">📨 מסרים<span id="tkMsgDot"></span></button>
       <button class="tk-tab" data-tk="phone">📞 טלפונים</button>
       <button class="tk-tab" data-tk="cur">💱 מטבעות</button>
       <button class="tk-tab" data-tk="area">📐 שטחים</button>
     </div>
     <div class="tk-body">
       <div class="tk-pane" id="tkLists"></div>
+      <div class="tk-pane" id="tkMsgs" hidden>
+        <div class="tk-msg-compose">
+          <textarea id="tkMsgBody" placeholder="כתוב/י הודעה לחברים…"></textarea>
+          <div class="tk-msg-tolbl">למי לשלוח:</div>
+          <div class="tk-msg-to" id="tkMsgTo"></div>
+          <button id="tkMsgSend">שלח הודעה</button>
+        </div>
+        <div id="tkMsgList"></div>
+      </div>
       <div class="tk-pane" id="tkPhone" hidden>
         <div class="tk-ph-top">
           <input class="tk-ph-search" id="tkPhSearch" placeholder="חיפוש ספק / איש קשר…">
@@ -1930,8 +1965,8 @@
   tabs.forEach(function(t){ t.addEventListener('click', function(){
     tabs.forEach(function(x){ x.classList.toggle('on', x===t); });
     var v=t.getAttribute('data-tk');
-    $('tkLists').hidden=(v!=='lists'); $('tkPhone').hidden=(v!=='phone'); $('tkCur').hidden=(v!=='cur'); $('tkArea').hidden=(v!=='area');
-    if(v==='phone'){ renderPhones(); loadShared(); } if(v==='cur') openCur(); if(v==='area') openArea();
+    $('tkLists').hidden=(v!=='lists'); $('tkMsgs').hidden=(v!=='msgs'); $('tkPhone').hidden=(v!=='phone'); $('tkCur').hidden=(v!=='cur'); $('tkArea').hidden=(v!=='area');
+    if(v==='phone'){ renderPhones(); loadShared(); } if(v==='msgs'){ openMsgs(); } if(v==='cur') openCur(); if(v==='area') openArea();
   }); });
 
   /* ---------- רשימות ---------- */
@@ -2145,6 +2180,92 @@
     else if(e.target.classList.contains('tk-card-edit')){ openPhForm(c, false); }
     else if(e.target.classList.contains('tk-card-del')){ if(confirm('למחוק את "'+(c.supplier||'הספק')+'" מהמכשיר?')){ PHONES=PHONES.filter(function(x){return x.id!==id;}); savePhones(); renderPhones(); } }
   });
+
+  /* ---------- מסרים פנימיים ---------- */
+  var DEV='אבידן קוטאי';
+  var MSGS=[], MEMBERS=null, msgToAll=true, msgChecked={};
+  var MSEEN_K='afcon_msgs_seen';
+  var tkAC=null, lastUnread=null;
+  function tkAudio(){ try{ if(!tkAC){ tkAC=new (window.AudioContext||window.webkitAudioContext)(); } if(tkAC.state==='suspended') tkAC.resume(); }catch(e){} return tkAC; }
+  document.addEventListener('click', tkAudio, true);
+  function tkBeep(){ try{ var ac=tkAudio(); if(!ac) return; var t=ac.currentTime; [880,1175].forEach(function(f,i){ var o=ac.createOscillator(), g=ac.createGain(); o.type='sine'; o.frequency.value=f; o.connect(g); g.connect(ac.destination); var s=t+i*0.16; g.gain.setValueAtTime(0.0001,s); g.gain.exponentialRampToValueAtTime(0.25,s+0.02); g.gain.exponentialRampToValueAtTime(0.0001,s+0.15); o.start(s); o.stop(s+0.17); }); if(navigator.vibrate) navigator.vibrate([60,40,60]); }catch(e){} }
+  function msgSeen(){ try{ return JSON.parse(localStorage.getItem(MSEEN_K)||'[]')||[]; }catch(e){ return []; } }
+  function setMsgSeen(ids){ try{ localStorage.setItem(MSEEN_K, JSON.stringify(ids)); }catch(e){} }
+  function isDev(){ return myName()===DEV; }
+  function loadMembers(cb){
+    if(MEMBERS){ cb&&cb(); return; }
+    srvGet('roster').then(function(r){
+      var set={}, arr=[];
+      function add(a){ if(a&&a.length) a.forEach(function(n){ n=String(n||'').trim(); if(n&&!set[n]){ set[n]=1; arr.push(n); } }); }
+      if(r&&r.ok){ add(r.buyers); add(r.reporters); }
+      MEMBERS=arr; cb&&cb();
+    });
+  }
+  function renderRecipients(){
+    var box=$('tkMsgTo'); if(!box) return; var me=myName();
+    var html='<label class="tk-rcp all"><input type="checkbox" id="tkRcpAll" '+(msgToAll?'checked':'')+'> לכולם</label>';
+    (MEMBERS||[]).forEach(function(n){ if(n===me) return;
+      html+='<label class="tk-rcp"><input type="checkbox" class="tk-rcp-c" value="'+esc(n)+'" '+(msgChecked[n]?'checked':'')+(msgToAll?' disabled':'')+'> '+esc(n)+'</label>';
+    });
+    box.innerHTML=html;
+  }
+  function openMsgs(){
+    if(!myName()){ $('tkMsgList').innerHTML='<div class="tk-empty">כדי לשלוח ולקבל מסרים — בחר/י קודם את שמך באפליקציה.</div>'; return; }
+    loadMembers(renderRecipients); loadMessages();
+  }
+  function loadMessages(){
+    if(!apiCfg().url || !myName()) return;
+    srvGet('messages',{me:myName()}).then(function(r){
+      if(r&&r.ok&&Object.prototype.toString.call(r.messages)==='[object Array]'){ MSGS=r.messages; }
+      renderMessages(); markMsgsSeen(); updateMsgBadge();
+    });
+  }
+  function fmtMTime(iso){ try{ return new Date(iso).toLocaleString('he-IL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }catch(e){ return ''; } }
+  function toLabel(to){ if(to==='*'||!to) return 'לכולם'; return String(to).split('\u0001').join(', '); }
+  function renderMessages(){
+    var box=$('tkMsgList'); if(!box) return; var dev=isDev();
+    if(!MSGS.length){ box.innerHTML='<div class="tk-empty">אין מסרים עדיין.</div>'; return; }
+    box.innerHTML=(dev?'<div class="tk-sec">📥 כל המסרים (תצוגת מפתח)</div>':'')+MSGS.map(function(m){
+      var act='';
+      if(dev){ act='<div class="tk-mact"><button class="h" data-mh="'+esc(m.id)+'" data-v="'+(m.handled?'0':'1')+'">'+(m.handled?'בטל טיפול':'סמן כטופל ✓')+'</button><button class="d" data-md="'+esc(m.id)+'">מחק</button></div>'; }
+      return '<div class="tk-mcard'+(m.handled?' handled':'')+'"><div class="tk-mhead"><span class="tk-mfrom">'+esc(m.from||'—')+'</span><span>←</span><span class="tk-mto">'+esc(toLabel(m.to))+'</span><span style="margin-inline-start:auto">'+esc(fmtMTime(m.created))+'</span>'+(m.handled?'<span class="tk-mhandled">✓ טופל</span>':'')+'</div><div class="tk-mbody">'+esc(m.body||'')+'</div>'+act+'</div>';
+    }).join('');
+  }
+  function markMsgsSeen(){ setMsgSeen(MSGS.map(function(m){return m.id;})); lastUnread=0; var d=$('tkMsgDot'); if(d) d.style.display='none'; updateLauncherDot(0); }
+  function unreadCount(){ var me=myName(); if(!me) return 0; var seen=msgSeen(), n=0; MSGS.forEach(function(m){ if(m.from===me) return; if(seen.indexOf(m.id)<0) n++; }); return n; }
+  function updateMsgBadge(){ var n=unreadCount(); var d=$('tkMsgDot'); if(d) d.style.display=n>0?'inline-block':'none'; var tab=document.querySelector('#tkModal .tk-tab[data-tk="msgs"]'); if(tab) tab.classList.toggle('tk-blink', n>0); updateLauncherDot(n); }
+  function updateLauncherDot(n){
+    var b=$('tkOpen'); if(!b) return; var dot=document.getElementById('tkLaunchDot');
+    if(n>0){ if(!dot){ b.style.position='relative'; dot=document.createElement('span'); dot.id='tkLaunchDot'; dot.style.cssText='position:absolute;top:-3px;left:-3px;width:11px;height:11px;border-radius:50%;background:#e2231a;border:2px solid #1c1917;animation:tkDotPulse 1s ease-in-out infinite'; b.appendChild(dot); } }
+    else if(dot){ dot.remove(); }
+  }
+  function refreshMsgBadge(){ if(!apiCfg().url || !myName()) return; srvGet('messages',{me:myName()}).then(function(r){ if(r&&r.ok&&Object.prototype.toString.call(r.messages)==='[object Array]'){ MSGS=r.messages; var n=unreadCount(); if(lastUnread!==null && n>lastUnread){ tkBeep(); } lastUnread=n; updateMsgBadge(); } }); }
+  $('tkMsgTo').addEventListener('change', function(e){
+    if(e.target.id==='tkRcpAll'){ msgToAll=e.target.checked; renderRecipients(); return; }
+    if(e.target.classList.contains('tk-rcp-c')){ msgChecked[e.target.value]=e.target.checked; }
+  });
+  $('tkMsgSend').addEventListener('click', function(){
+    if(!apiCfg().url){ alert('אין חיבור למערכת — לא ניתן לשלוח.'); return; }
+    var me=myName(); if(!me){ alert('בחר/י קודם את שמך באפליקציה.'); return; }
+    var body=($('tkMsgBody').value||'').trim(); if(!body){ alert('כתוב/י הודעה.'); return; }
+    var to='*';
+    if(!msgToAll){ var names=[]; for(var k in msgChecked){ if(msgChecked[k]) names.push(k); } if(!names.length){ alert('בחר/י נמען אחד לפחות, או סמן "לכולם".'); return; } to=names.join('\u0001'); }
+    var btn=$('tkMsgSend'); btn.disabled=true; btn.textContent='שולח…';
+    var mid='M'+Date.now()+Math.floor(Math.random()*100000);
+    srvGet('msgSend',{id:mid, from:me, to:to, body:body}).then(function(r){
+      btn.disabled=false; btn.textContent='שלח הודעה';
+      if(r&&r.ok){ $('tkMsgBody').value=''; msgChecked={}; msgToAll=true; renderRecipients(); loadMessages(); }
+      else if(r&&r.ok===false){ alert('⚠️ השרת לא מכיר את שליחת המסרים — צריך לפרוס מחדש את Code.gs.'); }
+      else { alert('⚠️ אין תשובה מהשרת. בדוק/י חיבור.'); }
+    });
+  });
+  $('tkMsgList').addEventListener('click', function(e){
+    var mh=e.target.getAttribute('data-mh'); var md=e.target.getAttribute('data-md');
+    if(mh){ srvGet('msgHandled',{id:mh, handled:e.target.getAttribute('data-v')}).then(function(){ loadMessages(); }); return; }
+    if(md){ if(confirm('למחוק את ההודעה?')){ srvGet('msgDelete',{id:md}).then(function(){ loadMessages(); }); } return; }
+  });
+  setTimeout(refreshMsgBadge, 1500);
+  setInterval(refreshMsgBadge, 60000);
 
   /* ---------- ממיר מטבעות ---------- */
   var CUR=[['ILS','₪ שקל'],['USD','$ דולר אמריקאי'],['EUR','€ אירו'],['GBP','£ ליש״ט'],['JPY','¥ ין יפני'],['CNY','יואן סיני'],['CHF','פרנק שוויצרי'],['CAD','דולר קנדי'],['AUD','דולר אוסטרלי'],['AED','דירהם (איחוד האמירויות)'],['INR','רופי הודי'],['RUB','רובל רוסי'],['TRY','לירה טורקית'],['BRL','ריאל ברזילאי'],['ZAR','ראנד דרום-אפריקני']];
