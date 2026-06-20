@@ -254,6 +254,7 @@
         <div id="meBar" style="font-size:12.5px;color:var(--green2);font-weight:700;margin-top:2px"></div>
       </div>
       <div class="top-actions">
+        <button class="ico" id="tkOpen" title="כלי עזר" style="width:auto;padding:0 12px;font-size:13.5px;font-weight:800;gap:5px">כלי עזר 🧰</button>
         <button class="ico" id="refreshBtn" title="רענן">🔄</button>
         <button class="ico" id="aboutBtn" title="אודות">ℹ️</button>
         <button class="ico" id="gearBtn" title="הגדרות">⚙️</button>
@@ -428,6 +429,12 @@
         <button class="ghost" id="clearAll" style="border-color:#7f1d1d;color:#f87171">🧹 אפס את כל ההתראות</button>
         <div class="note" id="clearNote"></div>
       </div>
+      <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:8px;color:#f87171">📞 ספר הטלפונים המשותף</div>
+        <p style="font-size:12.5px;color:var(--faint);line-height:1.6;margin-bottom:10px">מוחק את <b>כל</b> הספקים ששותפו לכולם (ב„כלי עזר ▸ טלפונים"). הספקים האישיים שכל אחד שמר במכשירו לא יושפעו. פעולה זו אינה הפיכה.</p>
+        <button class="ghost" id="clearPhones" style="border-color:#7f1d1d;color:#f87171">🗑️ מחק את כל ספר הטלפונים המשותף</button>
+        <div class="note" id="clearPhNote"></div>
+      </div>
     </div>
 
     <button class="ghost" id="mClose">סגור</button>
@@ -472,6 +479,7 @@
 
   function apiUrl(){ return (localStorage.getItem(K.api)||EMBED_API||'').trim(); }
   function apiToken(){ return (localStorage.getItem(K.token)||EMBED_TOKEN||'').trim(); }
+  try{ window.__AFCON_API={get url(){return apiUrl();}, get token(){return apiToken();}}; }catch(e){}
   function apiOn(){ return !!apiUrl(); }
   function apiGetJsonp(action, params){
     return new Promise(function(resolve, reject){
@@ -1252,6 +1260,12 @@
     try{ const r=await apiPost('clearAll'); if(r&&r.ok){ selDel.clear(); await load(); $('clearNote').textContent='✓ נמחקו '+(r.cleared||0)+' התראות · המספור אופס'; } else $('clearNote').textContent='האיפוס נכשל.'; }
     catch(e){ $('clearNote').textContent='האיפוס נכשל — בדוק חיבור.'; }
   });
+  const cp=$('clearPhones'); if(cp) cp.addEventListener('click', async ()=>{
+    if(!confirm('למחוק את כל ספר הטלפונים המשותף? כל הספקים ששותפו יוסרו אצל כולם. (ספקים אישיים במכשירים לא יושפעו.)')) return;
+    $('clearPhNote').textContent='מוחק…';
+    try{ const r=await apiPost('contactsClear'); if(r&&r.ok){ $('clearPhNote').textContent='✓ נמחקו '+(r.cleared||0)+' ספקים משותפים'; } else $('clearPhNote').textContent='המחיקה נכשלה.'; }
+    catch(e){ $('clearPhNote').textContent='המחיקה נכשלה — בדוק חיבור.'; }
+  });
   $('gateOk').addEventListener('click',()=>{ const v=$('gateSel').value.trim(); if(!v){ $('gateMsg').textContent='בחר את שמך מהרשימה.'; return; } localStorage.setItem(K.me,v); $('idGate').style.display='none'; fillIdentity(); load(); });
   $('gateDev').addEventListener('click',()=>{ const p=prompt('סיסמת מפתח:'); if(p==='30172'){ $('idGate').style.display='none'; openModal(); } });
   maybeGate();
@@ -1260,5 +1274,392 @@
   if(apiOn()){ load(); loadRoster(); loadNews(); } else renderEmptyConfig();
   document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&apiOn()) load(); });
 </script>
+<!-- ===== כלי עזר (מודול עצמאי — זהה בשתי האפליקציות) ===== -->
+<style>
+  #tkModal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;display:none;align-items:flex-start;justify-content:center}
+  #tkModal.open{display:flex}
+  #tkModal *{box-sizing:border-box}
+  #tkModal .tk-sheet{background:#0c0a09;width:100%;max-width:580px;height:100%;display:flex;flex-direction:column;color:#fafaf9;font-family:'Heebo','Segoe UI',sans-serif}
+  #tkModal .tk-head{display:flex;align-items:center;justify-content:space-between;padding:15px 16px;border-bottom:1px solid #292524;background:#1c1917}
+  #tkModal .tk-title{font-family:'Rubik','Heebo',sans-serif;font-weight:800;font-size:19px}
+  #tkModal .tk-x{background:#292524;border:none;color:#fafaf9;width:34px;height:34px;border-radius:9px;font-size:16px;cursor:pointer}
+  #tkModal .tk-tabs{display:flex;gap:5px;padding:10px;border-bottom:1px solid #292524;background:#161312}
+  #tkModal .tk-tab{flex:1;background:#1c1917;border:1px solid #292524;color:#a8a29e;border-radius:10px;padding:10px 3px;font-size:12.5px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;white-space:nowrap}
+  #tkModal .tk-tab.on{background:#e2231a;border-color:#e2231a;color:#fff}
+  #tkModal .tk-body{flex:1;overflow-y:auto;padding:16px}
+  #tkModal .tk-pane[hidden]{display:none}
+  #tkModal .tk-newlist{width:100%;background:#06281b;border:1px dashed #166534;color:#34d399;border-radius:13px;padding:13px;font-size:15px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;margin-bottom:14px}
+  #tkModal .tk-list{background:#1c1917;border:1px solid #292524;border-radius:14px;padding:13px;margin-bottom:13px}
+  #tkModal .tk-list-head{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+  #tkModal .tk-list-name{flex:1;background:#0c0a09;border:1px solid #3f3f46;border-radius:10px;padding:9px 11px;color:#fafaf9;font-size:15.5px;font-weight:700;font-family:'Rubik','Heebo',sans-serif}
+  #tkModal .tk-list-name:focus{outline:none;border-color:#e2231a}
+  #tkModal .tk-dellist{background:none;border:none;color:#f87171;font-size:17px;cursor:pointer;padding:4px}
+  #tkModal .tk-items{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+  #tkModal .tk-item{display:flex;align-items:center;gap:9px;background:#0c0a09;border:1px solid #292524;border-radius:9px;padding:8px 10px}
+  #tkModal .tk-item input[type=checkbox]{width:19px;height:19px;accent-color:#22c55e;flex:0 0 auto}
+  #tkModal .tk-itext{flex:1;font-size:14.5px;line-height:1.4;word-break:break-word;cursor:text}
+  #tkModal .tk-item.done .tk-itext{text-decoration:line-through;color:#78716c}
+  #tkModal .tk-iimg{flex:1}
+  #tkModal .tk-iimg img{max-width:100%;max-height:150px;border-radius:8px;border:1px solid #3f3f46;display:block}
+  #tkModal .tk-idel{background:none;border:none;color:#f87171;font-weight:800;cursor:pointer;font-size:14px;flex:0 0 auto}
+  #tkModal .tk-empty{color:#78716c;font-size:13.5px;text-align:center;padding:8px}
+  #tkModal .tk-additem{display:flex;gap:6px;align-items:stretch}
+  #tkModal .tk-iteminput{flex:1;background:#0c0a09;border:1px solid #3f3f46;border-radius:10px;padding:10px 11px;color:#fafaf9;font-size:14.5px;font-family:'Heebo',sans-serif}
+  #tkModal .tk-iteminput:focus{outline:none;border-color:#e2231a}
+  #tkModal .tk-additem button{border:1px solid #3f3f46;background:#211e1c;color:#fafaf9;border-radius:10px;font-size:17px;cursor:pointer;padding:0 12px}
+  #tkModal .tk-add{background:#22c55e!important;border-color:#22c55e!important;color:#052e16!important;font-weight:800}
+  #tkModal .tk-mic.rec{background:#e2231a!important;border-color:#e2231a!important;color:#fff!important;animation:tkpulse 1s infinite}
+  @keyframes tkpulse{0%,100%{opacity:1}50%{opacity:.5}}
+  #tkModal .tk-conv{background:#1c1917;border:1px solid #292524;border-radius:14px;padding:16px}
+  #tkModal .tk-row{display:flex;gap:10px;align-items:center;margin-bottom:12px}
+  #tkModal .tk-amt{flex:1;background:#0c0a09;border:1px solid #3f3f46;border-radius:11px;padding:13px;color:#fafaf9;font-size:20px;font-weight:800;font-family:'Rubik',sans-serif;text-align:start}
+  #tkModal .tk-amt:focus{outline:none;border-color:#e2231a}
+  #tkModal .tk-sel{flex:1;background:#0c0a09;border:1px solid #3f3f46;border-radius:11px;padding:13px;color:#fafaf9;font-size:15px;font-family:'Heebo',sans-serif}
+  #tkModal .tk-swap{background:#211e1c;border:1px solid #3f3f46;color:#fafaf9;border-radius:11px;width:46px;font-size:18px;cursor:pointer}
+  #tkModal .tk-result{background:#06281b;border:1px solid #166534;border-radius:12px;padding:16px;text-align:center;margin-top:6px}
+  #tkModal .tk-result .tk-rv{font-family:'Rubik',sans-serif;font-weight:900;font-size:30px;color:#34d399;line-height:1.1;word-break:break-word}
+  #tkModal .tk-result .tk-rl{font-size:13px;color:#a8a29e;margin-top:6px}
+  #tkModal .tk-note{font-size:12px;color:#78716c;text-align:center;margin-top:10px}
+  /* ספר טלפונים */
+  #tkModal .tk-ph-top{display:flex;gap:8px;margin-bottom:13px}
+  #tkModal .tk-ph-search{flex:1;background:#0c0a09;border:1px solid #3f3f46;border-radius:11px;padding:11px 13px;color:#fafaf9;font-size:14.5px;font-family:'Heebo',sans-serif}
+  #tkModal .tk-ph-search:focus{outline:none;border-color:#e2231a}
+  #tkModal .tk-ph-new{background:#06281b;border:1px solid #166534;color:#34d399;border-radius:11px;padding:0 16px;font-size:14px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;white-space:nowrap}
+  #tkModal .tk-ph-form{display:none;background:#1c1917;border:1px solid #3f3f46;border-radius:14px;padding:14px;margin-bottom:14px;flex-direction:column;gap:9px}
+  #tkModal .tk-ph-form.open{display:flex}
+  #tkModal .tk-ph-form input{background:#0c0a09;border:1px solid #3f3f46;border-radius:10px;padding:11px 12px;color:#fafaf9;font-size:14.5px;font-family:'Heebo',sans-serif}
+  #tkModal .tk-ph-form input:focus{outline:none;border-color:#e2231a}
+  #tkModal .tk-ph-2{display:flex;gap:8px}
+  #tkModal .tk-ph-2 input{flex:1;min-width:0}
+  #tkModal .tk-ph-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:3px}
+  #tkModal .tk-ph-save{background:#22c55e;border:none;color:#052e16;border-radius:10px;padding:10px 20px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;font-size:14.5px}
+  #tkModal .tk-ph-cancel{background:none;border:1px solid #3f3f46;color:#a8a29e;border-radius:10px;padding:10px 16px;font-weight:700;cursor:pointer;font-size:14px}
+  #tkModal .tk-card{background:#1c1917;border:1px solid #292524;border-radius:14px;padding:14px;margin-bottom:11px}
+  #tkModal .tk-card-h{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  #tkModal .tk-card-name{flex:1;font-family:'Rubik','Heebo',sans-serif;font-weight:800;font-size:16.5px;color:#fafaf9}
+  #tkModal .tk-card-edit,#tkModal .tk-card-del{background:none;border:none;cursor:pointer;font-size:15px;padding:3px}
+  #tkModal .tk-card-del{color:#f87171}
+  #tkModal .tk-line{display:flex;align-items:center;gap:8px;font-size:14px;color:#d6d3d1;padding:4px 0}
+  #tkModal .tk-line .ic{flex:0 0 auto;width:18px;text-align:center}
+  #tkModal a.tk-tel{color:#34d399;font-weight:800;text-decoration:none}
+  #tkModal a.tk-addr{color:#60a5fa;font-weight:700;text-decoration:none}
+  #tkModal .tk-card.shared{border-color:#1e3a5f;background:#13212e}
+  #tkModal .tk-tag{display:inline-block;background:#0c2d48;color:#60a5fa;border:1px solid #1e3a5f;border-radius:7px;font-size:11px;font-weight:800;padding:2px 7px;margin-inline-start:6px;vertical-align:middle}
+  #tkModal .tk-card-share{background:none;border:none;cursor:pointer;font-size:16px;padding:3px;color:#34d399}
+  #tkModal .tk-sec{font-size:12.5px;color:#a8a29e;font-weight:800;margin:4px 2px 9px;border-bottom:1px solid #292524;padding-bottom:5px}
+  #tkModal .tk-draw-note{font-size:12px;color:#78716c}
+  #tkDraw{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:320;display:none;flex-direction:column;align-items:center;justify-content:center;padding:16px}
+  #tkDraw.open{display:flex}
+  #tkDraw canvas{background:#fff;border-radius:12px;touch-action:none;max-width:100%;box-shadow:0 6px 30px rgba(0,0,0,.5)}
+  #tkDraw .tk-draw-bar{display:flex;gap:10px;margin-top:14px}
+  #tkDraw .tk-draw-bar button{border:none;border-radius:11px;padding:12px 20px;font-size:15px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer}
+  #tkDraw .tk-dsave{background:#22c55e;color:#052e16}
+  #tkDraw .tk-dclear{background:#292524;color:#fafaf9}
+  #tkDraw .tk-dcancel{background:#7f1d1d;color:#fff}
+</style>
+
+<div id="tkModal">
+  <div class="tk-sheet">
+    <div class="tk-head"><span class="tk-title">🧰 כלי עזר</span><button class="tk-x" id="tkClose">✕</button></div>
+    <div class="tk-tabs">
+      <button class="tk-tab on" data-tk="lists">📝 רשימות</button>
+      <button class="tk-tab" data-tk="phone">📞 טלפונים</button>
+      <button class="tk-tab" data-tk="cur">💱 מטבעות</button>
+      <button class="tk-tab" data-tk="area">📐 שטחים</button>
+    </div>
+    <div class="tk-body">
+      <div class="tk-pane" id="tkLists"></div>
+      <div class="tk-pane" id="tkPhone" hidden>
+        <div class="tk-ph-top">
+          <input class="tk-ph-search" id="tkPhSearch" placeholder="חיפוש ספק / איש קשר…">
+          <button class="tk-ph-new" id="tkPhNew">➕ ספק חדש</button>
+        </div>
+        <div class="tk-ph-form" id="tkPhForm">
+          <input id="tkPhSupplier" placeholder="שם הספק">
+          <div class="tk-ph-2"><input id="tkPhC1" placeholder="איש קשר 1"><input id="tkPhC2" placeholder="איש קשר 2"></div>
+          <div class="tk-ph-2"><input id="tkPhP1" type="tel" inputmode="tel" placeholder="טלפון 1"><input id="tkPhP2" type="tel" inputmode="tel" placeholder="טלפון 2"></div>
+          <input id="tkPhAddr" placeholder="כתובת">
+          <div class="tk-ph-actions"><button class="tk-ph-cancel" id="tkPhCancel">ביטול</button><button class="tk-ph-save" id="tkPhSave">שמור</button></div>
+        </div>
+        <div id="tkPhList"></div>
+      </div>
+      <div class="tk-pane" id="tkCur" hidden>
+        <div class="tk-conv">
+          <div class="tk-row"><input class="tk-amt" id="tkCurAmt" type="number" inputmode="decimal" value="100"></div>
+          <div class="tk-row">
+            <select class="tk-sel" id="tkCurFrom"></select>
+            <button class="tk-swap" id="tkCurSwap" title="החלף">⇄</button>
+            <select class="tk-sel" id="tkCurTo"></select>
+          </div>
+          <div class="tk-result"><div class="tk-rv" id="tkCurRes">—</div><div class="tk-rl" id="tkCurRate"></div></div>
+          <div class="tk-note" id="tkCurNote"></div>
+        </div>
+      </div>
+      <div class="tk-pane" id="tkArea" hidden>
+        <div class="tk-conv">
+          <div class="tk-row"><input class="tk-amt" id="tkAreaAmt" type="number" inputmode="decimal" value="1"></div>
+          <div class="tk-row">
+            <select class="tk-sel" id="tkAreaFrom"></select>
+            <button class="tk-swap" id="tkAreaSwap" title="החלף">⇄</button>
+            <select class="tk-sel" id="tkAreaTo"></select>
+          </div>
+          <div class="tk-result"><div class="tk-rv" id="tkAreaRes">—</div><div class="tk-rl" id="tkAreaRate"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="tkDraw">
+  <canvas id="tkCanvas" width="320" height="380"></canvas>
+  <div class="tk-draw-bar">
+    <button class="tk-dsave" id="tkDSave">שמור</button>
+    <button class="tk-dclear" id="tkDClear">נקה</button>
+    <button class="tk-dcancel" id="tkDCancel">ביטול</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id);};
+  var modal=$('tkModal'); if(!modal) return;
+  function esc(s){ return (s||'').toString().replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+
+  /* ---------- גישה לשרת (לספר טלפונים משותף) ---------- */
+  function apiCfg(){ var a=window.__AFCON_API||{}; return {url:(a.url||'').trim(), token:(a.token||'').trim()}; }
+  function myName(){ try{ return (localStorage.getItem('afcon_me')||localStorage.getItem('afcon_reporter')||'').trim(); }catch(e){ return ''; } }
+  function srvGet(action, params){
+    return new Promise(function(resolve){
+      var c=apiCfg(); if(!c.url){ resolve(null); return; }
+      var cb='tkcb'+Date.now()+Math.floor(Math.random()*100000);
+      var qs='?action='+encodeURIComponent(action)+'&token='+encodeURIComponent(c.token)+'&callback='+cb;
+      var pr=params||{}; for(var k in pr){ qs+='&'+encodeURIComponent(k)+'='+encodeURIComponent(pr[k]); }
+      var s=document.createElement('script'); var done=false;
+      window[cb]=function(data){ done=true; try{ delete window[cb]; }catch(e){} try{ s.remove(); }catch(e){} resolve(data); };
+      s.onerror=function(){ if(!done){ try{ delete window[cb]; }catch(e){} try{ s.remove(); }catch(e){} resolve(null); } };
+      s.src=c.url+qs; document.body.appendChild(s);
+      setTimeout(function(){ if(!done){ try{ delete window[cb]; }catch(e){} try{ s.remove(); }catch(e){} resolve(null); } }, 15000);
+    });
+  }
+  function srvPost(payload){
+    var c=apiCfg(); if(!c.url) return Promise.resolve();
+    return fetch(c.url,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({token:c.token},payload))}).catch(function(){});
+  }
+
+  var opener=$('tkOpen'); if(opener) opener.addEventListener('click', function(){ modal.classList.add('open'); renderLists(); });
+  $('tkClose').addEventListener('click', function(){ modal.classList.remove('open'); });
+  modal.addEventListener('click', function(e){ if(e.target===modal) modal.classList.remove('open'); });
+  var tabs=modal.querySelectorAll('.tk-tab');
+  tabs.forEach(function(t){ t.addEventListener('click', function(){
+    tabs.forEach(function(x){ x.classList.toggle('on', x===t); });
+    var v=t.getAttribute('data-tk');
+    $('tkLists').hidden=(v!=='lists'); $('tkPhone').hidden=(v!=='phone'); $('tkCur').hidden=(v!=='cur'); $('tkArea').hidden=(v!=='area');
+    if(v==='phone'){ renderPhones(); loadShared(); } if(v==='cur') openCur(); if(v==='area') openArea();
+  }); });
+
+  /* ---------- רשימות ---------- */
+  var LK='afcon_tools_lists';
+  function loadLists(){ try{ return JSON.parse(localStorage.getItem(LK)||'[]')||[]; }catch(e){ return []; } }
+  function saveLists(){ try{ localStorage.setItem(LK, JSON.stringify(LISTS)); }catch(e){} }
+  var LISTS=loadLists();
+  function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+  function renderLists(){
+    var box=$('tkLists');
+    var html='<button class="tk-newlist" id="tkNewList">➕ רשימה חדשה</button>';
+    if(!LISTS.length){ html+='<div class="tk-empty">אין רשימות עדיין. צור/י רשימה חדשה.</div>'; }
+    LISTS.forEach(function(L){
+      var items=(L.items||[]).map(function(it){
+        if(it.type==='draw'){ return '<div class="tk-item'+(it.done?' done':'')+'" data-iid="'+it.id+'"><input type="checkbox" '+(it.done?'checked':'')+'><div class="tk-iimg"><img src="'+it.img+'"></div><button class="tk-idel">✕</button></div>'; }
+        return '<div class="tk-item'+(it.done?' done':'')+'" data-iid="'+it.id+'"><input type="checkbox" '+(it.done?'checked':'')+'><span class="tk-itext">'+esc(it.text)+'</span><button class="tk-idel">✕</button></div>';
+      }).join('');
+      if(!items) items='<div class="tk-empty">רשימה ריקה</div>';
+      html+='<div class="tk-list" data-id="'+L.id+'">'
+        +'<div class="tk-list-head"><input class="tk-list-name" value="'+esc(L.name)+'"><button class="tk-dellist" title="מחק רשימה">🗑️</button></div>'
+        +'<div class="tk-items">'+items+'</div>'
+        +'<div class="tk-additem"><input class="tk-iteminput" placeholder="הוסף פריט…"><button class="tk-add" title="הוסף">➕</button><button class="tk-mic" title="הקלטה קולית">🎤</button><button class="tk-drawbtn" title="כתב יד / ציור">✏️</button></div>'
+        +'</div>';
+    });
+    box.innerHTML=html;
+  }
+  function listById(id){ for(var i=0;i<LISTS.length;i++){ if(LISTS[i].id===id) return LISTS[i]; } return null; }
+  $('tkLists').addEventListener('click', function(e){
+    var t=e.target;
+    if(t.id==='tkNewList'){ LISTS.unshift({id:uid(), name:'רשימה חדשה', items:[]}); saveLists(); renderLists(); return; }
+    var listEl=t.closest('.tk-list'); if(!listEl) return; var L=listById(listEl.getAttribute('data-id')); if(!L) return;
+    if(t.classList.contains('tk-dellist')){ if(confirm('למחוק את הרשימה "'+L.name+'"?')){ LISTS=LISTS.filter(function(x){return x!==L;}); saveLists(); renderLists(); } return; }
+    if(t.classList.contains('tk-add')){ var inp=listEl.querySelector('.tk-iteminput'); addText(L, inp.value); inp.value=''; renderLists(); return; }
+    if(t.classList.contains('tk-mic')){ startVoice(L, t); return; }
+    if(t.classList.contains('tk-drawbtn')){ openDraw(L); return; }
+    if(t.classList.contains('tk-idel')){ var iid=t.closest('.tk-item').getAttribute('data-iid'); L.items=(L.items||[]).filter(function(x){return x.id!==iid;}); saveLists(); renderLists(); return; }
+    if(t.classList.contains('tk-itext')){ var iid2=t.closest('.tk-item').getAttribute('data-iid'); var it=findItem(L,iid2); if(it){ var nv=prompt('עריכת פריט:', it.text); if(nv!==null){ it.text=nv.trim(); saveLists(); renderLists(); } } return; }
+  });
+  $('tkLists').addEventListener('change', function(e){
+    var t=e.target; var listEl=t.closest('.tk-list'); if(!listEl) return; var L=listById(listEl.getAttribute('data-id')); if(!L) return;
+    if(t.type==='checkbox'){ var iid=t.closest('.tk-item').getAttribute('data-iid'); var it=findItem(L,iid); if(it){ it.done=t.checked; saveLists(); renderLists(); } return; }
+    if(t.classList.contains('tk-list-name')){ L.name=t.value.trim()||'רשימה'; saveLists(); return; }
+  });
+  $('tkLists').addEventListener('keydown', function(e){
+    if(e.key==='Enter' && e.target.classList.contains('tk-iteminput')){ var listEl=e.target.closest('.tk-list'); var L=listById(listEl.getAttribute('data-id')); if(L){ addText(L, e.target.value); e.target.value=''; renderLists(); var ne=document.querySelector('.tk-list[data-id="'+L.id+'"] .tk-iteminput'); if(ne) ne.focus(); } }
+  });
+  function findItem(L,iid){ var a=L.items||[]; for(var i=0;i<a.length;i++){ if(a[i].id===iid) return a[i]; } return null; }
+  function addText(L, txt){ txt=(txt||'').trim(); if(!txt) return; L.items=L.items||[]; L.items.push({id:uid(), type:'text', text:txt, done:false}); saveLists(); }
+
+  /* ---------- הקלטה קולית ---------- */
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition; var rec=null, recBtn=null;
+  function startVoice(L, btn){
+    if(!SR){ alert('הקלטה קולית אינה נתמכת בדפדפן זה. נסה/י בכרום בנייד.'); return; }
+    if(rec){ try{ rec.stop(); }catch(e){} return; }
+    rec=new SR(); rec.lang='he-IL'; rec.interimResults=false; rec.maxAlternatives=1;
+    recBtn=btn; btn.classList.add('rec');
+    rec.onresult=function(ev){ var txt=''; for(var i=0;i<ev.results.length;i++){ txt+=ev.results[i][0].transcript; } addText(L, txt); };
+    rec.onerror=function(){};
+    rec.onend=function(){ if(recBtn) recBtn.classList.remove('rec'); rec=null; renderLists(); };
+    try{ rec.start(); }catch(e){ rec=null; btn.classList.remove('rec'); }
+  }
+
+  /* ---------- כתב יד / ציור ---------- */
+  var drawWrap=$('tkDraw'), cv=$('tkCanvas'), cx=cv.getContext('2d'), drawing=false, drawList=null;
+  cx.lineWidth=3; cx.lineCap='round'; cx.lineJoin='round'; cx.strokeStyle='#111';
+  function fitCanvas(){ var w=Math.min(340, window.innerWidth-32); cv.style.width=w+'px'; }
+  function pos(e){ var r=cv.getBoundingClientRect(); var sx=cv.width/r.width, sy=cv.height/r.height; var p=(e.touches&&e.touches[0])||e; return {x:(p.clientX-r.left)*sx, y:(p.clientY-r.top)*sy}; }
+  function dstart(e){ e.preventDefault(); drawing=true; var p=pos(e); cx.beginPath(); cx.moveTo(p.x,p.y); }
+  function dmove(e){ if(!drawing) return; e.preventDefault(); var p=pos(e); cx.lineTo(p.x,p.y); cx.stroke(); }
+  function dend(){ drawing=false; }
+  cv.addEventListener('mousedown',dstart); cv.addEventListener('mousemove',dmove); window.addEventListener('mouseup',dend);
+  cv.addEventListener('touchstart',dstart,{passive:false}); cv.addEventListener('touchmove',dmove,{passive:false}); cv.addEventListener('touchend',dend);
+  function openDraw(L){ drawList=L; cx.fillStyle='#fff'; cx.fillRect(0,0,cv.width,cv.height); fitCanvas(); drawWrap.classList.add('open'); }
+  $('tkDClear').addEventListener('click', function(){ cx.fillStyle='#fff'; cx.fillRect(0,0,cv.width,cv.height); });
+  $('tkDCancel').addEventListener('click', function(){ drawWrap.classList.remove('open'); drawList=null; });
+  $('tkDSave').addEventListener('click', function(){ if(drawList){ var img=cv.toDataURL('image/png'); drawList.items=drawList.items||[]; drawList.items.push({id:uid(), type:'draw', img:img, done:false}); saveLists(); renderLists(); } drawWrap.classList.remove('open'); drawList=null; });
+
+  /* ---------- ספר טלפונים (אישי + משותף) ---------- */
+  var PK='afcon_tools_phones';
+  function loadPhones(){ try{ return JSON.parse(localStorage.getItem(PK)||'[]')||[]; }catch(e){ return []; } }
+  function savePhones(){ try{ localStorage.setItem(PK, JSON.stringify(PHONES)); }catch(e){} }
+  var PHONES=loadPhones(); var SHAREDC=[]; var phEditId=null; var sharedLoaded=false;
+  function telLink(num){ var clean=String(num||'').replace(/[^0-9+]/g,''); return '<a class="tk-tel" href="tel:'+esc(clean)+'">📞 '+esc(num)+'</a>'; }
+  function addrLink(a){ return '<a class="tk-addr" href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(a)+'" target="_blank" rel="noopener">📍 '+esc(a)+'</a>'; }
+  function cardLines(c){
+    var lines='';
+    if(c.c1) lines+='<div class="tk-line"><span class="ic">👤</span>'+esc(c.c1)+'</div>';
+    if(c.c2) lines+='<div class="tk-line"><span class="ic">👤</span>'+esc(c.c2)+'</div>';
+    if(c.p1) lines+='<div class="tk-line"><span class="ic"></span>'+telLink(c.p1)+'</div>';
+    if(c.p2) lines+='<div class="tk-line"><span class="ic"></span>'+telLink(c.p2)+'</div>';
+    if(c.addr) lines+='<div class="tk-line"><span class="ic"></span>'+addrLink(c.addr)+'</div>';
+    return lines;
+  }
+  function matchQ(c,q){ return (String(c.supplier||'')+' '+(c.c1||'')+' '+(c.c2||'')+' '+(c.p1||'')+' '+(c.p2||'')).toLowerCase().indexOf(q)>=0; }
+  function loadShared(){
+    srvGet('contacts').then(function(r){ if(r&&r.ok&&Array.isArray(r.contacts)){ SHAREDC=r.contacts; } sharedLoaded=true; renderPhones(); });
+  }
+  function renderPhones(){
+    var q=($('tkPhSearch').value||'').trim().toLowerCase();
+    var local=PHONES.slice().sort(function(a,b){ return String(a.supplier||'').localeCompare(String(b.supplier||''),'he'); });
+    var shared=SHAREDC.slice().sort(function(a,b){ return String(a.supplier||'').localeCompare(String(b.supplier||''),'he'); });
+    if(q){ local=local.filter(function(c){return matchQ(c,q);}); shared=shared.filter(function(c){return matchQ(c,q);}); }
+    var box=$('tkPhList'); var html='';
+    // משותפים
+    html+='<div class="tk-sec">🔗 ספקים משותפים'+(sharedLoaded?'':' · טוען…')+'</div>';
+    if(shared.length){ html+=shared.map(function(c){
+      var by=c.sharedBy?('<span class="tk-tag">משותף ע״י '+esc(c.sharedBy)+'</span>'):'<span class="tk-tag">משותף</span>';
+      return '<div class="tk-card shared" data-id="'+esc(c.id)+'"><div class="tk-card-h"><span class="tk-card-name">'+esc(c.supplier||'ספק')+'</span>'+by+'</div>'+cardLines(c)+'</div>';
+    }).join(''); } else { html+='<div class="tk-empty">'+(q?'אין תוצאות משותפות':'אין ספקים משותפים עדיין')+'</div>'; }
+    // אישיים
+    html+='<div class="tk-sec" style="margin-top:14px">📱 הספקים שלי (במכשיר זה)</div>';
+    if(local.length){ html+=local.map(function(c){
+      return '<div class="tk-card" data-id="'+c.id+'"><div class="tk-card-h"><span class="tk-card-name">'+esc(c.supplier||'ספק')+'</span>'
+        +'<button class="tk-card-share" title="שתף לכולם">📤</button>'
+        +'<button class="tk-card-edit" title="ערוך">✏️</button><button class="tk-card-del" title="מחק">🗑️</button></div>'+cardLines(c)+'</div>';
+    }).join(''); } else { html+='<div class="tk-empty">'+(q?'אין תוצאות אישיות':'הוסף/י ספק חדש בכפתור למעלה')+'</div>'; }
+    box.innerHTML=html;
+  }
+  function openPhForm(c){
+    phEditId=c?c.id:null;
+    $('tkPhSupplier').value=c?(c.supplier||''):''; $('tkPhC1').value=c?(c.c1||''):''; $('tkPhC2').value=c?(c.c2||''):'';
+    $('tkPhP1').value=c?(c.p1||''):''; $('tkPhP2').value=c?(c.p2||''):''; $('tkPhAddr').value=c?(c.addr||''):'';
+    $('tkPhForm').classList.add('open'); $('tkPhSupplier').focus();
+  }
+  function closePhForm(){ $('tkPhForm').classList.remove('open'); phEditId=null; }
+  $('tkPhNew').addEventListener('click', function(){ openPhForm(null); });
+  $('tkPhCancel').addEventListener('click', closePhForm);
+  $('tkPhSearch').addEventListener('input', renderPhones);
+  $('tkPhSave').addEventListener('click', function(){
+    var rec={ supplier:$('tkPhSupplier').value.trim(), c1:$('tkPhC1').value.trim(), c2:$('tkPhC2').value.trim(), p1:$('tkPhP1').value.trim(), p2:$('tkPhP2').value.trim(), addr:$('tkPhAddr').value.trim() };
+    if(!rec.supplier && !rec.p1 && !rec.c1){ alert('יש למלא לפחות שם ספק או טלפון.'); return; }
+    if(phEditId){ for(var i=0;i<PHONES.length;i++){ if(PHONES[i].id===phEditId){ rec.id=phEditId; PHONES[i]=rec; break; } } }
+    else { rec.id=uid(); PHONES.push(rec); }
+    savePhones(); closePhForm(); renderPhones();
+  });
+  function shareContact(c){
+    if(!apiCfg().url){ alert('אין חיבור למערכת — לא ניתן לשתף.'); return; }
+    if(!confirm('לשתף את "'+(c.supplier||'הספק')+'" עם כל החברים? כולם יקבלו את הטלפון.')) return;
+    var kid='K'+Date.now()+Math.floor(Math.random()*100000);
+    srvPost({ action:'contactAdd', id:kid, supplier:c.supplier||'', c1:c.c1||'', c2:c.c2||'', p1:c.p1||'', p2:c.p2||'', addr:c.addr||'', sharedBy:myName() });
+    // מעבירים מהאישי למשותף — מסירים מהמכשיר ומרעננים מהשרת
+    PHONES=PHONES.filter(function(x){return x.id!==c.id;}); savePhones();
+    SHAREDC.push({ id:kid, supplier:c.supplier||'', c1:c.c1||'', c2:c.c2||'', p1:c.p1||'', p2:c.p2||'', addr:c.addr||'', sharedBy:myName() });
+    renderPhones();
+    setTimeout(loadShared, 1200);
+  }
+  $('tkPhList').addEventListener('click', function(e){
+    var card=e.target.closest('.tk-card'); if(!card) return; var id=card.getAttribute('data-id');
+    var c=null; for(var i=0;i<PHONES.length;i++){ if(PHONES[i].id===id){ c=PHONES[i]; break; } }
+    if(!c) return; // פעולות רק על ספקים אישיים
+    if(e.target.classList.contains('tk-card-share')){ shareContact(c); }
+    else if(e.target.classList.contains('tk-card-edit')){ openPhForm(c); }
+    else if(e.target.classList.contains('tk-card-del')){ if(confirm('למחוק את "'+(c.supplier||'הספק')+'" מהמכשיר?')){ PHONES=PHONES.filter(function(x){return x.id!==id;}); savePhones(); renderPhones(); } }
+  });
+
+  /* ---------- ממיר מטבעות ---------- */
+  var CUR=[['ILS','₪ שקל'],['USD','$ דולר אמריקאי'],['EUR','€ אירו'],['GBP','£ ליש״ט'],['JPY','¥ ין יפני'],['CNY','יואן סיני'],['CHF','פרנק שוויצרי'],['CAD','דולר קנדי'],['AUD','דולר אוסטרלי'],['AED','דירהם (איחוד האמירויות)'],['INR','רופי הודי'],['RUB','רובל רוסי'],['TRY','לירה טורקית'],['BRL','ריאל ברזילאי'],['ZAR','ראנד דרום-אפריקני']];
+  var FALLBACK={USD:1,ILS:3.7,EUR:0.92,GBP:0.79,JPY:157,CNY:7.25,CHF:0.88,CAD:1.44,AUD:1.52,AED:3.67,INR:85,RUB:100,TRY:35,BRL:6.1,ZAR:18.8};
+  var RATES=null, RATES_TS=0, curInit=false;
+  function loadCachedRates(){ try{ var c=JSON.parse(localStorage.getItem('afcon_tools_rates')||'null'); if(c&&c.r){ RATES=c.r; RATES_TS=c.t||0; } }catch(e){} }
+  function fetchRates(){ return fetch('https://open.er-api.com/v6/latest/USD').then(function(r){return r.json();}).then(function(j){ if(j&&j.rates){ RATES=j.rates; RATES_TS=Date.now(); try{ localStorage.setItem('afcon_tools_rates', JSON.stringify({r:RATES,t:RATES_TS})); }catch(e){} return true; } return false; }).catch(function(){ return false; }); }
+  function fillSel(sel, def){ sel.innerHTML=CUR.map(function(c){ return '<option value="'+c[0]+'"'+(c[0]===def?' selected':'')+'>'+esc(c[1])+'</option>'; }).join(''); }
+  function openCur(){
+    if(!curInit){ curInit=true; fillSel($('tkCurFrom'),'USD'); fillSel($('tkCurTo'),'ILS'); loadCachedRates();
+      ['tkCurAmt','tkCurFrom','tkCurTo'].forEach(function(id){ $(id).addEventListener('input', calcCur); $(id).addEventListener('change', calcCur); });
+      $('tkCurSwap').addEventListener('click', function(){ var a=$('tkCurFrom').value; $('tkCurFrom').value=$('tkCurTo').value; $('tkCurTo').value=a; calcCur(); });
+    }
+    var stale=(!RATES)||((Date.now()-RATES_TS)>12*3600000);
+    if(stale){ $('tkCurNote').textContent='מעדכן שערים…'; fetchRates().then(function(){ calcCur(); }); }
+    calcCur();
+  }
+  function calcCur(){
+    var rates=RATES||FALLBACK; var live=!!RATES;
+    var f=$('tkCurFrom').value, t=$('tkCurTo').value; var amt=parseFloat($('tkCurAmt').value); if(isNaN(amt)) amt=0;
+    var rf=rates[f]||FALLBACK[f]||1, rt=rates[t]||FALLBACK[t]||1;
+    var val=amt/rf*rt;
+    $('tkCurRes').textContent=val.toLocaleString('he-IL',{maximumFractionDigits:2})+' '+t;
+    var one=(1/rf*rt);
+    $('tkCurRate').textContent='1 '+f+' = '+one.toLocaleString('he-IL',{maximumFractionDigits:4})+' '+t;
+    var when=RATES_TS?new Date(RATES_TS).toLocaleString('he-IL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+    $('tkCurNote').textContent = live ? ('שערים חיים · עודכן '+when) : 'שערים משוערים (ללא חיבור לאינטרנט)';
+  }
+
+  /* ---------- ממיר שטחים ---------- */
+  var AREA=[['m2','מ״ר (מטר רבוע)',1],['dunam','דונם',1000],['km2','קמ״ר',1000000],['hectare','הקטר',10000],['acre','אקר',4046.8564224],['ft2','רגל רבועה',0.09290304],['yd2','יארד רבוע',0.83612736],['mi2','מייל רבוע',2589988.110336]];
+  var areaInit=false;
+  function fillArea(sel, def){ sel.innerHTML=AREA.map(function(a){ return '<option value="'+a[0]+'"'+(a[0]===def?' selected':'')+'>'+esc(a[1])+'</option>'; }).join(''); }
+  function areaFactor(code){ for(var i=0;i<AREA.length;i++){ if(AREA[i][0]===code) return AREA[i][2]; } return 1; }
+  function areaName(code){ for(var i=0;i<AREA.length;i++){ if(AREA[i][0]===code) return AREA[i][1]; } return code; }
+  function openArea(){
+    if(!areaInit){ areaInit=true; fillArea($('tkAreaFrom'),'dunam'); fillArea($('tkAreaTo'),'m2');
+      ['tkAreaAmt','tkAreaFrom','tkAreaTo'].forEach(function(id){ $(id).addEventListener('input', calcArea); $(id).addEventListener('change', calcArea); });
+      $('tkAreaSwap').addEventListener('click', function(){ var a=$('tkAreaFrom').value; $('tkAreaFrom').value=$('tkAreaTo').value; $('tkAreaTo').value=a; calcArea(); });
+    }
+    calcArea();
+  }
+  function calcArea(){
+    var f=$('tkAreaFrom').value, t=$('tkAreaTo').value; var amt=parseFloat($('tkAreaAmt').value); if(isNaN(amt)) amt=0;
+    var val=amt*areaFactor(f)/areaFactor(t);
+    $('tkAreaRes').textContent=val.toLocaleString('he-IL',{maximumFractionDigits:4});
+    $('tkAreaRate').textContent=amt.toLocaleString('he-IL')+' '+areaName(f)+' = '+val.toLocaleString('he-IL',{maximumFractionDigits:4})+' '+areaName(t);
+  }
+})();
+</script>
+<!-- ===== סוף כלי עזר ===== -->
+
 </body>
 </html>
