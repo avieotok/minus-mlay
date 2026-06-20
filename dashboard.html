@@ -565,7 +565,9 @@
         +(a.response?('<div class="resp">💬 <span>'+esc(a.response)+'</span></div>'):'')
         +photoBlock(a)
         +(boss ? '' : (
-          '<div class="acts">'
+          (String(a.status)==='טופל')
+          ? ('<div class="acts"><button class="btn prog" data-act="reopen">↩️ החזר לטיפול</button></div>')
+          : ('<div class="acts">'
           +'<button class="btn prog'+(a.status==='בטיפול'?' on':'')+'" data-act="בטיפול">🟠 קח לטיפול</button>'
           +'<button class="btn done'+(a.status==='טופל'?' on':'')+'" data-act="טופל">✅ טופל</button>'
           +'<button class="btn reply" data-act="transfer">↪️ העבר</button>'
@@ -573,7 +575,7 @@
           +'</div>'
           +'<div class="transfer"><select class="tsel">'+buyerOptions()+'</select><button class="tgo">העבר</button></div>'
           +'<div class="editor"><textarea placeholder="כתוב תגובה — לדוגמה: הוזמן מהספק, מגיע יום ג׳">'+esc(a.response||'')+'</textarea>'
-          +'<button class="save">שמור תגובה ועדכן</button></div>'
+          +'<button class="save">שמור תגובה ועדכן</button></div>')
         ))
         +'</div>';
     }).join('');
@@ -588,6 +590,13 @@
   }
 
   // actions — each maps to one backend call
+  async function reopenAlert(id){
+    const a=ALERTS.find(x=>String(x.id)===String(id));
+    if(a){ a.status='בטיפול'; a.updated=new Date().toISOString(); }
+    render();
+    try{ await apiPost('status',{id:id, status:'בטיפול'}); toast('הוחזר לטיפול ✓'); setTimeout(load,400); }
+    catch(e){ toast('הפעולה נכשלה — נסה שוב'); }
+  }
   async function assignTo(id, assignee, status, resp){
     resp=(resp||'').trim();
     const a=ALERTS.find(x=>String(x.id)===String(id));
@@ -622,6 +631,7 @@
     if(btn){ const a=btn.dataset.act;
       if(a==='reply'){ card.querySelector('.editor').classList.toggle('open'); return; }
       if(a==='transfer'){ card.querySelector('.transfer').classList.toggle('open'); return; }
+      if(a==='reopen'){ reopenAlert(id); return; }
       if(a==='בטיפול'||a==='טופל'){ if(needMe()) return; const ed=card.querySelector('.editor textarea'); assignTo(id, me(), a, ed?ed.value:''); return; }
       return;
     }
@@ -676,7 +686,7 @@
     const data=filtered();
     if(!data.length){ toast('אין נתונים לייצוא בתצוגה הנוכחית'); return; }
     const inHist = (fStatus==='history' || fStatus==='טופל');
-    const rows=[['סוג','מק״ט','תיאור שהוזמן','מספר הזמנה','כמות שהוזמנה','כמות שהתקבלה','תיאור שהתקבל','דחיפות','הערת מדווח','דווח ע״י','סטטוס','קניין אחראי','העברות טיפול','טופל ע״י','תאריך טיפול','תגובת הקניין','תמונות','נוצר','עודכן']];
+    const rows=[['סוג','מק״ט','תיאור שהוזמן','מספר הזמנה','כמות שהוזמנה','כמות שהתקבלה','תיאור שהתקבל','דחיפות','הערת מדווח','דווח ע״י','סטטוס','קניין אחראי','תיעוד טיפול (העברות / החזרות)','טופל ע״י','תאריך טיפול','תגובת הקניין','תמונות','נוצר','עודכן']];
     data.forEach(a=>rows.push([(a.type||'חוסר מלאי'),a.sku,a.desc,a.po,a.qty,a.qtyRecv,a.descRecv,a.urgency,a.note,a.reporter,a.status,a.assignee,fmtLog(a.log),a.ackBy,(a.status==='טופל'?fmt(a.ackAt||a.updated):''),a.response,(Number(a.photo)>0?('📷 '+a.photo):''),fmt(a.created),fmt(a.updated)]));
     const ws=XLSX.utils.aoa_to_sheet(rows); ws['!cols']=[{wch:12},{wch:11},{wch:22},{wch:14},{wch:13},{wch:13},{wch:22},{wch:12},{wch:24},{wch:14},{wch:9},{wch:14},{wch:30},{wch:14},{wch:15},{wch:28},{wch:40},{wch:16},{wch:16}];
     const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws, inHist?'היסטוריה':'דיווחים');
