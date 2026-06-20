@@ -590,7 +590,7 @@
     if($('idLock')) $('idLock').classList.toggle('hidden',!cur);
     updateMeBar();
   }
-  function updateMeBar(){ const el=$('meBar'); if(!el) return; const n=me(); el.textContent = n ? ('👤 '+n+(isBoss()?' · מנהל':'')) : ''; }
+  function updateMeBar(){ const el=$('meBar'); if(!el) return; const n=me(); el.textContent = n ? ('👤 '+n+(isBoss()?' · מנהל':'')) : ''; updateKpiTabVis(); }
   function buyerOptions(){ return '<option value="">העבר לקניין…</option>'+BUYERS.map(b=>'<option value="'+esc(b)+'">'+esc(b)+'</option>').join(''); }
 
   function fmt(iso){ if(!iso) return ''; try{ return new Date(iso).toLocaleString('he-IL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }catch(e){ return ''; } }
@@ -600,6 +600,8 @@
   function isOpen(a){ return String(a.status)!=='טופל'; }
   // ===== צ'אט מנהל / הנחיות לקניין =====
   const MGR='יהודה פור';
+  // לוח המחוונים — רק למנהל (יהודה פור) או במצב מנהל
+  function updateKpiTabVis(){ const t=$('vtKpi'); if(!t) return; const allowed=(me()===MGR)||isBoss(); t.style.display=allowed?'':'none'; if(!allowed && document.querySelector('main.kpi-mode')) setView('board'); }
   function fmtGenChat(s){ s=String(s==null?'':s); if(!s) return '';
     return s.split('\u0002').map(function(m){ var p=m.split('\u0001'); var t=(p[2]||''); if(p[3]) t=(t?t+' ':'')+'📷'; return (p[0]||'')+' ['+fmt(p[1]||'')+']: '+t; }).join('  •  '); }
 
@@ -1118,7 +1120,7 @@
   $('mSave').addEventListener('click', ()=>{
     localStorage.setItem(K.me, $('mName').value.trim());
     localStorage.setItem(K.boss, $('mBoss').checked?'1':'0');
-    setConn(); render();
+    setConn(); render(); updateMeBar();
     try{ if('Notification' in window && Notification.permission==='default') Notification.requestPermission(); }catch(e){}
     $('mNote').textContent = apiOn() ? 'נשמר ✓' : 'נשמר. כדי לחבר למערכת — פתח הגדרות מתקדמות.';
   });
