@@ -123,6 +123,24 @@
   .chatin:focus{outline:none;border-color:var(--blue)}
   .chatsend{background:var(--blue);border:none;color:#fff;border-radius:11px;padding:0 18px;font-size:14.5px;font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer;white-space:nowrap}
   .cbadge{display:inline-block;background:var(--blue);color:#fff;border-radius:999px;font-size:11px;font-weight:800;padding:1px 7px;margin-inline-start:3px}
+  .cbadge.gb{background:var(--green)}
+  .genchat{margin-top:11px;display:none;flex-direction:column;gap:9px}
+  .genchat.open{display:flex}
+  .gthread{display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto;background:var(--ink);border:1px solid var(--line2);border-radius:11px;padding:10px}
+  .gmsg{background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;max-width:86%;align-self:flex-start}
+  .gmsg.me{align-self:flex-end;background:rgba(34,197,94,.10);border-color:rgba(34,197,94,.4)}
+  .gmeta{font-size:11.5px;color:var(--faint);margin-bottom:3px;font-weight:700}
+  .gtext{font-size:14px;color:var(--text);line-height:1.5;white-space:pre-wrap;word-break:break-word}
+  .gimg{margin-top:6px}
+  .gimg img{max-width:200px;max-height:200px;border-radius:9px;border:1px solid var(--line2);display:block;cursor:pointer}
+  .gpending{display:flex;align-items:center;flex-wrap:wrap}
+  .gpchip{font-size:12.5px;color:var(--green2);font-weight:700}
+  .gpx{background:none;border:none;color:#e2231a;font-weight:800;cursor:pointer;font-size:13px}
+  .ginrow{display:flex;gap:7px;align-items:stretch}
+  .gphoto{background:var(--surface2);border:1px solid var(--line2);border-radius:11px;font-size:18px;cursor:pointer;padding:0 12px}
+  .gin{flex:1;background:var(--ink);border:1px solid var(--line2);border-radius:11px;padding:10px 12px;color:var(--text);font-size:14.5px;font-family:'Heebo',sans-serif;min-height:44px;resize:vertical}
+  .gin:focus{outline:none;border-color:var(--green)}
+  .gsend{background:var(--green);border:none;color:#052e16;border-radius:11px;padding:0 18px;font-size:14.5px;font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer;white-space:nowrap}
   .transfer select{flex:1;background:var(--ink);border:1px solid var(--line2);border-radius:11px;padding:11px 12px;color:var(--text);font-size:14.5px;font-family:'Heebo',sans-serif}
   .transfer .tgo{flex:0 0 auto;background:var(--amber);border:none;color:var(--ink);border-radius:11px;padding:11px 16px;font-size:14px;font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer}
   .mine-tag{color:var(--green2);font-weight:700}
@@ -383,6 +401,18 @@
   }
   function esc(s){ return (s||'').toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
+  // ===== תמונות לצ'אט: דחיסה + העלאה (ניסיון יחיד, בלי כפילויות) =====
+  const PHOTO_TARGET=55000;
+  function loadImg(file){ return new Promise(function(res,rej){ const r=new FileReader(); r.onload=function(){ const img=new Image(); img.onload=function(){res(img);}; img.onerror=rej; img.src=r.result; }; r.onerror=rej; r.readAsDataURL(file); }); }
+  function drawJpeg(img,maxDim,quality){ let w=img.width,h=img.height; const m=Math.max(w,h); if(m>maxDim){ const s=maxDim/m; w=Math.round(w*s); h=Math.round(h*s); } const c=document.createElement('canvas'); c.width=w; c.height=h; const ctx=c.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,w,h); ctx.drawImage(img,0,0,w,h); return c.toDataURL('image/jpeg',quality); }
+  function dataUrlBytes(d){ const i=d.indexOf(','); return i<0?0:Math.round((d.length-i-1)*0.75); }
+  async function compressPhoto(file){ const img=await loadImg(file); let dim=800,q=0.5,d=drawJpeg(img,dim,q),guard=0;
+    while(dataUrlBytes(d)>PHOTO_TARGET && guard++<12){ if(q>0.34){ q=Math.round((q-0.08)*100)/100; } else { dim=Math.round(dim*0.82); q=0.5; if(dim<420) break; } d=drawJpeg(img,dim,q); } return d; }
+  async function uploadPhotos(id, photos){
+    try{ await fetch(apiUrl(),{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({token:apiToken(),action:'addPhotos',id:id,photos:photos})}); }catch(e){}
+  }
+
   const URANK={'דחוף':3,'אזל לגמרי':2,'כמות נמוכה':1};
   const UCOLOR={'דחוף':'#b91c1c','אזל לגמרי':'#e2231a','כמות נמוכה':'#f59e0b'};
   const SPILL={
@@ -454,6 +484,7 @@
   // ===== צ'אט מנהל / הנחיות לקניין =====
   const MGR='יהודה פור';
   function chatCount(a){ const s=String(a.mgrChat||''); return s?s.split('\u0002').length:0; }
+  function hasMgrMsg(a){ const raw=String(a.mgrChat||''); if(!raw) return false; return raw.split('\u0002').some(function(m){ return String(m.split('\u0001')[0]||'').trim()===MGR; }); }
   function chatMsgHtml(author, ts, text){
     const isMgr=(String(author||'').trim()===MGR);
     return '<div class="cmsg'+(isMgr?' mgr':'')+'"><div class="cmeta">'+(isMgr?'💼 ':'👤 ')+esc(author||'—')+' · '+esc(fmt(ts))+'</div><div class="ctext">'+esc(text||'')+'</div></div>';
@@ -462,13 +493,15 @@
     const raw=String(a.mgrChat||''); if(!raw) return '<div class="cempty">אין הנחיות עדיין</div>';
     return raw.split('\u0002').map(function(m){ const p=m.split('\u0001'); return chatMsgHtml(p[0]||'', p[1]||'', p[2]||''); }).join('');
   }
-  function chatBtn(a){ const cc=chatCount(a); return '<button class="btn reply" data-act="chat">💼 צ׳אט מנהל'+(cc?(' <span class="cbadge">'+cc+'</span>'):'')+'</button>'; }
+  function chatBtn(a){ if(!(hasMgrMsg(a) || me()===MGR)) return ''; const cc=chatCount(a); return '<button class="btn reply" data-act="chat">💼 צ׳אט מנהל'+(cc?(' <span class="cbadge">'+cc+'</span>'):'')+'</button>'; }
   function chatBlock(a){
     return '<div class="mgrchat"><div class="chatthread">'+chatThreadHtml(a)+'</div>'
       +'<div class="chatinrow"><textarea class="chatin" placeholder="כתוב הנחיה/הערה לקניין…"></textarea><button class="chatsend">שלח</button></div></div>';
   }
   function fmtChat(s){ s=String(s==null?'':s); if(!s) return '';
     return s.split('\u0002').map(function(m){ var p=m.split('\u0001'); return (p[0]||'')+' ['+fmt(p[1]||'')+']: '+(p[2]||''); }).join('  •  '); }
+  function fmtGenChat(s){ s=String(s==null?'':s); if(!s) return '';
+    return s.split('\u0002').map(function(m){ var p=m.split('\u0001'); var t=(p[2]||''); if(p[3]) t=(t?t+' ':'')+'📷'; return (p[0]||'')+' ['+fmt(p[1]||'')+']: '+t; }).join('  •  '); }
   async function addChatMsg(card, id, text){
     text=(text||'').trim(); if(!text) return;
     if(needMe()) return;
@@ -479,6 +512,61 @@
     if(thread){ const em=thread.querySelector('.cempty'); if(em) thread.innerHTML=''; thread.insertAdjacentHTML('beforeend', chatMsgHtml(me(), ts, text)); thread.scrollTop=thread.scrollHeight; }
     const inp=card.querySelector('.chatin'); if(inp) inp.value='';
     try{ await apiPost('chatAdd',{id:id, author:me(), text:text}); }catch(e){ toast('השליחה נכשלה — נסה שוב'); }
+  }
+
+  // ===== צ'אט הפנייה (כללי — מחסנאי/קניינים/מנהל, דו-כיווני, עם תמונות) =====
+  const pendingChatImg={};
+  function parseMsgs(raw){ raw=String(raw||''); if(!raw) return [];
+    return raw.split('\u0002').map(function(m){ const p=m.split('\u0001'); return {author:p[0]||'', ts:p[1]||'', text:p[2]||'', photo:p[3]||''}; }); }
+  function genCount(a){ const s=String(a.chat||''); return s?s.split('\u0002').length:0; }
+  function genMsgHtml(m){
+    const mine=(String(m.author||'').trim()===me());
+    const isMgr=(String(m.author||'').trim()===MGR);
+    const img=m.photo?('<div class="gimg" data-cphoto="'+esc(m.photo)+'"><span style="color:#a8a29e;font-size:12px">📷 טוען…</span></div>'):'';
+    return '<div class="gmsg'+(mine?' me':'')+'"><div class="gmeta">'+(isMgr?'💼 ':'')+esc(m.author||'—')+' · '+esc(fmt(m.ts))+'</div>'
+      +(m.text?('<div class="gtext">'+esc(m.text)+'</div>'):'')+img+'</div>';
+  }
+  function genThreadHtml(a){ const msgs=parseMsgs(a.chat); if(!msgs.length) return '<div class="cempty">אין הודעות עדיין — פתח/י שיחה</div>';
+    return msgs.map(genMsgHtml).join(''); }
+  function genBtn(a){ const cc=genCount(a); return '<button class="btn reply" data-act="gchat">💬 צ׳אט הפנייה'+(cc?(' <span class="cbadge gb">'+cc+'</span>'):'')+'</button>'; }
+  function genPanel(a){
+    return '<div class="genchat"><div class="gthread">'+genThreadHtml(a)+'</div>'
+      +'<div class="gpending"></div>'
+      +'<div class="ginrow"><button class="gphoto" title="צרף תמונה">📷</button>'
+      +'<input type="file" class="gfile" accept="image/*" style="display:none">'
+      +'<textarea class="gin" placeholder="כתוב/י הודעה…"></textarea>'
+      +'<button class="gsend">שלח</button></div></div>';
+  }
+  async function fetchChatPhotos(){
+    const els=document.querySelectorAll('#list .gimg[data-cphoto]');
+    for(const el of els){ const pid=el.getAttribute('data-cphoto'); if(!pid) continue;
+      if(!photoCache[pid]){ try{ const r=await apiGet('photos',{id:pid}); if(r&&r.ok&&Array.isArray(r.photos)){ photoCache[pid]=r.photos; } else { continue; } }catch(e){ continue; } }
+      el.removeAttribute('data-cphoto');
+      el.innerHTML=(photoCache[pid]||[]).map(d=>'<a href="'+d+'" target="_blank" rel="noopener"><img src="'+d+'"></a>').join('');
+    }
+  }
+  async function sendGenMsg(card, id){
+    if(needMe()) return;
+    const inp=card.querySelector('.gin'); const text=(inp?inp.value:'').trim();
+    const img=pendingChatImg[id]||'';
+    if(!text && !img) return;
+    const ts=new Date().toISOString(); let photoId='';
+    if(img){ photoId='C'+Date.now()+Math.floor(Math.random()*1000); await uploadPhotos(photoId,[img]); }
+    const a=ALERTS.find(x=>String(x.id)===String(id)); const entry=me()+'\u0001'+ts+'\u0001'+text+'\u0001'+photoId;
+    if(a){ a.chat = a.chat?(a.chat+'\u0002'+entry):entry; }
+    if(photoId) photoCache[photoId]=[img];
+    const thread=card.querySelector('.gthread');
+    if(thread){ const em=thread.querySelector('.cempty'); if(em) thread.innerHTML=''; thread.insertAdjacentHTML('beforeend', genMsgHtml({author:me(),ts:ts,text:text,photo:photoId})); thread.scrollTop=thread.scrollHeight; }
+    if(inp) inp.value=''; delete pendingChatImg[id]; const pv=card.querySelector('.gpending'); if(pv) pv.innerHTML='';
+    fetchChatPhotos();
+    try{ await apiPost('msgAdd',{id:id, author:me(), text:text, photo:photoId}); }catch(e){ toast('השליחה נכשלה — נסה שוב'); }
+  }
+  async function onChatFile(card, id, file){
+    if(!file) return;
+    try{ const d=await compressPhoto(file); pendingChatImg[id]=d;
+      const pv=card.querySelector('.gpending');
+      if(pv) pv.innerHTML='<span class="gpchip">📎 תמונה מצורפת <button class="gpx" title="הסר">✕</button></span><img src="'+d+'" style="height:46px;border-radius:8px;border:1px solid var(--line2);margin-inline-start:8px">';
+    }catch(e){ toast('בעיה בעיבוד התמונה'); }
   }
   function isToday(iso){ if(!iso) return false; const d=new Date(iso); const n=new Date(); return d.toDateString()===n.toDateString(); }
   // כל רשומה שטופלה עוברת מיד להיסטוריה. לא‑מטופלת נשארת פעילה.
@@ -547,7 +635,7 @@
     if(fUrg!=='all') r=r.filter(a=>String(a.urgency)===fUrg);
     if(fType!=='all') r=r.filter(a=>String(a.type||'חוסר מלאי')===fType);
     if(fSearch){ const q=fSearch.toLowerCase();
-      r=r.filter(a=>([a.ticket,a.sku,a.desc,a.reporter,a.response,a.po,a.note,a.type,a.mgrChat].join(' ')).toLowerCase().indexOf(q)>=0); }
+      r=r.filter(a=>([a.ticket,a.sku,a.desc,a.reporter,a.response,a.po,a.note,a.type,a.mgrChat,a.chat].join(' ')).toLowerCase().indexOf(q)>=0); }
     if(fStatus==='history' || fStatus==='טופל'){
       r.sort((a,b)=>((b.ackAt||b.updated||b.created||'').localeCompare(a.ackAt||a.updated||a.created||'')));
     } else {
@@ -578,7 +666,7 @@
     const list=$('list'), items=filtered();
     const openState={};
     list.querySelectorAll('.card').forEach(c=>{ const cid=c.dataset.id; const o=[];
-      if(c.querySelector('.editor.open'))o.push('editor'); if(c.querySelector('.transfer.open'))o.push('transfer'); if(c.querySelector('.mgrchat.open'))o.push('mgrchat');
+      if(c.querySelector('.editor.open'))o.push('editor'); if(c.querySelector('.transfer.open'))o.push('transfer'); if(c.querySelector('.mgrchat.open'))o.push('mgrchat'); if(c.querySelector('.genchat.open'))o.push('genchat');
       if(o.length)openState[cid]=o; });
     if(!items.length){ list.innerHTML='<div class="empty"><div class="big">📭</div>אין דיווחים שתואמים לסינון.</div>'; return; }
     const bar = '';
@@ -614,17 +702,19 @@
         +photoBlock(a)
         +(boss ? '' : (
           (String(a.status)==='טופל')
-          ? ('<div class="acts"><button class="btn prog" data-act="reopen">↩️ החזר לטיפול</button>'+chatBtn(a)+'</div>'+chatBlock(a))
+          ? ('<div class="acts"><button class="btn prog" data-act="reopen">↩️ החזר לטיפול</button>'+genBtn(a)+chatBtn(a)+'</div>'+genPanel(a)+chatBlock(a))
           : ('<div class="acts">'
           +'<button class="btn prog'+(a.status==='בטיפול'?' on':'')+'" data-act="בטיפול">🟠 קח לטיפול</button>'
           +'<button class="btn done'+(a.status==='טופל'?' on':'')+'" data-act="טופל">✅ טופל</button>'
           +'<button class="btn reply" data-act="transfer">↪️ העבר</button>'
           +'<button class="btn reply" data-act="reply">📋</button>'
+          +genBtn(a)
           +chatBtn(a)
           +'</div>'
           +'<div class="transfer"><select class="tsel">'+buyerOptions()+'</select><button class="tgo">העבר</button></div>'
           +'<div class="editor"><div style="font-size:12.5px;color:#a8a29e;margin-bottom:5px;font-weight:700">📋 פעולות לטיפול בפנייה (חובה לסגירת הפנייה)</div><textarea placeholder="מה בוצע? לדוגמה: הוזמן מספק X · מספר הזמנה 123 · מגיע יום ג׳">'+esc(a.response||'')+'</textarea>'
           +'<button class="save">שמור פעולות ועדכן</button></div>'
+          +genPanel(a)
           +chatBlock(a))
         ))
         +'</div>';
@@ -632,6 +722,7 @@
     if(devOpen){ list.querySelectorAll('.selbox').forEach(b=>{ b.checked=selDel.has(b.dataset.sel); }); updSelN(); }
     Object.keys(openState).forEach(cid=>{ const c=list.querySelector('.card[data-id="'+cid+'"]'); if(c) openState[cid].forEach(cls=>{ const el=c.querySelector('.'+cls); if(el) el.classList.add('open'); }); });
     fetchPendingPhotos();
+    fetchChatPhotos();
   }
 
   function renderEmptyConfig(){
@@ -672,6 +763,7 @@
 
   $('list').addEventListener('change', e=>{
     const cb=e.target;
+    if(cb.classList && cb.classList.contains('gfile')){ const card=cb.closest('.card'); if(card){ onChatFile(card, card.dataset.id, cb.files&&cb.files[0]); cb.value=''; } return; }
     if(cb.classList && cb.classList.contains('selbox')){ if(cb.checked) selDel.add(cb.dataset.sel); else selDel.delete(cb.dataset.sel); updSelN(); return; }
     if(cb.id==='selAll'){ $('list').querySelectorAll('.selbox').forEach(b=>{ b.checked=cb.checked; if(cb.checked) selDel.add(b.dataset.sel); else selDel.delete(b.dataset.sel); }); updSelN(); return; }
   });
@@ -682,6 +774,7 @@
     if(btn){ const a=btn.dataset.act;
       if(a==='reply'){ card.querySelector('.editor').classList.toggle('open'); return; }
       if(a==='chat'){ card.querySelector('.mgrchat').classList.toggle('open'); return; }
+      if(a==='gchat'){ card.querySelector('.genchat').classList.toggle('open'); return; }
       if(a==='transfer'){ card.querySelector('.transfer').classList.toggle('open'); return; }
       if(a==='reopen'){ reopenAlert(id); return; }
       if(a==='בטיפול'){ if(needMe()) return; const ed=card.querySelector('.editor textarea'); assignTo(id, me(), 'בטיפול', ed?ed.value:''); return; }
@@ -693,6 +786,9 @@
     if(e.target.closest('.chatsend')){
       const inp=card.querySelector('.chatin'); addChatMsg(card, id, inp?inp.value:''); return;
     }
+    if(e.target.closest('.gsend')){ sendGenMsg(card, id); return; }
+    if(e.target.closest('.gphoto')){ const f=card.querySelector('.gfile'); if(f) f.click(); return; }
+    if(e.target.closest('.gpx')){ delete pendingChatImg[id]; const pv=card.querySelector('.gpending'); if(pv) pv.innerHTML=''; return; }
     if(e.target.closest('.tgo')){
       const to=card.querySelector('.tsel').value;
       if(!to){ toast('בחר קניין להעברה'); return; }
@@ -745,8 +841,8 @@
     const data=filtered();
     if(!data.length){ toast('אין נתונים לייצוא בתצוגה הנוכחית'); return; }
     const inHist = (fStatus==='history' || fStatus==='טופל');
-    const rows=[['מספר קריאה','סוג','מק״ט','תיאור שהוזמן','מספר הזמנה','כמות שהוזמנה','כמות שהתקבלה','תיאור שהתקבל','דחיפות','הערת מדווח','דווח ע״י','סטטוס','קניין אחראי','תיעוד טיפול (העברות / החזרות)','טופל ע״י','תאריך טיפול','פעולות לטיפול','צ׳אט מנהל','תמונות','נוצר','עודכן']];
-    data.forEach(a=>rows.push([(a.ticket||''),(a.type||'חוסר מלאי'),a.sku,a.desc,a.po,a.qty,a.qtyRecv,a.descRecv,a.urgency,a.note,a.reporter,a.status,a.assignee,fmtLog(a.log),a.ackBy,(a.status==='טופל'?fmt(a.ackAt||a.updated):''),a.response,fmtChat(a.mgrChat),(Number(a.photo)>0?('📷 '+a.photo):''),fmt(a.created),fmt(a.updated)]));
+    const rows=[['מספר קריאה','סוג','מק״ט','תיאור שהוזמן','מספר הזמנה','כמות שהוזמנה','כמות שהתקבלה','תיאור שהתקבל','דחיפות','הערת מדווח','דווח ע״י','סטטוס','קניין אחראי','תיעוד טיפול (העברות / החזרות)','טופל ע״י','תאריך טיפול','פעולות לטיפול','צ׳אט מנהל','צ׳אט הפנייה','תמונות','נוצר','עודכן']];
+    data.forEach(a=>rows.push([(a.ticket||''),(a.type||'חוסר מלאי'),a.sku,a.desc,a.po,a.qty,a.qtyRecv,a.descRecv,a.urgency,a.note,a.reporter,a.status,a.assignee,fmtLog(a.log),a.ackBy,(a.status==='טופל'?fmt(a.ackAt||a.updated):''),a.response,fmtChat(a.mgrChat),fmtGenChat(a.chat),(Number(a.photo)>0?('📷 '+a.photo):''),fmt(a.created),fmt(a.updated)]));
     const ws=XLSX.utils.aoa_to_sheet(rows); ws['!cols']=[{wch:12},{wch:11},{wch:22},{wch:14},{wch:13},{wch:13},{wch:22},{wch:12},{wch:24},{wch:14},{wch:9},{wch:14},{wch:30},{wch:14},{wch:15},{wch:28},{wch:40},{wch:16},{wch:16}];
     const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws, inHist?'היסטוריה':'דיווחים');
     const tag = inHist?'history' : (fStatus==='all'?'all':fStatus);

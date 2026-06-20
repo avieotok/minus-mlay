@@ -65,6 +65,21 @@
   .panel-body { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 12px; }
   .badge-count { background: #f59e0b; color: #0c0a09; font-size: 12px; font-weight: 800; padding: 2px 9px; border-radius: 20px; }
   .hist-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid #292524; font-size: 13px; }
+  .gchatbtn{margin-top:6px;background:#06281b;border:1px solid #166534;color:#34d399;border-radius:10px;padding:8px 12px;font-size:13.5px;font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer;align-self:flex-start}
+  .whchat{display:none;flex-direction:column;gap:8px;width:100%;margin-top:8px}
+  .whchat.open{display:flex}
+  .wthread{display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto;background:#0c0a09;border:1px solid #3f3f46;border-radius:11px;padding:10px}
+  .wmsg{background:#211e1c;border:1px solid #292524;border-radius:10px;padding:8px 10px;max-width:86%;align-self:flex-start}
+  .wmsg.me{align-self:flex-end;background:rgba(34,197,94,.10);border-color:rgba(34,197,94,.4)}
+  .wmeta{font-size:11.5px;color:#78716c;margin-bottom:3px;font-weight:700}
+  .wtext{font-size:14px;color:#fafaf9;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+  .wimg{margin-top:6px}
+  .wpending{display:flex;align-items:center;flex-wrap:wrap}
+  .winrow{display:flex;gap:7px;align-items:stretch}
+  .wphoto{background:#211e1c;border:1px solid #3f3f46;border-radius:11px;font-size:18px;cursor:pointer;padding:0 12px;color:#fafaf9}
+  .win{flex:1;background:#0c0a09;border:1px solid #3f3f46;border-radius:11px;padding:10px 12px;color:#fafaf9;font-size:14.5px;font-family:'Heebo',sans-serif;min-height:44px;resize:vertical}
+  .win:focus{outline:none;border-color:#22c55e}
+  .wsend{background:#22c55e;border:none;color:#052e16;border-radius:11px;padding:0 18px;font-size:14.5px;font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer;white-space:nowrap}
   .hist-txt { color: #e7e5e4; font-weight: 500; display:flex; flex-direction:column; gap:2px; }
   .hist-meta { color: #78716c; white-space: nowrap; }
   .hist-meta2 { color: #78716c; font-size: 12px; font-weight: 400; }
@@ -1258,7 +1273,7 @@
         const who=(x.assignee||'').trim();
         const ty=String(x.type||'חוסר מלאי'); const tic=TICON[ty]||'•';
         const isMis=(ty==='אי-התאמה');
-        return '<div class="hist-row" style="align-items:flex-start;flex-direction:column;gap:6px">'
+        return '<div class="hist-row" data-id="'+esc(x.id)+'" style="align-items:flex-start;flex-direction:column;gap:6px">'
           +'<div style="display:flex;justify-content:space-between;width:100%;align-items:center;gap:8px">'
           +'<span style="font-weight:700">'+tic+' מק״ט '+esc(x.sku||'—')+(x.desc?(' · '+esc(x.desc)):'')+(x.ticket?(' <span style="color:#34d399;font-weight:800">🎫 '+esc(x.ticket)+'</span>'):'')+'</span>'
           +'<span style="font-size:12px;font-weight:700;color:'+pc[0]+';background:'+pc[1]+';border:1px solid '+pc[0]+';border-radius:20px;padding:3px 10px;flex-shrink:0">'+esc(st)+'</span>'
@@ -1269,9 +1284,17 @@
           +'<span class="hist-meta2">'+(who?('🧑‍💼 מטפל: '+esc(who)):'⏳ ממתין לשיוך קניין')+'</span>'
           +(x.response?('<span class="hist-meta2" style="color:#34d399">📋 פעולות הקניין: '+esc(x.response)+'</span>'):'')
           +(Number(x.photo)>0?('<span class="inboxPhotos" data-pid="'+esc(x.id)+'" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px"><span class="hist-meta2">📷 טוען תמונות…</span></span>'):'')
+          +'<button class="gchatbtn" data-gchat="1">💬 צ׳אט הפנייה'+(whCount(x)?(' ('+whCount(x)+')'):'')+'</button>'
+          +'<div class="whchat"><div class="wthread">'+whThreadHtml(x)+'</div>'
+            +'<div class="wpending"></div>'
+            +'<div class="winrow"><button class="wphoto" type="button" title="צרף תמונה">📷</button>'
+            +'<input type="file" class="wfile" accept="image/*" style="display:none">'
+            +'<textarea class="win" placeholder="כתוב/י הודעה…"></textarea>'
+            +'<button class="wsend" type="button">שלח</button></div></div>'
           +'</div>';
       }).join('');
       fetchInboxPhotos();
+      fetchChatImgsWh();
     }catch(e){ L.innerHTML='<div class="hist-empty">לא ניתן להתחבר.<br><span style="font-size:12px;opacity:.8;direction:ltr;display:inline-block;margin-top:6px">סיבה: '+esc(String((e&&e.message)||e||'לא ידוע'))+'</span></div>'; }
   }
   const whPhotoCache={};
@@ -1286,6 +1309,59 @@
     }
   }
   $('inboxRefresh').addEventListener('click', loadInbox);
+
+  // ===== צ'אט הפנייה במחסנאי (דו-כיווני עם הקניינים/מנהל, עם תמונות) =====
+  const MGR_WH='יהודה פור';
+  const pendingWhImg={};
+  function whMe(){ return (localStorage.getItem(K.reporter)||'').trim(); }
+  function whFmt(iso){ if(!iso) return ''; try{ return new Date(iso).toLocaleString('he-IL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }catch(e){ return ''; } }
+  function parseMsgsWh(raw){ raw=String(raw||''); if(!raw) return []; return raw.split('\u0002').map(function(m){ const p=m.split('\u0001'); return {author:p[0]||'',ts:p[1]||'',text:p[2]||'',photo:p[3]||''}; }); }
+  function whCount(x){ const s=String(x.chat||''); return s?s.split('\u0002').length:0; }
+  function whMsgHtml(m){
+    const mine=(String(m.author||'').trim()===whMe());
+    const isMgr=(String(m.author||'').trim()===MGR_WH);
+    const img=m.photo?('<div class="wimg" data-cphoto="'+esc(m.photo)+'"><span class="hist-meta2">📷 טוען…</span></div>'):'';
+    return '<div class="wmsg'+(mine?' me':'')+'"><div class="wmeta">'+(isMgr?'💼 ':'')+esc(m.author||'—')+' · '+esc(whFmt(m.ts))+'</div>'+(m.text?('<div class="wtext">'+esc(m.text)+'</div>'):'')+img+'</div>';
+  }
+  function whThreadHtml(x){ const msgs=parseMsgsWh(x.chat); if(!msgs.length) return '<div class="hist-empty" style="padding:8px;font-size:13px">אין הודעות עדיין — אפשר לכתוב לקניין/מנהל</div>'; return msgs.map(whMsgHtml).join(''); }
+  async function fetchChatImgsWh(){
+    const els=document.querySelectorAll('.wimg[data-cphoto]');
+    for(const el of els){ const pid=el.getAttribute('data-cphoto'); if(!pid) continue;
+      if(!whPhotoCache[pid]){ try{ const r=await apiGet('photos',{id:pid}); if(r&&r.ok&&Array.isArray(r.photos)){ whPhotoCache[pid]=r.photos; } else { continue; } }catch(e){ continue; } }
+      el.removeAttribute('data-cphoto');
+      el.innerHTML=(whPhotoCache[pid]||[]).map(d=>'<a href="'+d+'" target="_blank" rel="noopener"><img src="'+d+'" style="max-width:200px;max-height:200px;border-radius:9px;border:1px solid #44403c"></a>').join('');
+    }
+  }
+  async function onWhFile(row, id, file){
+    if(!file) return;
+    try{ const d=await compressPhoto(file); pendingWhImg[id]=d;
+      const pv=row.querySelector('.wpending');
+      if(pv) pv.innerHTML='<span style="font-size:12.5px;color:#34d399;font-weight:700">📎 תמונה מצורפת <button class="wpx" type="button" style="background:none;border:none;color:#e2231a;font-weight:800;cursor:pointer">✕</button></span><img src="'+d+'" style="height:46px;border-radius:8px;border:1px solid #44403c;margin-inline-start:8px">';
+    }catch(e){ setStatus('בעיה בעיבוד התמונה'); }
+  }
+  async function sendWhMsg(row, id){
+    const me=whMe(); if(!me){ setStatus('בחר קודם את שמך'); return; }
+    const inp=row.querySelector('.win'); const text=(inp?inp.value:'').trim();
+    const img=pendingWhImg[id]||''; if(!text && !img) return;
+    const ts=new Date().toISOString(); let photoId='';
+    if(img){ photoId='C'+Date.now()+Math.floor(Math.random()*1000); await uploadPhotos(photoId,[img]); whPhotoCache[photoId]=[img]; }
+    const thread=row.querySelector('.wthread');
+    if(thread){ const em=thread.querySelector('.hist-empty'); if(em) thread.innerHTML=''; thread.insertAdjacentHTML('beforeend', whMsgHtml({author:me,ts:ts,text:text,photo:photoId})); thread.scrollTop=thread.scrollHeight; }
+    if(inp) inp.value=''; delete pendingWhImg[id]; const pv=row.querySelector('.wpending'); if(pv) pv.innerHTML='';
+    fetchChatImgsWh();
+    try{ await apiPost('msgAdd',{id:id, author:me, text:text, photo:photoId}); }catch(e){ setStatus('שליחה נכשלה — נסה שוב'); }
+  }
+  function whChatTyping(){ const el=document.activeElement; return !!(el && el.closest && el.closest('#inboxList') && /TEXTAREA|INPUT/.test(el.tagName)); }
+  $('inboxList').addEventListener('click', e=>{
+    const row=e.target.closest('.hist-row'); if(!row) return; const id=row.dataset.id; if(!id) return;
+    if(e.target.closest('[data-gchat]')){ row.querySelector('.whchat').classList.toggle('open'); return; }
+    if(e.target.closest('.wsend')){ sendWhMsg(row, id); return; }
+    if(e.target.closest('.wphoto')){ const f=row.querySelector('.wfile'); if(f) f.click(); return; }
+    if(e.target.closest('.wpx')){ delete pendingWhImg[id]; const pv=row.querySelector('.wpending'); if(pv) pv.innerHTML=''; return; }
+  });
+  $('inboxList').addEventListener('change', e=>{
+    const cb=e.target; if(cb.classList && cb.classList.contains('wfile')){ const row=cb.closest('.hist-row'); if(row){ onWhFile(row, row.dataset.id, cb.files&&cb.files[0]); cb.value=''; } }
+  });
 
   // ===== מנגנון פידבק: התראה כשהקניין הגיב/שינה סטטוס =====
   // "חתימת פידבק" לכל דיווח: רק כשהקניין פעל (סטטוס מתקדם או תשובה)
@@ -1323,7 +1399,7 @@
       const fresh=keys.filter(k=>seen.indexOf(k)===-1);
       // אם הטאב פתוח כרגע — לא צריך נקודה (כבר רואים); נרענן אם יש חדש
       const inboxOpen = $('inboxMode') && !$('inboxMode').classList.contains('hidden');
-      if(inboxOpen){ if(fresh.length){ loadInbox(); } else { saveSeen(keys); setInboxBadge(0); } }
+      if(inboxOpen){ if(fresh.length && !whChatTyping()){ loadInbox(); } else if(!fresh.length){ saveSeen(keys); setInboxBadge(0); } }
       else { setInboxBadge(fresh.length); }
     }catch(e){}
   }
@@ -1460,6 +1536,6 @@
     setTimeout(()=>{ document.documentElement.innerHTML='<body style="background:#0c0a09;color:#a8a29e;font-family:Heebo,sans-serif;height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:18px;">להתראות 👋<br><br>אפשר לסגור את החלון/הכרטיסייה.</body>'; }, 250);
   });
 </script>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 56</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 57</div>
 </body>
 </html>
