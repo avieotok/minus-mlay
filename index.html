@@ -1024,7 +1024,7 @@
       if(r && r.duplicate){ setStatus(''); dupExisting=r.alert||null; showDup(r.alert || {sku:subj.sku, status:'', reporter:'', response:'', assignee:''}); resetForm(); return; }
       if(r && r.ok){
         if(defPhotos.length){ setStatus('מעלה תמונות…'); try{ await uploadPhotos(currentAlertId, defPhotos); }catch(_){ } }
-        addHist((subj.type||'דיווח')+' · מק״ט '+subj.sku); reportDone(subj); return;
+        addHist((subj.type||'דיווח')+' · מק״ט '+subj.sku); reportDone(subj, r.ticket||''); return;
       }
       setStatus('לא ניתן היה לשלוח כרגע — נסה שוב בעוד רגע.');
     }catch(e){ setStatus('לא ניתן היה לשלוח כרגע — נסה שוב בעוד רגע.'); }
@@ -1080,11 +1080,12 @@
     try{ refreshDesc(); }catch(e){}
     if(typeof currentImg!=='undefined'){ currentImg=null; hide($('previewWrap')); if($('sendPhoto')) $('sendPhoto').disabled=true; }
   }
-  function reportDone(subj){
+  function reportDone(subj, ticket){
     setStatus('');
     resetForm();
     show($('sentWrap'));
-    $('sentInfo').innerHTML='<b>'+esc(subj.type||'דיווח')+'</b> · מק״ט <b>'+esc(subj.sku)+'</b>'+(subj.desc?(' — '+esc(subj.desc)):'')+' נשלח לקניינים ונכנס ללוח לטיפול. ✓';
+    var tkt = ticket ? ('<div style="margin:10px auto 0;display:inline-block;background:#0c2a14;border:1px solid #166534;border-radius:12px;padding:9px 18px;color:#bbf7d0;font-size:18px;font-weight:800;font-family:\'Rubik\',sans-serif">🎫 קריאה מס׳ '+esc(ticket)+'</div>') : '';
+    $('sentInfo').innerHTML='<b>'+esc(subj.type||'דיווח')+'</b> · מק״ט <b>'+esc(subj.sku)+'</b>'+(subj.desc?(' — '+esc(subj.desc)):'')+' נשלח לקניינים ונכנס ללוח לטיפול. ✓'+tkt;
   }
 
   // דיאלוג כפילות
@@ -1259,7 +1260,7 @@
         const isMis=(ty==='אי-התאמה');
         return '<div class="hist-row" style="align-items:flex-start;flex-direction:column;gap:6px">'
           +'<div style="display:flex;justify-content:space-between;width:100%;align-items:center;gap:8px">'
-          +'<span style="font-weight:700">'+tic+' מק״ט '+esc(x.sku||'—')+(x.desc?(' · '+esc(x.desc)):'')+'</span>'
+          +'<span style="font-weight:700">'+tic+' מק״ט '+esc(x.sku||'—')+(x.desc?(' · '+esc(x.desc)):'')+(x.ticket?(' <span style="color:#34d399;font-weight:800">🎫 '+esc(x.ticket)+'</span>'):'')+'</span>'
           +'<span style="font-size:12px;font-weight:700;color:'+pc[0]+';background:'+pc[1]+';border:1px solid '+pc[0]+';border-radius:20px;padding:3px 10px;flex-shrink:0">'+esc(st)+'</span>'
           +'</div>'
           +'<span class="hist-meta2">'+esc(ty)+'  ·  ✅ התקבל'+(when?(' · '+when):'')
@@ -1459,6 +1460,6 @@
     setTimeout(()=>{ document.documentElement.innerHTML='<body style="background:#0c0a09;color:#a8a29e;font-family:Heebo,sans-serif;height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:18px;">להתראות 👋<br><br>אפשר לסגור את החלון/הכרטיסייה.</body>'; }, 250);
   });
 </script>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 55</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 56</div>
 </body>
 </html>
