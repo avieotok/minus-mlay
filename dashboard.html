@@ -440,6 +440,14 @@
         <p style="font-size:12.5px;color:var(--faint);line-height:1.6;margin-bottom:10px">גיבוי יומי אוטומטי של כל הנתונים נשמר בתיקיית Drive (נשמרים 30 הגיבויים האחרונים). אפשר גם לגבות עכשיו ידנית כדי לבדוק.</p>
         <button class="ghost" id="backupNow" style="border-color:var(--line2)">🗂️ גבה עכשיו</button>
         <div class="note" id="backupNote"></div>
+        <div style="margin-top:12px">
+          <button class="ghost" id="loadBackups" style="border-color:var(--line2)">↩️ שחזור מגיבוי…</button>
+          <div id="restoreBox" style="display:none;margin-top:10px">
+            <select id="restoreSel" style="width:100%;background:var(--ink);border:1px solid var(--line2);color:var(--text);border-radius:10px;padding:10px;font-size:13.5px;font-family:'Heebo',sans-serif"></select>
+            <button class="ghost" id="doRestore" style="border-color:#7f1d1d;color:#f87171;margin-top:8px;width:100%">↩️ שחזר מהגיבוי שנבחר</button>
+          </div>
+          <div class="note" id="restoreNote"></div>
+        </div>
       </div>
     </div>
 
@@ -489,7 +497,7 @@
   const $ = id => document.getElementById(id);
   const K = { api:'afcon_api_url', token:'afcon_api_token', me:'afcon_me', sheet:'afcon_sheet', boss:'afcon_boss' };
   // חיבור מוטמע מראש — הלוח מחובר אוטומטית בלי הגדרה ידנית
-  const EMBED_API='https://script.google.com/macros/s/AKfycbw3W-sDXuw9QePymMZoCqz2fBJoAnuEiabCntGn6PxN7WBx1cRG7VZj1E9CxbecmeacqQ/exec';
+  const EMBED_API='https://script.google.com/macros/s/AKfycbxtEKo2wDVseqk5TrPPF7FvTtvZTCaqFvowgYtkinGE3MECd_Y1ZYc1xdJUD1-Wc1Eq1A/exec';
   const EMBED_TOKEN='afcon2026';
   try{ if(localStorage.getItem(K.api)!==EMBED_API){ localStorage.setItem(K.api, EMBED_API); } if(localStorage.getItem(K.token)!==EMBED_TOKEN){ localStorage.setItem(K.token, EMBED_TOKEN); } }catch(e){}
 
@@ -1286,6 +1294,19 @@
     $('backupNote').textContent='מגבה…';
     try{ const r=await apiGet('backup'); if(r&&r.ok){ $('backupNote').textContent='✓ נוצר גיבוי: '+(r.name||''); } else $('backupNote').textContent='הגיבוי נכשל. ודא/י שהופעל הגיבוי בעורך (הרצת installBackupTrigger ואישור הרשאות).'; }
     catch(e){ $('backupNote').textContent='הגיבוי נכשל — בדוק חיבור.'; }
+  });
+  const lb=$('loadBackups'); if(lb) lb.addEventListener('click', async ()=>{
+    $('restoreNote').textContent='טוען רשימת גיבויים…';
+    try{ const r=await apiGet('backupsList'); if(r&&r.ok&&r.backups&&r.backups.length){ const sel=$('restoreSel'); sel.innerHTML=r.backups.map(b=>'<option value="'+b.id+'">'+b.name+'</option>').join(''); $('restoreBox').style.display='block'; $('restoreNote').textContent=r.backups.length+' גיבויים זמינים — בחר/י ולחץ/י שחזר.'; } else if(r&&r.ok){ $('restoreNote').textContent='אין עדיין גיבויים.'; } else $('restoreNote').textContent='לא ניתן לטעון — ייתכן שהשרת לא עודכן (פרוס מחדש Code.gs).'; }
+    catch(e){ $('restoreNote').textContent='הטעינה נכשלה — בדוק חיבור.'; }
+  });
+  const dr=$('doRestore'); if(dr) dr.addEventListener('click', async ()=>{
+    const sel=$('restoreSel'); const id=sel.value; const name=(sel.options[sel.selectedIndex]||{}).text||'';
+    if(!id) return;
+    if(!confirm('שחזור ידרוס את כל הנתונים הנוכחיים בנתוני הגיבוי:\n"'+name+'"\n\n(לפני כן תישמר אוטומטית נקודת גיבוי של המצב הנוכחי, כך שאפשר לחזור אחורה.)\n\nלהמשיך?')) return;
+    $('restoreNote').textContent='משחזר… זה עשוי לקחת מספר שניות, נא לא לסגור.';
+    try{ const r=await apiGet('restore',{id:id, name:name}); if(r&&r.ok){ $('restoreNote').textContent='✓ שוחזר מהגיבוי "'+name+'". רענן/י את הדף כדי לראות את הנתונים.'; } else $('restoreNote').textContent='השחזור נכשל — ייתכן שהשרת לא עודכן (פרוס מחדש), או שהפעולה ארכה מדי (נסה/י שחזור מהעורך).'; }
+    catch(e){ $('restoreNote').textContent='השחזור נכשל / ארך מדי — אפשר לשחזר מהעורך (restoreLatestBackup).'; }
   });
   $('gateOk').addEventListener('click',()=>{ const v=$('gateSel').value.trim(); if(!v){ $('gateMsg').textContent='בחר את שמך מהרשימה.'; return; } localStorage.setItem(K.me,v); $('idGate').style.display='none'; fillIdentity(); load(); });
   $('gateDev').addEventListener('click',()=>{ const p=prompt('סיסמת מפתח:'); if(p==='30172'){ $('idGate').style.display='none'; openModal(); } });
