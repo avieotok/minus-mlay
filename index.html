@@ -2045,6 +2045,8 @@
   function savePhones(){ try{ localStorage.setItem(PK, JSON.stringify(PHONES)); }catch(e){} }
   var PHONES=loadPhones(); var SHAREDC=[]; var phEditId=null; var phEditShared=null; var sharedLoaded=false; var sharedState='idle';
   var phKind='supplier'; // ספק / לקוח
+  var PH_OWNER='אבידן קוטאי', PH_PIN='30172', phAdmin=false; // מחיקה מהמשותף — רק לבעלים, אחרי קוד
+  function isPhOwner(){ return String(myName()||'').trim()===PH_OWNER; }
   function kindWord(){ return phKind==='customer'?'לקוח':'ספק'; }
   function kindWordThe(){ return phKind==='customer'?'הלקוח':'הספק'; }
   function ckind(c){ return (c && String(c.kind||''))==='customer' ? 'customer' : 'supplier'; }
@@ -2095,7 +2097,8 @@
     html+='<div class="tk-sec">🔗 '+Wp+' משותפים'+st+' <button id="tkPhReload" style="background:none;border:none;color:#60a5fa;font-weight:800;cursor:pointer;font-size:12.5px">↻ רענן</button></div>';
     if(shared.length){ html+=shared.map(function(c){
       var by=c.sharedBy?('<span class="tk-tag">משותף ע״י '+esc(c.sharedBy)+'</span>'):'<span class="tk-tag">משותף</span>';
-      return '<div class="tk-card shared" data-id="'+esc(c.id)+'"><div class="tk-card-h"><span class="tk-card-name">'+esc(c.supplier||W)+'</span>'+by+'<button class="tk-card-edit" title="ערוך (לכולם)">✏️</button></div>'+cardLines(c)+'</div>';
+      var delBtn=isPhOwner()?'<button class="tk-card-del" title="מחק (לכולם)">🗑️</button>':'';
+      return '<div class="tk-card shared" data-id="'+esc(c.id)+'"><div class="tk-card-h"><span class="tk-card-name">'+esc(c.supplier||W)+'</span>'+by+'<button class="tk-card-edit" title="ערוך (לכולם)">✏️</button>'+delBtn+'</div>'+cardLines(c)+'</div>';
     }).join(''); } else { html+='<div class="tk-empty">'+(q?'אין תוצאות משותפות':('אין '+Wp+' משותפים עדיין'))+'</div>'; }
     // אישיים
     html+='<div class="tk-sec" style="margin-top:14px">📱 ה'+Wp+' שלי (במכשיר זה)</div>';
@@ -2159,7 +2162,18 @@
     var card=e.target.closest('.tk-card'); if(!card) return; var id=card.getAttribute('data-id');
     if(card.classList.contains('shared')){
       var sc=null; for(var j=0;j<SHAREDC.length;j++){ if(String(SHAREDC[j].id)===String(id)){ sc=SHAREDC[j]; break; } }
-      if(sc && e.target.classList.contains('tk-card-edit')){ openPhForm(sc, true); }
+      if(!sc) return;
+      if(e.target.classList.contains('tk-card-edit')){ openPhForm(sc, true); return; }
+      if(e.target.classList.contains('tk-card-del')){
+        if(!isPhOwner()){ return; }
+        if(!phAdmin){ var pin=prompt('הקש/י קוד מנהל כדי למחוק מהספר המשותף:'); if(String(pin||'').trim()!==PH_PIN){ if(pin!==null) alert('קוד שגוי.'); return; } phAdmin=true; }
+        if(!confirm('למחוק את "'+(sc.supplier||kindWord())+'" מהספר המשותף? המחיקה תחול על כל החברים.')) return;
+        srvGet('contactDelete', { id:id }).then(function(r){
+          if(r && r.ok){ loadShared(); }
+          else if(r && r.ok===false){ alert('⚠️ השרת לא מכיר את פעולת המחיקה — צריך לפרוס מחדש את Code.gs (גרסה חדשה).'); }
+          else { alert('⚠️ אין תשובה מהשרת. בדוק/י חיבור ונסה/י שוב.'); }
+        });
+      }
       return;
     }
     var c=null; for(var i=0;i<PHONES.length;i++){ if(PHONES[i].id===id){ c=PHONES[i]; break; } }
