@@ -268,7 +268,7 @@
   </div>
 
   <main>
-    <div id="soundBar">🔔 הקש להפעלת צלילי התראה ‹ כדי לשמוע כשנכנסת קריאה</div>
+    <div id="soundBar">🔔 הקש להפעלת התראות לנייד ‹ כדי לקבל פופ-אפ + צליל על כל דיווח חדש</div>
     <div class="vtabs">
       <button class="vtab on" id="vtBoard">📋 פניות</button>
       <button class="vtab" id="vtKpi">📊 מחוונים</button>
@@ -605,6 +605,33 @@
     try{ if('Notification' in window && Notification.permission==='granted')
       new Notification('אפקון — קריאה חדשה', { body:(n>1?(n+' קריאות חדשות לטיפול'):'נכנסה קריאה חדשה לטיפול'), tag:'afcon-call', renotify:true }); }catch(e){}
   }
+  // ===== Service Worker + התראות מערכת עם פרטי הדיווח =====
+  var SWREG=null;
+  function registerSW(){ if(!('serviceWorker' in navigator)) return; navigator.serviceWorker.register('sw.js').then(function(reg){ SWREG=reg; }).catch(function(){}); }
+  function notifyOS(title, body, tag){
+    try{
+      if(!('Notification' in window) || Notification.permission!=='granted') return;
+      var opts={ body:body, tag:tag||'afcon-new', renotify:true, icon:'icon-dash.png', badge:'icon-dash.png', data:{ url: location.href } };
+      if(SWREG && SWREG.showNotification){ SWREG.showNotification(title, opts); return; }
+      if(navigator.serviceWorker && navigator.serviceWorker.ready){ navigator.serviceWorker.ready.then(function(r){ try{ r.showNotification(title, opts); }catch(e){ try{ new Notification(title, opts); }catch(_){} } }); return; }
+      var nn=new Notification(title, opts); nn.onclick=function(){ try{ window.focus(); }catch(e){} nn.close(); };
+    }catch(e){}
+  }
+  function typeEmoji(t){ t=String(t||'חוסר מלאי'); return t==='פריט פגום'?'🔴':(t==='אי-התאמה'?'🔵':'🟠'); }
+  function notifyNew(list){
+    toast('📥 '+(list.length>1?(list.length+' דיווחים חדשים'):'נכנס דיווח חדש'));
+    chime('call'); setTimeout(function(){ chime('call'); }, 850);
+    var title, body;
+    if(list.length===1){
+      var a=list[0]; var ty=String(a.type||'חוסר מלאי');
+      title='דיווח חדש — '+typeEmoji(ty)+' '+ty;
+      body='מק״ט '+(a.sku||'—')+(a.desc?(' · '+a.desc):'')+(a.reporter?(' · '+a.reporter):'');
+    } else {
+      title='📥 '+list.length+' דיווחים חדשים';
+      body='נכנסו '+list.length+' דיווחים חדשים לטיפול';
+    }
+    notifyOS(title, body, 'afcon-new');
+  }
   // שחרור שמע בכל מגע ראשון (נדרש בנייד)
   document.addEventListener('click', function(){ ensureAudio(); }, true);
   function soundOn(){ return localStorage.getItem('afcon_sound_on')==='1'; }
@@ -758,7 +785,7 @@
         ALERTS=res.alerts||[];
         const ids=ALERTS.map(a=>String(a.id));
         if(seen===null){ seen=new Set(ids); }
-        else { const fresh=ids.filter(id=>!seen.has(id)); ids.forEach(id=>seen.add(id)); if(fresh.length) ring(fresh.length); }
+        else { const freshIds=ids.filter(id=>!seen.has(id)); ids.forEach(id=>seen.add(id)); if(freshIds.length){ const fresh=ALERTS.filter(a=>freshIds.indexOf(String(a.id))>=0); notifyNew(fresh); } }
         reconcileChat();
         $('status').textContent='מעודכן '+new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}); render(); loadNews();
         if(document.querySelector('main.kpi-mode')) renderKpiDash();
@@ -1062,7 +1089,7 @@
   $('vtBoard').addEventListener('click',()=>setView('board'));
   $('vtKpi').addEventListener('click',()=>setView('kpi'));
   $('vtNews').addEventListener('click',()=>setView('news'));
-  $('soundBar').addEventListener('click',()=>{ ensureAudio(); chime('call'); try{ if('Notification' in window && Notification.permission==='default') Notification.requestPermission(); }catch(e){} localStorage.setItem('afcon_sound_on','1'); showSoundBar(); toast('צלילי התראה הופעלו ✓'); });
+  $('soundBar').addEventListener('click',()=>{ ensureAudio(); chime('call'); try{ if('Notification' in window && Notification.permission==='default') Notification.requestPermission(); }catch(e){} registerSW(); localStorage.setItem('afcon_sound_on','1'); showSoundBar(); toast('התראות וצליל הופעלו ✓'); });
   $('ncOpen').addEventListener('click',()=>{ $('ncForm').classList.toggle('open'); });
   $('ncCancel').addEventListener('click',()=>{ $('ncForm').classList.remove('open'); $('ncTitle').value=''; $('ncBody').value=''; $('ncPin').checked=false; pendingNewsImg=''; $('ncPending').innerHTML=''; });
   $('ncCats').addEventListener('click',e=>{ const b=e.target.closest('.nc-cat'); if(!b) return; newsCat=b.dataset.cat; $('ncCats').querySelectorAll('.nc-cat').forEach(x=>x.classList.toggle('on',x===b)); });
@@ -1386,6 +1413,7 @@
   maybeGate();
   updateMeBar();
   showSoundBar();
+  registerSW();
   if(apiOn()){ load(); loadRoster(); loadNews(); } else renderEmptyConfig();
   document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&apiOn()) load(); });
 </script>
