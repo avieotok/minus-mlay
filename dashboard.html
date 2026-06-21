@@ -448,6 +448,15 @@
           </div>
           <div class="note" id="restoreNote"></div>
         </div>
+        <div style="border-top:1px dashed var(--line2);margin-top:14px;padding-top:14px">
+          <div style="font-weight:700;font-size:14px;margin-bottom:4px">💾 גיבוי לקובץ במחשב <span style="color:var(--green);font-size:11.5px;font-weight:800">(מומלץ)</span></div>
+          <p style="font-size:12.5px;color:var(--faint);line-height:1.6;margin-bottom:10px">מוריד את <b>כל</b> הנתונים לקובץ אחד במחשב שלך — פניות, ספר טלפונים, ידיעון, קטלוג, שמות <b>וגם התמונות</b>. לא דורש הרשאות. השחזור טוען קובץ כזה ומחזיר את הכל.</p>
+          <button class="ghost" id="dlBackup" style="border-color:#166534;color:#34d399;width:100%">⬇️ הורד גיבוי לקובץ</button>
+          <div class="note" id="dlNote" style="margin-bottom:8px"></div>
+          <button class="ghost" id="upRestore" style="border-color:#7f1d1d;color:#f87171;width:100%">⬆️ שחזר מקובץ במחשב</button>
+          <input type="file" id="restoreFile" accept="application/json,.json" style="display:none">
+          <div class="note" id="upNote"></div>
+        </div>
       </div>
     </div>
 
@@ -527,7 +536,7 @@
   }
   async function apiGet(action, params){ return apiGetJsonp(action, params); }
   async function apiPost(action, payload){
-    if(action!=='catalogSet' && action!=='rosterSet'){ return apiGetJsonp(action, payload||{}); }
+    if(action!=='catalogSet' && action!=='rosterSet' && action!=='importAll'){ return apiGetJsonp(action, payload||{}); }
     // קטלוג/שמות (רשימות גדולות) ב-POST בלבד
     const body=Object.assign({token:apiToken(),action:action}, payload||{});
     const r=await fetch(apiUrl(),{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)});
@@ -1307,6 +1316,43 @@
     $('restoreNote').textContent='משחזר… זה עשוי לקחת מספר שניות, נא לא לסגור.';
     try{ const r=await apiGet('restore',{id:id, name:name}); if(r&&r.ok){ $('restoreNote').textContent='✓ שוחזר מהגיבוי "'+name+'". רענן/י את הדף כדי לראות את הנתונים.'; } else $('restoreNote').textContent='השחזור נכשל — ייתכן שהשרת לא עודכן (פרוס מחדש), או שהפעולה ארכה מדי (נסה/י שחזור מהעורך).'; }
     catch(e){ $('restoreNote').textContent='השחזור נכשל / ארך מדי — אפשר לשחזר מהעורך (restoreLatestBackup).'; }
+  });
+  // ===== גיבוי לקובץ במחשב + שחזור מקובץ =====
+  const dlb=$('dlBackup'); if(dlb) dlb.addEventListener('click', async ()=>{
+    $('dlNote').textContent='אוסף נתונים (כולל תמונות — עשוי לקחת רגע)…';
+    try{
+      const [all,contacts,news,roster,catalog,photos]=await Promise.all([
+        apiGet('all'), apiGet('contacts'), apiGet('news'), apiGet('roster'), apiGet('catalog'), apiGet('photosAll')
+      ]);
+      const snap={ _app:'afcon-portal', _ver:1, _exported:new Date().toISOString(),
+        alerts:(all&&all.alerts)||[], contacts:(contacts&&contacts.contacts)||[],
+        news:(news&&news.news)||[], catalog:(catalog&&catalog.items)||{},
+        buyers:(roster&&roster.buyers)||[], reporters:(roster&&roster.reporters)||[],
+        photos:(photos&&photos.photos)||[] };
+      const blob=new Blob([JSON.stringify(snap)],{type:'application/json'});
+      const url=URL.createObjectURL(blob); const a=document.createElement('a');
+      const stamp=new Date().toISOString().slice(0,16).replace(/[:T]/g,'-');
+      a.href=url; a.download='גיבוי-שרשרת-האספקה-'+stamp+'.json';
+      document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+      $('dlNote').textContent='✓ גיבוי מלא הורד למחשב ('+(snap.alerts.length)+' פניות, '+(snap.contacts.length)+' אנשי קשר, '+(snap.photos.length)+' תמונות).';
+    }catch(e){ $('dlNote').textContent='ההורדה נכשלה — בדוק חיבור ונסה שוב.'; }
+  });
+  const upr=$('upRestore'); if(upr) upr.addEventListener('click', ()=>{ $('restoreFile').click(); });
+  const rf=$('restoreFile'); if(rf) rf.addEventListener('change', async (ev)=>{
+    const file=ev.target.files&&ev.target.files[0]; if(!file) return;
+    $('upNote').textContent='קורא את הקובץ…';
+    try{
+      const text=await file.text(); let snap;
+      try{ snap=JSON.parse(text); }catch(e){ $('upNote').textContent='הקובץ אינו קובץ גיבוי תקין.'; rf.value=''; return; }
+      if(!snap||snap._app!=='afcon-portal'){ if(!confirm('הקובץ לא נראה כמו גיבוי של המערכת. להמשיך בכל זאת?')){ rf.value=''; $('upNote').textContent=''; return; } }
+      const n=(snap.alerts||[]).length;
+      if(!confirm('שחזור ידרוס את כל הנתונים הנוכחיים בנתוני הקובץ:\n'+n+' פניות, '+((snap.contacts||[]).length)+' אנשי קשר, '+((snap.news||[]).length)+' ידיעות.\n\nמומלץ להוריד גיבוי של המצב הנוכחי לפני כן.\n\nלהמשיך בשחזור?')) { rf.value=''; $('upNote').textContent=''; return; }
+      $('upNote').textContent='משחזר… נא לא לסגור.';
+      const r=await apiPost('importAll',{data:snap});
+      if(r&&r.ok){ $('upNote').textContent='✓ שוחזר בהצלחה: '+((r.restored||[]).join(', '))+'. רענן/י את הדף.'; }
+      else $('upNote').textContent='השחזור נכשל — ייתכן שהשרת לא עודכן (פרוס מחדש Code.gs).';
+    }catch(e){ $('upNote').textContent='השחזור נכשל — '+e; }
+    rf.value='';
   });
   $('gateOk').addEventListener('click',()=>{ const v=$('gateSel').value.trim(); if(!v){ $('gateMsg').textContent='בחר את שמך מהרשימה.'; return; } localStorage.setItem(K.me,v); $('idGate').style.display='none'; fillIdentity(); load(); });
   $('gateDev').addEventListener('click',()=>{ const p=prompt('סיסמת מפתח:'); if(p==='30172'){ $('idGate').style.display='none'; openModal(); } });
