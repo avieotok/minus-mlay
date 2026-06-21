@@ -59,7 +59,7 @@
   @property --ledang { syntax:'<angle>'; inherits:false; initial-value:0deg; }
   @keyframes ledspin{ to{ --ledang:360deg; } }
   @keyframes ledspinFallback{ 0%,100%{box-shadow:0 0 0 0 rgba(226,35,26,.6)} 50%{box-shadow:0 0 9px 3px rgba(226,35,26,.55)} }
-  .chip.chip-blink{position:relative;border-color:var(--red);color:#fff;animation:ledspinFallback 1.3s ease-in-out infinite}
+  .chip.chip-blink{position:relative;border-color:var(--red);animation:ledspinFallback 1.3s ease-in-out infinite}
   .chip.chip-blink::before{content:'';position:absolute;inset:0;border-radius:inherit;padding:2.5px;background:conic-gradient(from var(--ledang), transparent 0deg, transparent 295deg, #ff6a5e 330deg, #e2231a 350deg, #ff8a7e 360deg);-webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:ledspin 1.3s linear infinite;pointer-events:none;filter:drop-shadow(0 0 3px #e2231a)}
   .search{background:var(--surface);border:1px solid var(--line2);border-radius:12px;padding:12px 14px;color:var(--text);font-size:15px;font-family:'Heebo',sans-serif;width:100%}
   .search:focus{outline:none;border-color:var(--green)}
