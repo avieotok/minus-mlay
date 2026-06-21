@@ -854,7 +854,7 @@
           (String(a.status)==='טופל')
           ? ('<div class="acts"><button class="btn prog" data-act="reopen">↩️ החזר לטיפול</button>'+genBtn(a)+'</div>'+genPanel(a))
           : ('<div class="acts">'
-          +'<button class="btn prog'+(a.status==='בטיפול'?' on':'')+'" data-act="בטיפול">🟠 קח לטיפול</button>'
+          +'<button class="btn prog'+(a.status==='בטיפול'?' on':'')+'" data-act="בטיפול">'+((String(a.status)==='בטיפול'&&String(a.assignee||'')===me())?'↩️ החזר לממתין':'🟠 קח לטיפול')+'</button>'
           +'<button class="btn done'+(a.status==='טופל'?' on':'')+'" data-act="טופל">✅ טופל</button>'
           +'<button class="btn reply" data-act="transfer">↪️ העבר</button>'
           +'<button class="btn reply" data-act="reply">📋</button>'
@@ -909,6 +909,13 @@
       toast('עודכן ✓'); setTimeout(load,400);
     }
     catch(e){ toast('העדכון נכשל — רענן ונסה שוב'); }
+  }
+  async function backToPending(id){
+    const a=ALERTS.find(x=>String(x.id)===String(id));
+    if(a){ a.status='ממתין'; a.assignee=''; a.updated=new Date().toISOString(); }
+    render();
+    try{ await apiPost('assign',{id:id, assignee:'', status:'ממתין'}); toast('הוחזר לממתין ✓'); setTimeout(load,400); }
+    catch(e){ toast('הפעולה נכשלה — נסה שוב'); }
   }
   async function saveResp(id, text){
     const a=ALERTS.find(x=>String(x.id)===String(id));
@@ -1096,7 +1103,10 @@
       if(a==='gchat'){ const panel=card.querySelector('.genchat'); panel.classList.toggle('open'); if(panel.classList.contains('open')){ markChatSeen(id); render(); } return; }
       if(a==='transfer'){ card.querySelector('.transfer').classList.toggle('open'); return; }
       if(a==='reopen'){ reopenAlert(id); return; }
-      if(a==='בטיפול'){ if(needMe()) return; const ed=card.querySelector('.editor textarea'); assignTo(id, me(), 'בטיפול', ed?ed.value:''); return; }
+      if(a==='בטיפול'){ if(needMe()) return;
+        const al=ALERTS.find(x=>String(x.id)===String(id));
+        if(al && String(al.status)==='בטיפול' && String(al.assignee||'')===me()){ backToPending(id); return; } // לחיצה שנייה → חזרה לממתין
+        const ed=card.querySelector('.editor textarea'); assignTo(id, me(), 'בטיפול', ed?ed.value:''); return; }
       if(a==='טופל'){ if(needMe()) return; const ed=card.querySelector('.editor textarea'); const txt=ed?ed.value.trim():'';
         if(!txt){ card.querySelector('.editor').classList.add('open'); if(ed) ed.focus(); toast('יש למלא "פעולות לטיפול" לפני סגירת הפנייה'); return; }
         assignTo(id, me(), 'טופל', txt); return; }
