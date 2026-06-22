@@ -1342,6 +1342,10 @@
   // ===== הגדרות חיבור למערכת =====
   function paintApiState(){ $('apiState').textContent = apiOn()?'מחובר ✓':'לא מחובר'; }
   $('apiUrlInp').value=apiUrl(); $('apiTokenInp').value=apiToken(); paintApiState();
+  // ===== נוכחות: פעימת לב מהמחסנאי =====
+  function presencePingWH(){ try{ if(!apiOn()) return; var nm=myName(); if(!nm) return; apiGet('presence',{me:nm, app:'warehouse'}); }catch(e){} }
+  presencePingWH(); setInterval(presencePingWH, 60000);
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible') presencePingWH(); });
   $('gateSearch').addEventListener('input', ()=>{ gateSelected=''; renderGateList(); });
   $('gateResults').addEventListener('click', e=>{ const b=e.target.closest('.gate-row'); if(!b) return; gateSelected=b.dataset.name; $('gateMsg').textContent=''; renderGateList(); });
   $('gateOk').addEventListener('click',()=>{ let v=(gateSelected||'').trim();

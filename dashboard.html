@@ -275,6 +275,7 @@
         <button class="ico" id="tkOpen" title="כלי עזר" style="width:auto;padding:0 12px;font-size:13.5px;font-weight:800;gap:5px">כלי עזר 🧰</button>
         <button class="ico" id="refreshBtn" title="רענן">🔄</button>
         <button class="ico" id="aboutBtn" title="אודות">ℹ️</button>
+        <button class="ico" id="presBtn" title="נוכחות משתמשים" style="display:none">👥</button>
         <button class="ico" id="gearBtn" title="הגדרות">⚙️</button>
       </div>
     </div>
@@ -482,6 +483,14 @@
   </div>
 </div>
 
+<div class="modal" id="presModal">
+  <div class="sheet">
+    <h3>👥 נוכחות משתמשים</h3>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:6px"><button id="presRefresh" style="background:none;border:none;color:#60a5fa;font-weight:800;cursor:pointer;font-size:13px">↻ רענן</button></div>
+    <div id="presBody"></div>
+    <button class="btn" id="presClose" style="margin-top:12px;width:100%;background:var(--surface2);border:1px solid var(--line2);color:var(--text);border-radius:11px;padding:11px;font-weight:800;cursor:pointer">סגור</button>
+  </div>
+</div>
 <div class="modal" id="aboutModal">
   <div class="sheet">
     <h3>אודות</h3>
@@ -627,6 +636,38 @@
   // ===== Service Worker + התראות מערכת עם פרטי הדיווח =====
   var SWREG=null;
   function registerSW(){ if(!('serviceWorker' in navigator)) return; navigator.serviceWorker.register('sw.js').then(function(reg){ SWREG=reg; }).catch(function(){}); }
+  // ===== נוכחות: פעימת לב + מסך מנהל =====
+  const APP_NAME='dashboard';
+  function presencePing(){ try{ if(!apiOn()) return; var nm=me(); if(!nm) return; apiGet('presence',{me:nm, app:APP_NAME}); }catch(e){} }
+  function updatePresBtn(){ var b=$('presBtn'); if(b) b.style.display=(isBoss()||me()===MGR)?'':'none'; }
+  function presAgo(iso, now){ var t=Date.parse(iso); if(!t) return ''; var m=Math.round((now-t)/60000); if(m<1) return 'עכשׁיו'; if(m<60) return 'לפני '+m+' דק׳'; var hh=Math.round(m/60); if(hh<24) return 'לפני '+hh+' ש׳'; return 'לפני '+Math.round(hh/24)+' ימים'; }
+  function presHHMM(iso){ var d=new Date(iso); if(isNaN(d.getTime())) return ''; return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }
+  function presApp(a){ return a==='warehouse'?'🏭 מחסן':(a==='dashboard'?'🛒 לוח':a); }
+  async function openPresence(){
+    $('presModal').classList.add('open'); $('presBody').innerHTML='<div style="color:var(--muted)">טוען…</div>';
+    try{
+      const r=await apiGet('presenceList'); const rows=(r&&r.presence)||[]; const now=Date.now();
+      const online=rows.filter(x=>{ const t=Date.parse(x.lastSeen); return t && (now-t)<=180000; })
+        .sort((a,b)=>(Date.parse(b.lastSeen)||0)-(Date.parse(a.lastSeen)||0));
+      const byName={}; rows.forEach(x=>{ (byName[x.name]=byName[x.name]||[]).push(x); });
+      const names=Object.keys(byName).sort((a,b)=>{
+        const la=Math.max.apply(null,byName[a].map(z=>Date.parse(z.lastSeen)||0));
+        const lb=Math.max.apply(null,byName[b].map(z=>Date.parse(z.lastSeen)||0));
+        return lb-la; });
+      let html='<div style="font-weight:800;margin:2px 0 8px;color:var(--green2)">🟢 מחוברים עכשׁיו ('+online.length+')</div>';
+      if(online.length){ html+=online.map(x=>'<div style="display:flex;justify-content:space-between;align-items:center;background:#06281b;border:1px solid #166534;border-radius:10px;padding:9px 12px;margin-bottom:6px"><span style="font-weight:700">🟢 '+esc(x.name)+'</span><span style="color:var(--muted);font-size:13px">'+presApp(x.app)+' · '+presAgo(x.lastSeen,now)+'</span></div>').join(''); }
+      else html+='<div style="color:var(--faint);font-size:13px;margin-bottom:6px">אין מחוברים כרגע</div>';
+      html+='<div style="font-weight:800;margin:16px 0 8px;color:var(--blue2)">🗓️ היסטוריה — 7 ימים אחרונים</div>';
+      if(names.length){ html+=names.map(nm=>{
+        const days=byName[nm].slice().sort((a,b)=>b.day.localeCompare(a.day));
+        const last=days[0];
+        const lines=days.map(d=>{ const dd=d.day.slice(8,10)+'/'+d.day.slice(5,7); return '<div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);padding:2px 0"><span>'+dd+' · '+presApp(d.app)+'</span><span>'+presHHMM(d.firstSeen)+'–'+presHHMM(d.lastSeen)+' · '+d.hits+' פעולות</span></div>'; }).join('');
+        return '<div style="background:var(--ink);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px"><div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-weight:800">'+esc(nm)+'</span><span style="font-size:12px;color:var(--faint)">נראה '+presAgo(last.lastSeen,now)+'</span></div>'+lines+'</div>';
+      }).join(''); }
+      else html+='<div style="color:var(--faint);font-size:13px">אין נתונים עדיין</div>';
+      $('presBody').innerHTML=html;
+    }catch(e){ $('presBody').innerHTML='<div style="color:#f87171">שגיאה בטעינה — ייתכן שצריך לפרוס מחדש את Code.gs.</div>'; }
+  }
   function notifyOS(title, body, tag){
     try{
       if(!('Notification' in window) || Notification.permission!=='granted') return;
@@ -874,6 +915,7 @@
   }
 
   function render(){
+    updatePresBtn();
     kpis();
     const boss=isBoss();
     const bb=$('bossBar');
@@ -1276,6 +1318,10 @@
   function openSettingsUnlocked(){ openModal(); $('advPinRow').style.display='none'; $('advBox').classList.remove('hidden'); devOpen=true; render(); renderQRs(); renderNames(); if(apiOn()) loadRoster(); }
   $('gearBtn').addEventListener('click', ()=>{ $('setPin').value=''; $('setPinMsg').textContent=''; $('setGate').style.display='flex'; setTimeout(()=>$('setPin').focus(),50); });
   $('aboutBtn').addEventListener('click', ()=>$('aboutModal').classList.add('open'));
+  $('presBtn').addEventListener('click', openPresence);
+  $('presClose').addEventListener('click', ()=>$('presModal').classList.remove('open'));
+  $('presRefresh').addEventListener('click', openPresence);
+  $('presModal').addEventListener('click', e=>{ if(e.target===$('presModal')) $('presModal').classList.remove('open'); });
   $('aboutClose').addEventListener('click', ()=>$('aboutModal').classList.remove('open'));
   $('aboutModal').addEventListener('click', e=>{ if(e.target===$('aboutModal')) $('aboutModal').classList.remove('open'); });
   function trySettingsPin(){ const v=($('setPin').value||'').trim(); if(v===DEV_PIN){ $('setGate').style.display='none'; openSettingsUnlocked(); } else { $('setPinMsg').textContent='סיסמה שגויה'; $('setPin').value=''; } }
@@ -1480,6 +1526,8 @@
   updateMeBar();
   showSoundBar();
   registerSW();
+  updatePresBtn(); presencePing(); setInterval(presencePing, 60000);
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible') presencePing(); });
   if(apiOn()){ load(); loadRoster(); loadNews(); } else renderEmptyConfig();
   document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&apiOn()) load(); });
 </script>
