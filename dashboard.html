@@ -285,6 +285,10 @@
   .sheet{ background:linear-gradient(180deg, var(--surface2), var(--surface)); border-top:1px solid rgba(217,181,107,.32); box-shadow:0 -22px 64px -22px rgba(0,0,0,.92); border-radius:24px 24px 0 0; }
   .sheet h3{ letter-spacing:-.01em; }
   .controls{ position:static; }
+  .tplbar{ display:flex; gap:6px; overflow-x:auto; padding:6px 2px 7px; margin-bottom:6px; scrollbar-width:none; }
+  .tplbar::-webkit-scrollbar{ height:0; display:none; }
+  .tplchip{ flex:0 0 auto; background:linear-gradient(180deg,#1c1f26,#15171c); border:1px solid rgba(217,181,107,.4); color:var(--gold2); border-radius:999px; padding:8px 14px; font-size:13px; font-weight:700; cursor:pointer; font-family:'Heebo',sans-serif; white-space:nowrap; box-shadow:0 2px 8px -4px rgba(0,0,0,.5); }
+  .tplchip:active{ transform:scale(.96); }
 </style>
 </head>
 <body>
@@ -446,6 +450,23 @@
         <input type="file" id="catFile" accept=".xlsx,.xls,.csv" style="display:none">
         <button class="ghost" id="catPush" style="border-color:var(--amber);color:var(--amber2)">⬆️ דחוף קטלוג לכולם</button>
         <div class="note" id="catNote"></div>
+      </div>
+
+      <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:4px">💬 תבניות לצ'אט (משותף לכל המכשירים)</div>
+        <p style="font-size:12.5px;color:var(--faint);line-height:1.6;margin-bottom:10px">תבניות מהירות לכל תווית. יופיעו בלחיצה על שורת הצ'אט בפנייה מאותו סוג. "כללי" יופיע בכל הסוגים.</p>
+        <div id="tplTypeTabs" style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:11px">
+          <button class="chip on" data-tt="חוסר מלאי">🟠 חוסר מלאי</button>
+          <button class="chip" data-tt="פריט פגום">🔴 פגום</button>
+          <button class="chip" data-tt="אי-התאמה">🔵 אי-התאמה</button>
+          <button class="chip" data-tt="">כללי</button>
+        </div>
+        <div id="tplList" style="display:flex;flex-direction:column;gap:7px;margin-bottom:10px"></div>
+        <div style="display:flex;gap:8px">
+          <input id="tplNew" placeholder="טקסט תבנית חדשה…" style="flex:1;background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--text);font-family:'Heebo',sans-serif;font-size:14px">
+          <button class="ghost" id="tplAdd" style="border-color:var(--green);color:var(--green2)">➕ הוסף</button>
+        </div>
+        <div class="note" id="tplNote"></div>
       </div>
 
       <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
@@ -687,6 +708,19 @@
   var SWREG=null;
   function syncSticky(){ var t=document.querySelector('.top'); if(t) document.documentElement.style.setProperty('--hH', t.offsetHeight+'px'); }
   window.addEventListener('resize', syncSticky);
+  // ===== תבניות צ'אט (משותפות לכל המכשירים, לפי תווית) =====
+  const TPL_KEY='afcon_tpl_v2';
+  let TPLS=[]; let tplAdminType='חוסר מלאי';
+  function tplCacheGet(){ try{ const a=JSON.parse(localStorage.getItem(TPL_KEY)||'[]'); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
+  function tplCacheSet(a){ try{ localStorage.setItem(TPL_KEY, JSON.stringify(a)); }catch(e){} }
+  async function tplLoad(){ try{ const r=await apiGet('tpl'); if(r && r.ok && Array.isArray(r.templates)){ TPLS=r.templates; tplCacheSet(TPLS); renderTplAdmin(); } }catch(e){} }
+  async function tplSave(){ tplCacheSet(TPLS); const n=$('tplNote'); if(n) n.textContent='שומר…'; try{ const r=await apiPost('tplSet',{data:TPLS}); if(n) n.textContent=(r&&r.ok)?'נשמר ✓ זמין בכל המכשירים':'נשמר מקומית — בדוק חיבור'; }catch(e){ if(n) n.textContent='נשמר מקומית — אין חיבור לשרת'; } }
+  function tplTypeOf(ta){ const card=ta.closest&&ta.closest('.card'); if(!card) return ''; const a=ALERTS.find(x=>String(x.id)===String(card.dataset.id)); return a?String(a.type||'חוסר מלאי'):''; }
+  function tplInsert(ta, text){ const v=ta.value, s=(ta.selectionStart!=null?ta.selectionStart:v.length), e=(ta.selectionEnd!=null?ta.selectionEnd:v.length); ta.value=v.slice(0,s)+text+v.slice(e); const pos=s+text.length; try{ ta.selectionStart=ta.selectionEnd=pos; }catch(_){} ta.focus(); ta.dispatchEvent(new Event('input',{bubbles:true})); }
+  function tplBuildBar(ta){ const ty=tplTypeOf(ta); const arr=TPLS.filter(t=>!t.type||t.type===ty); if(!arr.length) return null; const bar=document.createElement('div'); bar.className='tplbar'; arr.forEach(t=>{ const b=document.createElement('button'); b.type='button'; b.className='tplchip'; b.textContent=(t.text.length>28?t.text.slice(0,28)+'…':t.text); b.title=t.text; b.addEventListener('mousedown', ev=>{ ev.preventDefault(); tplInsert(ta, t.text); }); bar.appendChild(b); }); return bar; }
+  document.addEventListener('focusin', e=>{ const ta=e.target; if(!ta||!ta.matches||!ta.matches('.gin, .editor textarea')) return; const prev=ta.previousElementSibling; if(prev && prev.classList && prev.classList.contains('tplbar')) return; const bar=tplBuildBar(ta); if(bar) ta.parentNode.insertBefore(bar, ta); });
+  document.addEventListener('focusout', e=>{ const ta=e.target; if(!ta||!ta.matches||!ta.matches('.gin, .editor textarea')) return; setTimeout(()=>{ const bar=ta.previousElementSibling; if(bar && bar.classList && bar.classList.contains('tplbar') && document.activeElement!==ta) bar.remove(); }, 200); });
+  function renderTplAdmin(){ const box=$('tplList'); if(!box) return; const rows=TPLS.map((t,i)=>({t,i})).filter(o=>String(o.t.type||'')===tplAdminType); if(!rows.length){ box.innerHTML='<div style="color:var(--faint);font-size:13px">אין תבניות לתווית זו עדיין</div>'; return; } box.innerHTML=rows.map(o=>'<div style="display:flex;gap:8px;align-items:center;background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:9px 11px"><span style="flex:1;font-size:13.5px;white-space:pre-wrap;word-break:break-word">'+esc(o.t.text)+'</span><button data-i="'+o.i+'" class="tpl-ed" style="background:none;border:none;cursor:pointer;font-size:15px">✏️</button><button data-i="'+o.i+'" class="tpl-del" style="background:none;border:none;cursor:pointer;font-size:15px">🗑️</button></div>').join(''); }
   function registerSW(){ if(!('serviceWorker' in navigator)) return; navigator.serviceWorker.register('sw.js').then(function(reg){ SWREG=reg; }).catch(function(){}); }
   // ===== נוכחות: פעימת לב + מסך מנהל =====
   const APP_NAME='dashboard';
@@ -1409,7 +1443,11 @@
   // settings modal
   function openModal(){ fillIdentity(); $('mName').value=me(); $('mUrl').value=apiUrl(); $('mTok').value=apiToken(); $('mSheet').value=localStorage.getItem(K.sheet)||''; $('mBoss').checked=isBoss(); $('mNote').textContent=''; $('advNote').textContent=''; $('catNote').textContent=''; $('advBox').classList.add('hidden'); $('modal').classList.add('open'); if(apiOn()) loadRoster(); }
   function closeModal(){ $('modal').classList.remove('open'); }
-  function openSettingsUnlocked(){ openModal(); $('advPinRow').style.display='none'; $('advBox').classList.remove('hidden'); devOpen=true; render(); renderQRs(); renderNames(); if(apiOn()) loadRoster(); }
+  function openSettingsUnlocked(){ openModal(); $('advPinRow').style.display='none'; $('advBox').classList.remove('hidden'); devOpen=true; renderTplAdmin(); render(); renderQRs(); renderNames(); if(apiOn()) loadRoster(); }
+  $('tplTypeTabs').addEventListener('click', e=>{ const b=e.target.closest('.chip'); if(!b) return; tplAdminType=b.getAttribute('data-tt'); document.querySelectorAll('#tplTypeTabs .chip').forEach(x=>x.classList.toggle('on',x===b)); renderTplAdmin(); });
+  $('tplAdd').addEventListener('click', ()=>{ const v=($('tplNew').value||'').trim(); if(!v) return; TPLS.push({type:tplAdminType, text:v}); $('tplNew').value=''; renderTplAdmin(); tplSave(); });
+  $('tplNew').addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); $('tplAdd').click(); } });
+  $('tplList').addEventListener('click', e=>{ const ed=e.target.closest('.tpl-ed'), del=e.target.closest('.tpl-del'); if(ed){ const i=+ed.dataset.i; const v=prompt('עריכת תבנית:', TPLS[i].text); if(v!=null){ const t=v.trim(); if(t){ TPLS[i].text=t; renderTplAdmin(); tplSave(); } } } else if(del){ const i=+del.dataset.i; if(confirm('למחוק תבנית זו?')){ TPLS.splice(i,1); renderTplAdmin(); tplSave(); } } });
   $('gearBtn').addEventListener('click', ()=>{ $('setPin').value=''; $('setPinMsg').textContent=''; $('setGate').style.display='flex'; setTimeout(()=>$('setPin').focus(),50); });
   $('aboutBtn').addEventListener('click', ()=>$('aboutModal').classList.add('open'));
   $('presBtn').addEventListener('click', openPresence);
@@ -1620,6 +1658,7 @@
   updateMeBar();
   showSoundBar();
   registerSW();
+  TPLS=tplCacheGet(); if(apiOn()) tplLoad();
   updatePresBtn(); presencePing(); setInterval(presencePing, 60000);
   document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible') presencePing(); });
   if(apiOn()){ load(); loadRoster(); loadNews(); } else renderEmptyConfig();
