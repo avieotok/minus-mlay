@@ -82,6 +82,14 @@
   .dcmp td:first-child{color:var(--muted);font-weight:700}
   .dphotos{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
   .dphotos img{width:92px;height:92px;object-fit:cover;border-radius:10px;border:1px solid var(--line2);display:block}
+  img.zoomable{cursor:zoom-in}
+  #imgLightbox{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:99999;padding:18px;cursor:zoom-out}
+  #imgLightbox.open{display:flex}
+  #imgLightbox img{max-width:100%;max-height:100%;border-radius:10px;box-shadow:0 12px 50px rgba(0,0,0,.7)}
+  #imgLightbox .lb-bar{position:fixed;bottom:22px;left:0;right:0;display:flex;gap:12px;justify-content:center}
+  #imgLightbox .lb-bar button{border:none;border-radius:12px;padding:12px 18px;font-size:15px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer}
+  #imgLightbox .lb-share{background:#25d366;color:#04210f}
+  #imgLightbox .lb-close{background:#3f3f46;color:#fff}
   @keyframes blinkpulse{0%,100%{opacity:1}50%{opacity:.18}}
   .pill.blink{animation:blinkpulse .55s ease-in-out infinite}
   .acts{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
@@ -114,6 +122,11 @@
   .field input:focus,.field select:focus{outline:none;border-color:var(--green)}
   .transfer{margin-top:10px;display:none;gap:9px;align-items:center}
   .transfer.open{display:flex}
+  .order{margin-top:10px;display:none;flex-direction:column;gap:9px;background:#06281b;border:1px solid #166534;border-radius:12px;padding:12px}
+  .order.open{display:flex}
+  .order .osel{background:var(--surface);border:1px solid var(--line2);color:var(--text);border-radius:10px;padding:10px;font-size:14px;font-family:'Heebo',sans-serif}
+  .order .omsg{background:var(--ink);border:1px solid var(--line2);color:var(--text);border-radius:10px;padding:10px;font-size:14px;font-family:'Heebo',sans-serif;min-height:96px;resize:vertical}
+  .order .ogo{background:#25d366;border:none;color:#04210f;border-radius:10px;padding:11px;font-weight:800;font-size:14.5px;font-family:'Rubik','Heebo',sans-serif;cursor:pointer}
   .cempty{color:var(--faint);font-size:13px;text-align:center;padding:6px}
   .cbadge{display:inline-block;background:var(--blue);color:#fff;border-radius:999px;font-size:11px;font-weight:800;padding:1px 7px;margin-inline-start:3px}
   .cbadge.gb{background:var(--green)}
@@ -500,6 +513,12 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
+  // ===== הגדלת תמונה במקום (lightbox) — לחיצה על תמונה מגדילה, לא פותחת לשונית =====
+  function openLightbox(src){ if(!src) return; var ov=document.getElementById('imgLightbox'); if(!ov){ ov=document.createElement('div'); ov.id='imgLightbox'; ov.innerHTML='<img alt=\"תמונה\"><div class=\"lb-bar\"><button type=\"button\" class=\"lb-share\">📲 שתף בוואטסאפ</button><button type=\"button\" class=\"lb-close\">✕ סגור</button></div>'; document.body.appendChild(ov); ov.addEventListener('click',function(e){ if(e.target===ov) ov.classList.remove('open'); }); ov.querySelector('.lb-close').addEventListener('click',function(e){ e.stopPropagation(); ov.classList.remove('open'); }); ov.querySelector('.lb-share').addEventListener('click',function(e){ e.stopPropagation(); shareLightbox(); }); } ov.querySelector('img').src=src; ov.classList.add('open'); }
+  function dataURLtoFile(durl,name){ var arr=durl.split(','),mm=(arr[0].match(/:(.*?);/)||[])[1]||'image/jpeg',bstr=atob(arr[1]),n=bstr.length,u8=new Uint8Array(n); while(n--) u8[n]=bstr.charCodeAt(n); return new File([u8],name,{type:mm}); }
+  async function shareLightbox(){ var ov=document.getElementById('imgLightbox'); if(!ov) return; var src=ov.querySelector('img').getAttribute('src'); if(!src) return; var file=null; try{ file=dataURLtoFile(src,'afcon-photo.jpg'); }catch(e){} if(file && navigator.canShare && navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file], title:'תמונה — שרשרת האספקה'}); }catch(e){} return; } try{ var a=document.createElement('a'); a.href=src; a.download='afcon-photo.jpg'; document.body.appendChild(a); a.click(); a.remove(); alert('שיתוף ישיר אינו נתמך במכשיר זה — התמונה הורדה, אפשר לצרף אותה ידנית בוואטסאפ.'); }catch(_){} }
+  document.addEventListener('click', function(e){ var im=(e.target&&e.target.closest)?e.target.closest('img.zoomable'):null; if(im){ e.preventDefault(); e.stopPropagation(); openLightbox(im.getAttribute('src')); } }, true);
+
   const APP_URL='https://avieotok.github.io/minus-mlay';
   function renderQRs(){
     if(typeof QRCode==='undefined') return;
@@ -574,14 +593,14 @@
   function photoBlock(a){
     if(!a.photo || !(Number(a.photo)>0)) return '';
     const id=String(a.id);
-    if(photoCache[id]) return '<div class="dphotos">'+photoCache[id].map(d=>'<a href="'+d+'" target="_blank" rel="noopener"><img src="'+d+'" loading="lazy" alt="תמונה"></a>').join('')+'</div>';
+    if(photoCache[id]) return '<div class="dphotos">'+photoCache[id].map(d=>'<img class="zoomable" src="'+d+'" loading="lazy" alt="תמונה">').join('')+'</div>';
     return '<div class="dphotos" data-pid="'+esc(id)+'"><span style="color:#a8a29e;font-size:12.5px">📷 טוען תמונות…</span></div>';
   }
   async function fetchPendingPhotos(){
     const els=document.querySelectorAll('#list .dphotos[data-pid]');
     for(const el of els){ const id=el.getAttribute('data-pid'); if(!id||photoCache[id]) continue;
       try{ const r=await apiGet('photos',{id:id}); if(r&&r.ok&&Array.isArray(r.photos)){ photoCache[id]=r.photos; } else { continue; } }catch(e){ continue; }
-      el.removeAttribute('data-pid'); el.innerHTML=(photoCache[id]||[]).map(d=>'<a href="'+d+'" target="_blank" rel="noopener"><img src="'+d+'" loading="lazy" alt="תמונה"></a>').join('');
+      el.removeAttribute('data-pid'); el.innerHTML=(photoCache[id]||[]).map(d=>'<img class="zoomable" src="'+d+'" loading="lazy" alt="תמונה">').join('');
     }
   }
   const me=()=> (localStorage.getItem(K.me)||'').trim();
@@ -672,6 +691,38 @@
   }
   function updateMeBar(){ const el=$('meBar'); if(!el) return; const n=me(); el.textContent = n ? ('👤 '+n+(isBoss()?' · מנהל':'')) : ''; updateKpiTabVis(); }
   function buyerOptions(){ return '<option value="">העבר לקניין…</option>'+BUYERS.map(b=>'<option value="'+esc(b)+'">'+esc(b)+'</option>').join(''); }
+  // ===== הזמנה מספק ב-WhatsApp =====
+  var SUPPLIERS_CACHE=null;
+  function loadSuppliers(cb){
+    if(SUPPLIERS_CACHE){ cb(SUPPLIERS_CACHE); return; }
+    apiGet('contacts').then(function(r){
+      var arr=(r&&r.ok&&r.contacts)?r.contacts:[];
+      SUPPLIERS_CACHE=arr.filter(function(c){ return String(c.kind||'supplier')!=='customer'; });
+      cb(SUPPLIERS_CACHE);
+    }).catch(function(){ cb([]); });
+  }
+  function waPhone(num){ var d=String(num||'').replace(/[^0-9]/g,''); if(!d) return ''; if(d.indexOf('972')===0) return d; if(d.charAt(0)==='0') return '972'+d.substring(1); if(d.length===9 && d.charAt(0)==='5') return '972'+d; return d; }
+  function orderMsg(a){
+    var L=['שלום 🙂','כאן '+(me()||'')+' מאפקון.','נא לספק את הפריט הבא:'];
+    L.push('• מק״ט '+(a.sku||'—')+(a.desc?(' — '+a.desc):''));
+    if(a.qty) L.push('• כמות: '+a.qty);
+    if(a.ticket) L.push('(מס׳ קריאה: '+a.ticket+')');
+    L.push('תודה רבה!');
+    return L.join('\n');
+  }
+  function openOrderPanel(card, id){
+    var panel=card.querySelector('.order'); if(!panel) return;
+    var open=panel.classList.toggle('open'); if(!open) return;
+    var a=ALERTS.find(function(x){return String(x.id)===String(id);})||{};
+    var msg=panel.querySelector('.omsg'); if(msg && !msg.value.trim()) msg.value=orderMsg(a);
+    var sel=panel.querySelector('.osel'); sel.innerHTML='<option value="">טוען ספקים…</option>';
+    loadSuppliers(function(sup){
+      var withPhone=sup.filter(function(c){ return waPhone(c.p1)||waPhone(c.p2); });
+      if(!withPhone.length){ sel.innerHTML='<option value="">אין ספקים עם טלפון בספר הטלפונים</option>'; return; }
+      withPhone.sort(function(x,y){ return String(x.supplier||'').localeCompare(String(y.supplier||''),'he'); });
+      sel.innerHTML='<option value="">בחר ספק…</option>'+withPhone.map(function(c){ var ph=waPhone(c.p1)||waPhone(c.p2); return '<option value="'+ph+'">'+esc(c.supplier||'ספק')+' · '+esc(c.p1||c.p2)+'</option>'; }).join('');
+    });
+  }
 
   function fmt(iso){ if(!iso) return ''; try{ return new Date(iso).toLocaleString('he-IL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }catch(e){ return ''; } }
   function fmtLog(s){ s=String(s==null?'':s); if(!s) return '';
@@ -715,7 +766,7 @@
     for(const el of els){ const pid=el.getAttribute('data-cphoto'); if(!pid) continue;
       if(!photoCache[pid]){ try{ const r=await apiGet('photos',{id:pid}); if(r&&r.ok&&Array.isArray(r.photos)){ photoCache[pid]=r.photos; } else { continue; } }catch(e){ continue; } }
       el.removeAttribute('data-cphoto');
-      el.innerHTML=(photoCache[pid]||[]).map(d=>'<a href="'+d+'" target="_blank" rel="noopener"><img src="'+d+'"></a>').join('');
+      el.innerHTML=(photoCache[pid]||[]).map(d=>'<img class="zoomable" src="'+d+'">').join('');
     }
   }
   async function sendGenMsg(card, id){
@@ -840,9 +891,10 @@
       k.classList.toggle('sel', f===fStatus);
     });
     const list=$('list'), items=filtered();
-    const openState={};
+    const openState={}; const orderDraft={};
     list.querySelectorAll('.card').forEach(c=>{ const cid=c.dataset.id; const o=[];
       if(c.querySelector('.editor.open'))o.push('editor'); if(c.querySelector('.transfer.open'))o.push('transfer'); if(c.querySelector('.genchat.open'))o.push('genchat');
+      const _op=c.querySelector('.order.open'); if(_op){ o.push('order'); orderDraft[cid]={ msg:(_op.querySelector('.omsg')||{}).value||'', ph:(_op.querySelector('.osel')||{}).value||'' }; }
       if(o.length)openState[cid]=o; });
     if(!items.length){ list.innerHTML='<div class="empty"><div class="big">📭</div>אין דיווחים שתואמים לסינון.</div>'; return; }
     const bar = '';
@@ -885,9 +937,11 @@
           +'<button class="btn done'+(a.status==='טופל'?' on':'')+'" data-act="טופל">✅ טופל</button>'
           +'<button class="btn reply" data-act="transfer">↪️ העבר</button>'
           +'<button class="btn reply" data-act="reply">📋</button>'
+          +'<button class="btn reply" data-act="order" style="border-color:#166534;color:#34d399">📲 הזמן</button>'
           +genBtn(a)
           +'</div>'
           +'<div class="transfer"><select class="tsel">'+buyerOptions()+'</select><button class="tgo">העבר</button></div>'
+          +'<div class="order"><select class="osel"></select><textarea class="omsg" placeholder="הודעת ההזמנה…"></textarea><button class="ogo">📲 פתח ב-WhatsApp</button></div>'
           +'<div class="editor"><div style="font-size:12.5px;color:#a8a29e;margin-bottom:5px;font-weight:700">📋 פעולות לטיפול בפנייה (חובה לסגירת הפנייה)</div><textarea placeholder="מה בוצע? לדוגמה: הוזמן מספק X · מספר הזמנה 123 · מגיע יום ג׳">'+esc(a.response||'')+'</textarea>'
           +'<button class="save">שמור פעולות ועדכן</button></div>'
           +genPanel(a))
@@ -895,7 +949,10 @@
         +'</div>';
     }).join('');
     if(devOpen){ list.querySelectorAll('.selbox').forEach(b=>{ b.checked=selDel.has(b.dataset.sel); }); updSelN(); }
-    Object.keys(openState).forEach(cid=>{ const c=list.querySelector('.card[data-id="'+cid+'"]'); if(c) openState[cid].forEach(cls=>{ const el=c.querySelector('.'+cls); if(el) el.classList.add('open'); }); });
+    Object.keys(openState).forEach(cid=>{ const c=list.querySelector('.card[data-id="'+cid+'"]'); if(c) openState[cid].forEach(cls=>{ const el=c.querySelector('.'+cls); if(el){ el.classList.add('open');
+      if(cls==='order'){ const d=orderDraft[cid]||{}; const mg=el.querySelector('.omsg'); if(mg) mg.value=d.msg||orderMsg(ALERTS.find(x=>String(x.id)===cid)||{});
+        const sl=el.querySelector('.osel'); loadSuppliers(function(sup){ var wp=sup.filter(function(x){return waPhone(x.p1)||waPhone(x.p2);}); wp.sort(function(x,y){return String(x.supplier||'').localeCompare(String(y.supplier||''),'he');}); sl.innerHTML='<option value="">בחר ספק…</option>'+wp.map(function(x){var ph=waPhone(x.p1)||waPhone(x.p2);return '<option value="'+ph+'"'+(ph===d.ph?' selected':'')+'>'+esc(x.supplier||'ספק')+' · '+esc(x.p1||x.p2)+'</option>';}).join(''); }); }
+    } }); });
     fetchPendingPhotos();
     fetchChatPhotos();
     updateTypeChipsBlink();
@@ -980,7 +1037,7 @@
     const els=document.querySelectorAll('.ni-img[data-cphoto]');
     for(const el of els){ const pid=el.getAttribute('data-cphoto'); if(!pid) continue;
       if(!photoCache[pid]){ try{ const r=await apiGet('photos',{id:pid}); if(r&&r.ok&&Array.isArray(r.photos)){ photoCache[pid]=r.photos; } else continue; }catch(e){ continue; } }
-      el.removeAttribute('data-cphoto'); el.innerHTML=(photoCache[pid]||[]).map(d=>'<a href="'+d+'" target="_blank" rel="noopener"><img src="'+d+'"></a>').join('');
+      el.removeAttribute('data-cphoto'); el.innerHTML=(photoCache[pid]||[]).map(d=>'<img class="zoomable" src="'+d+'">').join('');
     }
   }
   function renderNews(){
@@ -1129,6 +1186,7 @@
       if(a==='reply'){ card.querySelector('.editor').classList.toggle('open'); return; }
       if(a==='gchat'){ const panel=card.querySelector('.genchat'); panel.classList.toggle('open'); if(panel.classList.contains('open')){ markChatSeen(id); render(); } return; }
       if(a==='transfer'){ card.querySelector('.transfer').classList.toggle('open'); return; }
+      if(a==='order'){ openOrderPanel(card, id); return; }
       if(a==='reopen'){ reopenAlert(id); return; }
       if(a==='בטיפול'){ if(needMe()) return;
         const al=ALERTS.find(x=>String(x.id)===String(id));
@@ -1142,6 +1200,14 @@
     if(e.target.closest('.gsend')){ sendGenMsg(card, id); return; }
     if(e.target.closest('.gphoto')){ const f=card.querySelector('.gfile'); if(f) f.click(); return; }
     if(e.target.closest('.gpx')){ delete pendingChatImg[id]; const pv=card.querySelector('.gpending'); if(pv) pv.innerHTML=''; return; }
+    if(e.target.closest('.ogo')){
+      const panel=card.querySelector('.order'); if(!panel) return;
+      const ph=panel.querySelector('.osel').value;
+      const msg=panel.querySelector('.omsg').value;
+      if(!ph){ toast('בחר ספק מהרשימה'); return; }
+      window.open('https://wa.me/'+ph+'?text='+encodeURIComponent(msg), '_blank');
+      return;
+    }
     if(e.target.closest('.tgo')){
       const to=card.querySelector('.tsel').value;
       if(!to){ toast('בחר קניין להעברה'); return; }
