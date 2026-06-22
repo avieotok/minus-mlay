@@ -189,7 +189,8 @@
       radial-gradient(1100px 560px at 50% -220px, rgba(217,181,107,.055), transparent 60%),
       radial-gradient(820px 460px at 100% 0%, rgba(226,35,26,.05), transparent 55%),
       #0a0b0e; background-attachment:fixed; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
-  .header{ border-bottom:1px solid transparent; box-shadow:0 1px 0 rgba(217,181,107,.20), 0 8px 22px -18px rgba(0,0,0,.8); }
+  .header{ position:sticky; top:0; z-index:20; border-bottom:1px solid transparent; background:linear-gradient(180deg, rgba(16,18,23,.94), rgba(10,11,14,.82)); backdrop-filter:blur(14px) saturate(120%); -webkit-backdrop-filter:blur(14px) saturate(120%); box-shadow:0 1px 0 rgba(217,181,107,.20), 0 10px 24px -18px rgba(0,0,0,.85); }
+  .controls{ position:sticky; top:var(--hH,70px); z-index:18; background:#0a0b0e; padding-bottom:6px; box-shadow:0 14px 22px -20px rgba(0,0,0,.95); }
   .title{ letter-spacing:-.02em; }
   .tabs{ background:linear-gradient(180deg,#1c1f26,#15171c); border-color:rgba(255,255,255,.07); box-shadow:inset 0 1px 0 rgba(255,255,255,.04); }
   .tab.active{ background:linear-gradient(180deg,#f8f5ef,#e6e2d5); color:#171309; box-shadow:0 4px 14px -6px rgba(217,181,107,.55); }
@@ -227,6 +228,7 @@
   </div>
 
   <main>
+    <div class="controls" id="controls">
     <div class="panel" style="margin-bottom:14px">
       <div class="panel-head" style="cursor:default"><span>🔗 חיבור למערכת &nbsp;·&nbsp; <span id="apiState" class="badge-count">לא מחובר</span></span></div>
     </div>
@@ -235,6 +237,7 @@
       <button class="tab" id="tabInbox">📥 הדיווחים שלי<span id="inboxBadge" style="display:none;background:#e2231a;color:#fff;border-radius:999px;min-width:18px;height:18px;line-height:18px;text-align:center;font-size:11px;font-weight:800;margin-inline-start:6px;padding:0 5px">●</span></button>
       <button class="tab" id="tabNews">📢 ידיעון<span id="newsBadge" style="display:none;background:#fbbf24;color:#1c1917;border-radius:999px;min-width:9px;height:9px;margin-inline-start:6px;vertical-align:middle;padding:0 4px;font-size:0">●</span></button>
       <button class="tab tab-about" id="tabAbout">ℹ️ אודות</button>
+    </div>
     </div>
     <div id="soundBar" onclick="">🔔 הקש להפעלת צלילי התראה ‹ כדי לשמוע כשנכנסת הודעה</div>
     <div id="opsWrap">
@@ -1367,6 +1370,11 @@
   function presencePingWH(){ try{ if(!apiOn()) return; var nm=myName(); if(!nm) return; apiGet('presence',{me:nm, app:'warehouse'}); }catch(e){} }
   presencePingWH(); setInterval(presencePingWH, 60000);
   document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible') presencePingWH(); });
+  // ===== קיבוע אזור הבקרה (כותרת + טאבים) =====
+  function syncSticky(){ var t=document.querySelector('.header'); if(t) document.documentElement.style.setProperty('--hH', t.offsetHeight+'px'); }
+  window.addEventListener('resize', syncSticky);
+  try{ if(window.ResizeObserver){ var hdr=document.querySelector('.header'); if(hdr) new ResizeObserver(syncSticky).observe(hdr); } }catch(e){}
+  syncSticky(); setTimeout(syncSticky, 800);
   $('gateSearch').addEventListener('input', ()=>{ gateSelected=''; renderGateList(); });
   $('gateResults').addEventListener('click', e=>{ const b=e.target.closest('.gate-row'); if(!b) return; gateSelected=b.dataset.name; $('gateMsg').textContent=''; renderGateList(); });
   $('gateOk').addEventListener('click',()=>{ let v=(gateSelected||'').trim();

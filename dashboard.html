@@ -53,7 +53,7 @@
   .k-done .num{color:var(--green2)} .k-done .strip{background:var(--green)}
 
   /* filters */
-  .filters{display:flex;flex-direction:column;gap:12px;margin-bottom:14px}
+  .filters{display:flex;flex-direction:column;gap:9px;margin-bottom:14px}
   .chips{display:flex;gap:7px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
   .chip{flex-shrink:0;background:var(--surface);border:1px solid var(--line2);color:var(--muted);border-radius:20px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;white-space:nowrap}
   .chip.on{background:var(--text);color:var(--ink);border-color:var(--text)}
@@ -257,9 +257,14 @@
   .kpi:hover{ border-color:var(--line2); box-shadow:0 13px 30px -15px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.07); }
   .kpi.sel{ border-color:var(--gold); box-shadow:0 0 0 1px rgba(217,181,107,.45), 0 11px 28px -15px rgba(0,0,0,.85); }
   .kpi .num{ letter-spacing:-.02em; }
-  .chips{ scrollbar-width:none; justify-content:center; flex-wrap:wrap; gap:11px; overflow:visible; }
+  .chips{ scrollbar-width:none; justify-content:center; flex-wrap:nowrap; gap:7px; overflow-x:auto; }
   .chips::-webkit-scrollbar{ height:0; width:0; display:none; }
-  .chip{ background:linear-gradient(180deg, var(--surface2), var(--surface)); border:1px solid rgba(255,255,255,.09); color:var(--muted); padding:10px 19px; font-size:14.5px; font-weight:700; border-radius:22px; box-shadow:0 2px 8px -4px rgba(0,0,0,.5); transition:transform .12s, border-color .15s, color .15s, background .2s, box-shadow .2s; }
+  .histwrap{ display:flex; justify-content:center; }
+  .histchip{ border-radius:999px; padding:8px 18px; display:inline-flex; align-items:center; gap:6px; background:linear-gradient(180deg, var(--surface2), var(--surface)); border:1px solid rgba(255,255,255,.12); color:var(--muted); font-size:13px; font-weight:700; cursor:pointer; font-family:'Heebo',sans-serif; white-space:nowrap; box-shadow:0 2px 8px -4px rgba(0,0,0,.5); transition:transform .12s, border-color .15s, color .15s, background .2s, box-shadow .2s; }
+  .histchip:hover{ border-color:rgba(217,181,107,.45); color:var(--text); }
+  .histchip:active{ transform:scale(.97); }
+  .histchip.on{ background:linear-gradient(180deg,#f8f5ef,#e6e2d5); color:#171309; border-color:var(--gold); font-weight:800; box-shadow:0 6px 18px -7px rgba(217,181,107,.6), inset 0 1px 0 rgba(255,255,255,.6); }
+  .chip{ background:linear-gradient(180deg, var(--surface2), var(--surface)); border:1px solid rgba(255,255,255,.09); color:var(--muted); padding:8px 14px; font-size:13px; font-weight:700; border-radius:20px; box-shadow:0 2px 8px -4px rgba(0,0,0,.5); transition:transform .12s, border-color .15s, color .15s, background .2s, box-shadow .2s; }
   .chip:not(.on):hover{ border-color:rgba(217,181,107,.45); color:var(--text); }
   .chip:not(.on):active{ transform:scale(.96); }
   .chip.on{ background:linear-gradient(180deg,#f8f5ef,#e6e2d5); color:#171309; border:1px solid var(--gold); font-weight:800; box-shadow:0 6px 18px -7px rgba(217,181,107,.6), inset 0 1px 0 rgba(255,255,255,.6); }
@@ -279,6 +284,7 @@
   .modal{ background:rgba(6,7,9,.66); backdrop-filter:blur(7px); -webkit-backdrop-filter:blur(7px); }
   .sheet{ background:linear-gradient(180deg, var(--surface2), var(--surface)); border-top:1px solid rgba(217,181,107,.32); box-shadow:0 -22px 64px -22px rgba(0,0,0,.92); border-radius:24px 24px 0 0; }
   .sheet h3{ letter-spacing:-.01em; }
+  .controls{ position:sticky; top:var(--hH,72px); z-index:18; background:#0a0b0e; padding-bottom:8px; box-shadow:0 14px 22px -20px rgba(0,0,0,.95); }
 </style>
 </head>
 <body>
@@ -320,6 +326,7 @@
   </div>
 
   <main>
+    <div class="controls" id="controls">
     <div id="soundBar">🔔 הקש להפעלת התראות לנייד ‹ כדי לקבל פופ-אפ + צליל על כל דיווח חדש</div>
     <div class="vtabs">
       <button class="vtab on" id="vtBoard">📋 פניות</button>
@@ -344,7 +351,6 @@
         <button class="chip on" data-s="all">פעילות</button>
         <button class="chip" data-s="ממתין">ממתין</button>
         <button class="chip" data-s="בטיפול">בטיפול</button>
-        <button class="chip" data-s="history">🗄️ היסטוריה (טופלו)</button>
       </div>
       <div class="chips" id="urgChips">
         <button class="chip on" data-u="all">כל הדחיפויות</button>
@@ -358,7 +364,11 @@
         <button class="chip" data-t="פריט פגום">🔴 פגום</button>
         <button class="chip" data-t="אי-התאמה">🔵 אי-התאמה</button>
       </div>
+      <div class="histwrap">
+        <button class="histchip" id="histBtn" data-s="history">🗄️ היסטוריה (טופלו)</button>
+      </div>
       <input class="search" id="search" placeholder="חיפוש מק״ט / תיאור / מדווח…">
+    </div>
     </div>
 
     <div class="list" id="list"></div>
@@ -675,6 +685,8 @@
   }
   // ===== Service Worker + התראות מערכת עם פרטי הדיווח =====
   var SWREG=null;
+  function syncSticky(){ var t=document.querySelector('.top'); if(t) document.documentElement.style.setProperty('--hH', t.offsetHeight+'px'); }
+  window.addEventListener('resize', syncSticky);
   function registerSW(){ if(!('serviceWorker' in navigator)) return; navigator.serviceWorker.register('sw.js').then(function(reg){ SWREG=reg; }).catch(function(){}); }
   // ===== נוכחות: פעימת לב + מסך מנהל =====
   const APP_NAME='dashboard';
@@ -973,6 +985,7 @@
 
   function render(){
     updatePresBtn();
+    syncSticky();
     kpis();
     const boss=isBoss();
     const bb=$('bossBar');
@@ -1327,8 +1340,10 @@
   $('scopeChips').addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b) return;
     if(b.dataset.m==='mine' && !me()){ toast('בחר את שמך בהגדרות ⚙️'); openModal(); return; }
     fMine=(b.dataset.m==='mine'); document.querySelectorAll('#scopeChips .chip').forEach(x=>x.classList.toggle('on',x===b)); render(); });
+  function markStatus(s){ fStatus=s; document.querySelectorAll('#statusChips .chip').forEach(x=>x.classList.toggle('on', x.dataset.s===s)); var hb=$('histBtn'); if(hb) hb.classList.toggle('on', s==='history'); }
   $('statusChips').addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b) return;
-    fStatus=b.dataset.s; document.querySelectorAll('#statusChips .chip').forEach(x=>x.classList.toggle('on',x===b)); render(); });
+    markStatus(b.dataset.s); render(); });
+  $('histBtn').addEventListener('click',()=>{ markStatus('history'); render(); });
   $('urgChips').addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b) return;
     fUrg=b.dataset.u; document.querySelectorAll('#urgChips .chip').forEach(x=>x.classList.toggle('on',x===b)); render(); });
   $('typeChips').addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b) return;
@@ -1337,7 +1352,7 @@
 
   // KPI cards as quick filters
   $('kpis').addEventListener('click',e=>{ const k=e.target.closest('.kpi'); if(!k) return; const f=k.dataset.f;
-    const setStatusChip=s=>{ fStatus=s; document.querySelectorAll('#statusChips .chip').forEach(x=>x.classList.toggle('on',x.dataset.s===s)); };
+    const setStatusChip=s=>markStatus(s);
     const setUrgChip=u=>{ fUrg=u; document.querySelectorAll('#urgChips .chip').forEach(x=>x.classList.toggle('on',x.dataset.u===u)); };
     if(f==='ממתין'){ setStatusChip('ממתין'); setUrgChip('all'); }
     else if(f==='בטיפול'){ setStatusChip('בטיפול'); setUrgChip('all'); }
