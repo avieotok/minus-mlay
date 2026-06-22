@@ -654,25 +654,32 @@
     }
     $('presModal').classList.add('open'); $('presBody').innerHTML='<div style="color:var(--muted)">טוען…</div>';
     try{
+      if(!BUYERS.length && !REPORTERS.length){ try{ await loadRoster(); }catch(e){} }
       const r=await apiGet('presenceList'); const rows=(r&&r.presence)||[]; const now=Date.now();
-      const online=rows.filter(x=>{ const t=Date.parse(x.lastSeen); return t && (now-t)<=180000; })
-        .sort((a,b)=>(Date.parse(b.lastSeen)||0)-(Date.parse(a.lastSeen)||0));
-      const byName={}; rows.forEach(x=>{ (byName[x.name]=byName[x.name]||[]).push(x); });
-      const names=Object.keys(byName).sort((a,b)=>{
-        const la=Math.max.apply(null,byName[a].map(z=>Date.parse(z.lastSeen)||0));
-        const lb=Math.max.apply(null,byName[b].map(z=>Date.parse(z.lastSeen)||0));
-        return lb-la; });
-      let html='<div style="font-weight:800;margin:2px 0 8px;color:var(--green2)">🟢 מחוברים עכשׁיו ('+online.length+')</div>';
-      if(online.length){ html+=online.map(x=>'<div style="display:flex;justify-content:space-between;align-items:center;background:#06281b;border:1px solid #166534;border-radius:10px;padding:9px 12px;margin-bottom:6px"><span style="font-weight:700">🟢 '+esc(x.name)+'</span><span style="color:var(--muted);font-size:13px">'+presApp(x.app)+' · '+presAgo(x.lastSeen,now)+'</span></div>').join(''); }
-      else html+='<div style="color:var(--faint);font-size:13px;margin-bottom:6px">אין מחוברים כרגע</div>';
-      html+='<div style="font-weight:800;margin:16px 0 8px;color:var(--blue2)">🗓️ היסטוריה — 7 ימים אחרונים</div>';
-      if(names.length){ html+=names.map(nm=>{
-        const days=byName[nm].slice().sort((a,b)=>b.day.localeCompare(a.day));
-        const last=days[0];
-        const lines=days.map(d=>{ const dd=d.day.slice(8,10)+'/'+d.day.slice(5,7); return '<div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);padding:2px 0"><span>'+dd+' · '+presApp(d.app)+'</span><span>'+presHHMM(d.firstSeen)+'–'+presHHMM(d.lastSeen)+' · '+d.hits+' פעולות</span></div>'; }).join('');
-        return '<div style="background:var(--ink);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px"><div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-weight:800">'+esc(nm)+'</span><span style="font-size:12px;color:var(--faint)">נראה '+presAgo(last.lastSeen,now)+'</span></div>'+lines+'</div>';
-      }).join(''); }
-      else html+='<div style="color:var(--faint);font-size:13px">אין נתונים עדיין</div>';
+      const latest={}; rows.forEach(x=>{ const t=Date.parse(x.lastSeen)||0; const cur=latest[x.name]; if(!cur||t>cur.t) latest[x.name]={t:t, iso:x.lastSeen, app:x.app}; });
+      const isOnline=n=>{ const L=latest[n]; return !!(L && (now-L.t)<=180000); };
+      function userRow(name){
+        const L=latest[name], onl=isOnline(name);
+        const right = onl
+          ? '<span style="color:#34d399;font-weight:800;font-size:13.5px">🟢 מחובר עכשׁיו · '+presApp(L.app)+'</span>'
+          : (L ? '<span style="color:var(--muted);font-size:13px">נראה '+presAgo(L.iso,now)+' · '+presApp(L.app)+'</span>'
+               : '<span style="color:var(--faint);font-size:13px">לא נכנס עדיין</span>');
+        const box = onl ? 'background:#06281b;border:1px solid #166534' : 'background:var(--ink);border:1px solid var(--line)';
+        return '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;'+box+';border-radius:10px;padding:10px 12px;margin-bottom:6px"><span style="font-weight:700">'+(onl?'🟢 ':'⚪ ')+esc(name)+'</span>'+right+'</div>';
+      }
+      function section(title, arr){
+        const list=(arr||[]).slice().sort((a,b)=>{ const oa=isOnline(a)?1:0, ob=isOnline(b)?1:0; if(oa!==ob) return ob-oa; return ((latest[b]?latest[b].t:0)-(latest[a]?latest[a].t:0)); });
+        let h='<div style="font-weight:800;margin:8px 0 8px;color:var(--blue2)">'+title+' ('+list.length+')</div>';
+        h+= list.length ? list.map(userRow).join('') : '<div style="color:var(--faint);font-size:13px">אין</div>';
+        return h;
+      }
+      const roster=BUYERS.concat(REPORTERS);
+      const onlineCount=roster.filter(isOnline).length + Object.keys(latest).filter(n=>roster.indexOf(n)<0 && isOnline(n)).length;
+      let html='<div style="font-weight:900;font-size:15px;margin:2px 0 6px;color:var(--green2)">🟢 מחוברים עכשׁיו: '+onlineCount+'</div>';
+      html+=section('🛒 קניינים', BUYERS);
+      html+=section('🏭 מחסנאים', REPORTERS);
+      const extras=Object.keys(latest).filter(n=>roster.indexOf(n)<0);
+      if(extras.length) html+=section('👤 משתמשים נוספים', extras);
       $('presBody').innerHTML=html;
     }catch(e){ $('presBody').innerHTML='<div style="color:#f87171">שגיאה בטעינה — ייתכן שצריך לפרוס מחדש את Code.gs.</div>'; }
   }
