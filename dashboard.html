@@ -986,11 +986,9 @@
           +'<button class="btn done'+(a.status==='טופל'?' on':'')+'" data-act="טופל">✅ טופל</button>'
           +'<button class="btn reply" data-act="transfer">↪️ העבר</button>'
           +'<button class="btn reply" data-act="reply">📋</button>'
-          +'<button class="btn reply" data-act="order" style="border-color:#166534;color:#34d399">📲 הזמן</button>'
           +genBtn(a)
           +'</div>'
           +'<div class="transfer"><select class="tsel">'+buyerOptions()+'</select><button class="tgo">העבר</button></div>'
-          +'<div class="order"><select class="osel"></select><textarea class="omsg" placeholder="הודעת ההזמנה…"></textarea><button class="ogo">📲 פתח ב-WhatsApp</button></div>'
           +'<div class="editor"><div style="font-size:12.5px;color:#a8a29e;margin-bottom:5px;font-weight:700">📋 פעולות לטיפול בפנייה (חובה לסגירת הפנייה)</div><textarea placeholder="מה בוצע? לדוגמה: הוזמן מספק X · מספר הזמנה 123 · מגיע יום ג׳">'+esc(a.response||'')+'</textarea>'
           +'<button class="save">שמור פעולות ועדכן</button></div>'
           +genPanel(a))
