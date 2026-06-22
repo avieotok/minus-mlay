@@ -328,6 +328,7 @@
     <div class="foot">
       <button id="exportBtn">⬇️ ייצוא לאקסל</button>
       <button id="exportWaBtn">📲 שלח בוואטסאפ</button>
+      <button id="fullReportBtn" style="display:none">📊 דוח מלא (הכל)</button>
       <button id="sheetBtn">📊 פתח גיליון</button>
     </div>
 
@@ -642,7 +643,7 @@
   const PRES_OWNER='אבידן קוטאי', PRES_PIN='30172'; let presUnlocked=false;
   function presCanView(){ return isBoss()||me()===MGR||me()===PRES_OWNER; }
   function presencePing(){ try{ if(!apiOn()) return; var nm=me(); if(!nm) return; apiGet('presence',{me:nm, app:APP_NAME}); }catch(e){} }
-  function updatePresBtn(){ var b=$('presBtn'); if(b) b.style.display=presCanView()?'':'none'; }
+  function updatePresBtn(){ var b=$('presBtn'); if(b) b.style.display=presCanView()?'':'none'; var f=$('fullReportBtn'); if(f) f.style.display=presCanView()?'':'none'; }
   function presAgo(iso, now){ var t=Date.parse(iso); if(!t) return ''; var m=Math.round((now-t)/60000); if(m<1) return 'עכשׁיו'; if(m<60) return 'לפני '+m+' דק׳'; var hh=Math.round(m/60); if(hh<24) return 'לפני '+hh+' ש׳'; return 'לפני '+Math.round(hh/24)+' ימים'; }
   function presHHMM(iso){ var d=new Date(iso); if(isNaN(d.getTime())) return ''; return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }
   function presApp(a){ return a==='warehouse'?'🏭 מחסן':(a==='dashboard'?'🛒 לוח':a); }
@@ -1313,10 +1314,12 @@
   function startAuto(){ if(timer) clearInterval(timer); timer=setInterval(()=>{ if(auto&&document.visibilityState==='visible'&&!isTyping()) load(); }, 30000); }
 
   // export — אקסל אחד, לשונית לכל תווית (חוסר מלאי / פגום / אי-התאמה)
-  function buildExportWb(){
+  function buildExportWb(useAll){
     if(typeof XLSX==='undefined'){ toast('מנוע האקסל נטען — נסה שוב'); return null; }
-    const savedType=fType; fType='all'; const data=filtered(); fType=savedType; // כל הסוגים, לפי שאר הסינונים
-    if(!data.length){ toast('אין נתונים לייצוא בתצוגה הנוכחית'); return null; }
+    let data;
+    if(useAll){ data=ALERTS.slice().sort((a,b)=>String(b.created||'').localeCompare(String(a.created||''))); } // הכל — כל הסטטוסים, מהקמה ועד גמר טיפול
+    else { const savedType=fType; fType='all'; data=filtered(); fType=savedType; } // כל הסוגים, לפי שאר הסינונים
+    if(!data.length){ toast('אין נתונים לייצוא'); return null; }
     const inHist = (fStatus==='history' || fStatus==='טופל');
     const HEAD=['מספר קריאה','סוג','מק״ט','תיאור שהוזמן','מספר הזמנה','כמות שהוזמנה','כמות שהתקבלה','תיאור שהתקבל','דחיפות','הערת מדווח','דווח ע״י','סטטוס','קניין אחראי','תיעוד טיפול (העברות / החזרות)','טופל ע״י','תאריך טיפול','פעולות לטיפול','צ׳אט הפנייה','תמונות','נוצר','עודכן'];
     const COLS=[{wch:12},{wch:11},{wch:22},{wch:14},{wch:13},{wch:13},{wch:22},{wch:12},{wch:24},{wch:14},{wch:9},{wch:14},{wch:30},{wch:14},{wch:15},{wch:28},{wch:40},{wch:16},{wch:16}];
@@ -1328,11 +1331,13 @@
       const ws=XLSX.utils.aoa_to_sheet([HEAD].concat(arr.map(rowFor))); ws['!cols']=COLS;
       XLSX.utils.book_append_sheet(wb,ws,tb.n);
     });
-    return { wb:wb, filename:'afcon-'+(inHist?'היסטוריה':'דיווחים')+'-'+new Date().toISOString().slice(0,10)+'.xlsx' };
+    const tag = useAll ? 'דוח-מלא' : (inHist?'היסטוריה':'דיווחים');
+    return { wb:wb, filename:'afcon-'+tag+'-'+new Date().toISOString().slice(0,10)+'.xlsx' };
   }
-  $('exportBtn').addEventListener('click',()=>{ const r=buildExportWb(); if(r) XLSX.writeFile(r.wb, r.filename); });
+  $('exportBtn').addEventListener('click',()=>{ const r=buildExportWb(false); if(r) XLSX.writeFile(r.wb, r.filename); });
+  $('fullReportBtn').addEventListener('click',()=>{ const r=buildExportWb(true); if(r){ XLSX.writeFile(r.wb, r.filename); toast('דוח מלא הופק ✓'); } });
   $('exportWaBtn').addEventListener('click', async ()=>{
-    const r=buildExportWb(); if(!r) return;
+    const r=buildExportWb(false); if(!r) return;
     try{
       const buf=XLSX.write(r.wb,{type:'array',bookType:'xlsx'});
       const file=new File([buf], r.filename, {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
