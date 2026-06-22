@@ -1689,15 +1689,18 @@
   #tkModal .tk-ph-search{flex:1;background:#0c0a09;border:1px solid #3f3f46;border-radius:11px;padding:11px 13px;color:#fafaf9;font-size:14.5px;font-family:'Heebo',sans-serif}
   #tkModal .tk-ph-search:focus{outline:none;border-color:#e2231a}
   #tkModal .tk-ph-new{background:#06281b;border:1px solid #166534;color:#34d399;border-radius:11px;padding:0 16px;font-size:14px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;white-space:nowrap}
-  #tkModal .tk-ph-form{display:none;background:#1c1917;border:1px solid #3f3f46;border-radius:14px;padding:14px;margin-bottom:14px;flex-direction:column;gap:9px}
-  #tkModal .tk-ph-form.open{display:flex}
-  #tkModal .tk-ph-form input{background:#0c0a09;border:1px solid #3f3f46;border-radius:10px;padding:11px 12px;color:#fafaf9;font-size:14.5px;font-family:'Heebo',sans-serif}
+  #tkModal .tk-ph-form{display:none}
+  #tkModal .tk-ph-form.open{display:flex;position:fixed;inset:0;z-index:330;background:#0c0a09;flex-direction:column;gap:12px;padding:20px 18px calc(22px + env(safe-area-inset-bottom));overflow-y:auto}
+  #tkModal .tk-ph-ftop{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:2px}
+  #tkModal #tkPhTitle{font-family:'Rubik','Heebo',sans-serif;font-weight:800;font-size:20px;color:#fafaf9}
+  #tkModal .tk-ph-x{background:#211e1c;border:1px solid #3f3f46;color:#fafaf9;width:42px;height:42px;border-radius:12px;font-size:17px;cursor:pointer;flex:0 0 auto}
+  #tkModal .tk-ph-form input{background:#1c1917;border:1px solid #3f3f46;border-radius:12px;padding:15px 14px;color:#fafaf9;font-size:16.5px;font-family:'Heebo',sans-serif;width:100%}
   #tkModal .tk-ph-form input:focus{outline:none;border-color:#e2231a}
-  #tkModal .tk-ph-2{display:flex;gap:8px}
+  #tkModal .tk-ph-2{display:flex;gap:10px}
   #tkModal .tk-ph-2 input{flex:1;min-width:0}
-  #tkModal .tk-ph-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:3px}
-  #tkModal .tk-ph-save{background:#22c55e;border:none;color:#052e16;border-radius:10px;padding:10px 20px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;font-size:14.5px}
-  #tkModal .tk-ph-cancel{background:none;border:1px solid #3f3f46;color:#a8a29e;border-radius:10px;padding:10px 16px;font-weight:700;cursor:pointer;font-size:14px}
+  #tkModal .tk-ph-actions{display:flex;gap:10px;margin-top:auto;padding-top:8px}
+  #tkModal .tk-ph-save{flex:1;background:#22c55e;border:none;color:#052e16;border-radius:13px;padding:16px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;font-size:16.5px}
+  #tkModal .tk-ph-cancel{flex:1;background:#211e1c;border:1px solid #3f3f46;color:#d6d3d1;border-radius:13px;padding:16px;font-weight:800;cursor:pointer;font-size:16px;font-family:'Heebo',sans-serif}
   #tkModal .tk-card{background:#1c1917;border:1px solid #292524;border-radius:14px;padding:14px;margin-bottom:11px}
   #tkModal .tk-card-h{display:flex;align-items:center;gap:8px;margin-bottom:8px}
   #tkModal .tk-card-name{flex:1;font-family:'Rubik','Heebo',sans-serif;font-weight:800;font-size:16.5px;color:#fafaf9}
@@ -1744,6 +1747,7 @@
         </div>
         <div class="tk-az" id="tkAz"></div>
         <div class="tk-ph-form" id="tkPhForm">
+          <div class="tk-ph-ftop"><span id="tkPhTitle">עריכה</span><button class="tk-ph-x" id="tkPhX" title="סגור">✕</button></div>
           <input id="tkPhSupplier" placeholder="שם הספק">
           <div class="tk-ph-2"><input id="tkPhC1" placeholder="איש קשר 1"><input id="tkPhC2" placeholder="איש קשר 2"></div>
           <div class="tk-ph-2"><input id="tkPhP1" type="tel" inputmode="tel" placeholder="טלפון 1"><input id="tkPhP2" type="tel" inputmode="tel" placeholder="טלפון 2"></div>
@@ -2030,11 +2034,15 @@
   function openPhForm(c, isShared){
     phEditId = (c && !isShared) ? c.id : null;
     phEditShared = (c && isShared) ? c.id : null;
+    var W=kindWord();
+    var t=$('tkPhTitle'); if(t) t.textContent = c ? ('עריכת '+(c.supplier||W)) : (W+' חדש');
+    $('tkPhSupplier').placeholder='שם ה'+W;
     $('tkPhSupplier').value=c?(c.supplier||''):''; $('tkPhC1').value=c?(c.c1||''):''; $('tkPhC2').value=c?(c.c2||''):'';
     $('tkPhP1').value=c?(c.p1||''):''; $('tkPhP2').value=c?(c.p2||''):''; $('tkPhAddr').value=c?(c.addr||''):'';
     $('tkPhForm').classList.add('open'); $('tkPhSupplier').focus();
   }
   function closePhForm(){ $('tkPhForm').classList.remove('open'); phEditId=null; phEditShared=null; }
+  $('tkPhX').addEventListener('click', closePhForm);
   $('tkPhNew').addEventListener('click', function(){ openPhForm(null); });
   $('tkPhKind').addEventListener('click', function(e){ var b=e.target.closest('.tk-kind'); if(!b) return; var k=b.getAttribute('data-k'); if(k===phKind) return; phKind=k; phLetter=''; closePhForm(); renderPhones(); });
   $('tkAz').addEventListener('click', function(e){ var b=e.target.closest('.tk-azl'); if(!b) return; var L=b.getAttribute('data-l'); phLetter=(L===phLetter?'':L); renderPhones(); });
