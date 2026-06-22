@@ -1611,9 +1611,11 @@
   #tkModal .tk-kind{flex:1;background:#211e1c;border:1px solid #3f3f46;color:#a8a29e;border-radius:11px;padding:10px 0;font-size:14.5px;font-weight:800;cursor:pointer;font-family:'Rubik','Heebo',sans-serif}
   #tkModal .tk-kind.on{background:#2563eb;border-color:#3b82f6;color:#fff}
   #tkModal .tk-ph-top{display:flex;gap:8px;margin-bottom:13px}
-  #tkModal .tk-az{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:13px}
-  #tkModal .tk-azl{flex:0 0 auto;min-width:24px;padding:6px 8px;background:#1c1917;border:1px solid #292524;color:#57534e;border-radius:7px;font-size:13px;font-weight:800;cursor:pointer;text-align:center;font-family:'Rubik','Heebo',sans-serif}
-  #tkModal .tk-azl.has{color:#e7e5e4;border-color:#3f3f46}
+  #tkModal .tk-az{display:flex;flex-direction:column;gap:9px;margin-bottom:13px}
+  #tkModal .tk-az-row{display:flex;flex-wrap:wrap;gap:6px}
+  #tkModal .tk-az-lat{padding-top:11px;border-top:1px dashed #3f3f46}
+  #tkModal .tk-azl{flex:0 0 auto;min-width:33px;padding:10px 8px;background:#1c1917;border:1px solid #292524;color:#57534e;border-radius:9px;font-size:16px;font-weight:800;cursor:pointer;text-align:center;font-family:'Rubik','Heebo',sans-serif}
+  #tkModal .tk-azl.has{color:#e7e5e4;border-color:#44403c}
   #tkModal .tk-azl.on{background:#2563eb;border-color:#3b82f6;color:#fff}
   #tkModal .tk-azdiv{background:#0c0a09;color:#60a5fa;font-weight:900;font-size:15px;border-radius:8px;padding:5px 12px;margin:12px 2px 8px;border-right:3px solid #2563eb}
   #tkModal .tk-ph-search{flex:1;background:#0c0a09;border:1px solid #3f3f46;border-radius:11px;padding:11px 13px;color:#fafaf9;font-size:14.5px;font-family:'Heebo',sans-serif}
@@ -1932,11 +1934,12 @@
   function firstLetter(name){ var s=String(name||'').trim(); if(!s) return '#'; var ch=s.charAt(0); if(FINAL_MAP[ch]) ch=FINAL_MAP[ch]; if(HEB_LETTERS.indexOf(ch)>=0) return ch; if(/[A-Za-z]/.test(ch)) return ch.toUpperCase(); return '#'; }
   function renderAzStrip(present){
     var el=$('tkAz'); if(!el) return;
-    var html='<button type="button" class="tk-azl'+(phLetter===''?' on':'')+'" data-l="">הכל</button>';
-    HEB_LETTERS.forEach(function(L){ html+='<button type="button" class="tk-azl'+(phLetter===L?' on':'')+(present[L]?' has':'')+'" data-l="'+L+'">'+L+'</button>'; });
-    LAT_LETTERS.forEach(function(L){ html+='<button type="button" class="tk-azl'+(phLetter===L?' on':'')+(present[L]?' has':'')+'" data-l="'+L+'">'+L+'</button>'; });
-    if(present['#']) html+='<button type="button" class="tk-azl'+(phLetter==='#'?' on':'')+' has" data-l="#">#</button>';
-    el.innerHTML=html;
+    function chip(L,label){ return '<button type="button" class="tk-azl'+(phLetter===L?' on':'')+(present[L]?' has':'')+'" data-l="'+L+'">'+(label||L)+'</button>'; }
+    var heb='<button type="button" class="tk-azl'+(phLetter===''?' on':'')+'" data-l="">הכל</button>';
+    HEB_LETTERS.forEach(function(L){ heb+=chip(L); });
+    var lat=''; LAT_LETTERS.forEach(function(L){ lat+=chip(L); });
+    if(present['#']) lat+=chip('#');
+    el.innerHTML='<div class="tk-az-row">'+heb+'</div><div class="tk-az-row tk-az-lat">'+lat+'</div>';
   }
   function groupedHtml(arr, builder){
     var groups={}, order=[];
