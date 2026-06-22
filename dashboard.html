@@ -327,6 +327,7 @@
 
     <div class="foot">
       <button id="exportBtn">⬇️ ייצוא לאקסל</button>
+      <button id="exportWaBtn">📲 שלח בוואטסאפ</button>
       <button id="sheetBtn">📊 פתח גיליון</button>
     </div>
 
@@ -1301,18 +1302,38 @@
   function isTyping(){ const el=document.activeElement; return !!(el && el.closest && el.closest('#list') && /TEXTAREA|INPUT|SELECT/.test(el.tagName)); }
   function startAuto(){ if(timer) clearInterval(timer); timer=setInterval(()=>{ if(auto&&document.visibilityState==='visible'&&!isTyping()) load(); }, 30000); }
 
-  // export
-  $('exportBtn').addEventListener('click',()=>{
-    if(typeof XLSX==='undefined'){ toast('מנוע האקסל נטען — נסה שוב'); return; }
-    const data=filtered();
-    if(!data.length){ toast('אין נתונים לייצוא בתצוגה הנוכחית'); return; }
+  // export — אקסל אחד, לשונית לכל תווית (חוסר מלאי / פגום / אי-התאמה)
+  function buildExportWb(){
+    if(typeof XLSX==='undefined'){ toast('מנוע האקסל נטען — נסה שוב'); return null; }
+    const savedType=fType; fType='all'; const data=filtered(); fType=savedType; // כל הסוגים, לפי שאר הסינונים
+    if(!data.length){ toast('אין נתונים לייצוא בתצוגה הנוכחית'); return null; }
     const inHist = (fStatus==='history' || fStatus==='טופל');
-    const rows=[['מספר קריאה','סוג','מק״ט','תיאור שהוזמן','מספר הזמנה','כמות שהוזמנה','כמות שהתקבלה','תיאור שהתקבל','דחיפות','הערת מדווח','דווח ע״י','סטטוס','קניין אחראי','תיעוד טיפול (העברות / החזרות)','טופל ע״י','תאריך טיפול','פעולות לטיפול','צ׳אט הפנייה','תמונות','נוצר','עודכן']];
-    data.forEach(a=>rows.push([(a.ticket||''),(a.type||'חוסר מלאי'),a.sku,a.desc,a.po,a.qty,a.qtyRecv,a.descRecv,a.urgency,a.note,a.reporter,a.status,a.assignee,fmtLog(a.log),a.ackBy,(a.status==='טופל'?fmt(a.ackAt||a.updated):''),a.response,fmtGenChat(a.chat),(Number(a.photo)>0?('📷 '+a.photo):''),fmt(a.created),fmt(a.updated)]));
-    const ws=XLSX.utils.aoa_to_sheet(rows); ws['!cols']=[{wch:12},{wch:11},{wch:22},{wch:14},{wch:13},{wch:13},{wch:22},{wch:12},{wch:24},{wch:14},{wch:9},{wch:14},{wch:30},{wch:14},{wch:15},{wch:28},{wch:40},{wch:16},{wch:16}];
-    const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws, inHist?'היסטוריה':'דיווחים');
-    const tag = inHist?'history' : (fStatus==='all'?'all':fStatus);
-    XLSX.writeFile(wb,'afcon-'+tag+'-'+new Date().toISOString().slice(0,10)+'.xlsx');
+    const HEAD=['מספר קריאה','סוג','מק״ט','תיאור שהוזמן','מספר הזמנה','כמות שהוזמנה','כמות שהתקבלה','תיאור שהתקבל','דחיפות','הערת מדווח','דווח ע״י','סטטוס','קניין אחראי','תיעוד טיפול (העברות / החזרות)','טופל ע״י','תאריך טיפול','פעולות לטיפול','צ׳אט הפנייה','תמונות','נוצר','עודכן'];
+    const COLS=[{wch:12},{wch:11},{wch:22},{wch:14},{wch:13},{wch:13},{wch:22},{wch:12},{wch:24},{wch:14},{wch:9},{wch:14},{wch:30},{wch:14},{wch:15},{wch:28},{wch:40},{wch:16},{wch:16}];
+    const rowFor=a=>[(a.ticket||''),(a.type||'חוסר מלאי'),a.sku,a.desc,a.po,a.qty,a.qtyRecv,a.descRecv,a.urgency,a.note,a.reporter,a.status,a.assignee,fmtLog(a.log),a.ackBy,(a.status==='טופל'?fmt(a.ackAt||a.updated):''),a.response,fmtGenChat(a.chat),(Number(a.photo)>0?('📷 '+a.photo):''),fmt(a.created),fmt(a.updated)];
+    const wb=XLSX.utils.book_new();
+    const TABS=[{t:'חוסר מלאי',n:'חוסר מלאי'},{t:'פריט פגום',n:'פגום'},{t:'אי-התאמה',n:'אי-התאמה'}];
+    TABS.forEach(tb=>{
+      const arr=data.filter(a=>String(a.type||'חוסר מלאי')===tb.t);
+      const ws=XLSX.utils.aoa_to_sheet([HEAD].concat(arr.map(rowFor))); ws['!cols']=COLS;
+      XLSX.utils.book_append_sheet(wb,ws,tb.n);
+    });
+    return { wb:wb, filename:'afcon-'+(inHist?'היסטוריה':'דיווחים')+'-'+new Date().toISOString().slice(0,10)+'.xlsx' };
+  }
+  $('exportBtn').addEventListener('click',()=>{ const r=buildExportWb(); if(r) XLSX.writeFile(r.wb, r.filename); });
+  $('exportWaBtn').addEventListener('click', async ()=>{
+    const r=buildExportWb(); if(!r) return;
+    try{
+      const buf=XLSX.write(r.wb,{type:'array',bookType:'xlsx'});
+      const file=new File([buf], r.filename, {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        try{ await navigator.share({ files:[file], title:'דוח שרשרת האספקה', text:'דוח שרשרת האספקה' }); }catch(e){}
+        return;
+      }
+      // נפילה: הורדה רגילה
+      XLSX.writeFile(r.wb, r.filename);
+      toast('שיתוף ישיר לא נתמך — הקובץ הורד, אפשר לצרפו ידנית בוואטסאפ');
+    }catch(e){ toast('שגיאה בהכנת הקובץ'); }
   });
   $('sheetBtn').addEventListener('click',()=>{ const u=(localStorage.getItem(K.sheet)||'').trim();
     if(u) window.open(u,'_blank'); else { toast('הוסף קישור לגיליון בהגדרות'); openModal(); } });
