@@ -13,9 +13,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Rubik:wght@600;700;900&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#0c0a09; --surface:#1c1917; --surface2:#211e1c; --line:#292524; --line2:#3f3f46;
-    --text:#fafaf9; --muted:#a8a29e; --faint:#78716c;
+    --ink:#0a0b0e; --surface:#15171c; --surface2:#1c1f26; --line:#242830; --line2:#343a45;
+    --text:#f2f4f8; --muted:#98a0ac; --faint:#697079;
     --red:#e2231a; --amber:#f59e0b; --amber2:#fbbf24; --green:#22c55e; --green2:#34d399; --blue:#3b82f6; --blue2:#60a5fa;
+    --gold:#d9b56b; --gold2:#f0d6a0;
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   body{font-family:'Heebo',sans-serif;background:var(--ink);color:var(--text);min-height:100vh}
@@ -52,7 +53,7 @@
   .k-done .num{color:var(--green2)} .k-done .strip{background:var(--green)}
 
   /* filters */
-  .filters{display:flex;flex-direction:column;gap:9px;margin-bottom:14px}
+  .filters{display:flex;flex-direction:column;gap:12px;margin-bottom:14px}
   .chips{display:flex;gap:7px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
   .chip{flex-shrink:0;background:var(--surface);border:1px solid var(--line2);color:var(--muted);border-radius:20px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;white-space:nowrap}
   .chip.on{background:var(--text);color:var(--ink);border-color:var(--text)}
@@ -241,6 +242,43 @@
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
   @media(max-width:520px){ .kpi .num{font-size:23px} .kpis{gap:7px} }
+
+  /* ===== עיצוב יוקרתי — אובסידיאן & שמפניה ===== */
+  body{ background:
+      radial-gradient(1100px 560px at 50% -220px, rgba(217,181,107,.055), transparent 60%),
+      radial-gradient(820px 460px at 100% 0%, rgba(59,130,246,.045), transparent 55%),
+      var(--ink); background-attachment:fixed; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
+  .top{ background:linear-gradient(180deg, rgba(16,18,23,.93), rgba(10,11,14,.80)); backdrop-filter:blur(16px) saturate(125%); -webkit-backdrop-filter:blur(16px) saturate(125%); border-bottom:1px solid transparent; box-shadow:0 1px 0 rgba(217,181,107,.20), 0 10px 26px -18px rgba(0,0,0,.85); }
+  .ttl{ letter-spacing:-.02em; }
+  .badge{ border-radius:12px; box-shadow:0 5px 16px -5px rgba(0,0,0,.65), 0 0 0 1px rgba(255,255,255,.06); }
+  .ico{ background:linear-gradient(180deg, var(--surface2), var(--surface)); border-color:rgba(255,255,255,.08); box-shadow:0 2px 7px -3px rgba(0,0,0,.55); transition:transform .12s, border-color .15s, background .2s; }
+  .ico:hover{ border-color:rgba(217,181,107,.45); }
+  .kpi{ background:linear-gradient(180deg, var(--surface2), var(--surface)); border-color:rgba(255,255,255,.06); border-radius:16px; box-shadow:0 9px 24px -15px rgba(0,0,0,.75), inset 0 1px 0 rgba(255,255,255,.045); transition:transform .14s, border-color .15s, box-shadow .2s; }
+  .kpi:hover{ border-color:var(--line2); box-shadow:0 13px 30px -15px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.07); }
+  .kpi.sel{ border-color:var(--gold); box-shadow:0 0 0 1px rgba(217,181,107,.45), 0 11px 28px -15px rgba(0,0,0,.85); }
+  .kpi .num{ letter-spacing:-.02em; }
+  .chips{ scrollbar-width:none; justify-content:center; flex-wrap:wrap; gap:11px; overflow:visible; }
+  .chips::-webkit-scrollbar{ height:0; width:0; display:none; }
+  .chip{ background:linear-gradient(180deg, var(--surface2), var(--surface)); border:1px solid rgba(255,255,255,.09); color:var(--muted); padding:10px 19px; font-size:14.5px; font-weight:700; border-radius:22px; box-shadow:0 2px 8px -4px rgba(0,0,0,.5); transition:transform .12s, border-color .15s, color .15s, background .2s, box-shadow .2s; }
+  .chip:not(.on):hover{ border-color:rgba(217,181,107,.45); color:var(--text); }
+  .chip:not(.on):active{ transform:scale(.96); }
+  .chip.on{ background:linear-gradient(180deg,#f8f5ef,#e6e2d5); color:#171309; border:1px solid var(--gold); font-weight:800; box-shadow:0 6px 18px -7px rgba(217,181,107,.6), inset 0 1px 0 rgba(255,255,255,.6); }
+  .search{ background:rgba(255,255,255,.035); border-color:rgba(255,255,255,.09); transition:border-color .15s, box-shadow .15s; }
+  .search:focus{ outline:none; border-color:var(--gold); box-shadow:0 0 0 3px rgba(217,181,107,.16); }
+  .card{ background:linear-gradient(180deg, var(--surface2), var(--surface)); border-color:rgba(255,255,255,.06); border-radius:18px; box-shadow:0 15px 36px -20px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.045); transition:box-shadow .2s, border-color .15s; }
+  .card:hover{ border-color:rgba(255,255,255,.1); box-shadow:0 20px 44px -20px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.07); }
+  .sku{ letter-spacing:-.01em; }
+  .tkt{ color:var(--gold2); background:linear-gradient(180deg, rgba(217,181,107,.16), rgba(217,181,107,.05)); border:1px solid rgba(217,181,107,.5); box-shadow:0 2px 11px -5px rgba(217,181,107,.32) }
+  .btn{ background:linear-gradient(180deg, var(--surface2), var(--surface)); border-color:rgba(255,255,255,.1); transition:transform .12s, border-color .15s, background .2s, box-shadow .2s; }
+  .btn:hover{ border-color:var(--line2); }
+  .cta{ background:linear-gradient(180deg,#ef3b32,#cf1a12); box-shadow:0 9px 24px -9px rgba(226,35,26,.55); transition:transform .12s, box-shadow .2s; }
+  .cta:hover{ box-shadow:0 13px 30px -9px rgba(226,35,26,.72); }
+  .editor .save{ background:linear-gradient(180deg,#2ed47f,#16a34a); box-shadow:0 9px 22px -9px rgba(34,197,94,.5); }
+  .foot button{ transition:border-color .15s, color .15s, background .2s; }
+  .foot button:hover{ border-color:var(--gold); color:var(--gold2); }
+  .modal{ background:rgba(6,7,9,.66); backdrop-filter:blur(7px); -webkit-backdrop-filter:blur(7px); }
+  .sheet{ background:linear-gradient(180deg, var(--surface2), var(--surface)); border-top:1px solid rgba(217,181,107,.32); box-shadow:0 -22px 64px -22px rgba(0,0,0,.92); border-radius:24px 24px 0 0; }
+  .sheet h3{ letter-spacing:-.01em; }
 </style>
 </head>
 <body>
