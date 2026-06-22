@@ -638,12 +638,19 @@
   function registerSW(){ if(!('serviceWorker' in navigator)) return; navigator.serviceWorker.register('sw.js').then(function(reg){ SWREG=reg; }).catch(function(){}); }
   // ===== נוכחות: פעימת לב + מסך מנהל =====
   const APP_NAME='dashboard';
+  const PRES_OWNER='אבידן קוטאי', PRES_PIN='30172'; let presUnlocked=false;
+  function presCanView(){ return isBoss()||me()===MGR||me()===PRES_OWNER; }
   function presencePing(){ try{ if(!apiOn()) return; var nm=me(); if(!nm) return; apiGet('presence',{me:nm, app:APP_NAME}); }catch(e){} }
-  function updatePresBtn(){ var b=$('presBtn'); if(b) b.style.display=(isBoss()||me()===MGR)?'':'none'; }
+  function updatePresBtn(){ var b=$('presBtn'); if(b) b.style.display=presCanView()?'':'none'; }
   function presAgo(iso, now){ var t=Date.parse(iso); if(!t) return ''; var m=Math.round((now-t)/60000); if(m<1) return 'עכשׁיו'; if(m<60) return 'לפני '+m+' דק׳'; var hh=Math.round(m/60); if(hh<24) return 'לפני '+hh+' ש׳'; return 'לפני '+Math.round(hh/24)+' ימים'; }
   function presHHMM(iso){ var d=new Date(iso); if(isNaN(d.getTime())) return ''; return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }
   function presApp(a){ return a==='warehouse'?'🏭 מחסן':(a==='dashboard'?'🛒 לוח':a); }
   async function openPresence(){
+    var mgr=(isBoss()||me()===MGR);
+    if(!mgr){
+      if(me()!==PRES_OWNER) return;
+      if(!presUnlocked && !devOpen){ var pin=prompt('הקש/י קוד כדי לצפות בנוכחות:'); if(String(pin||'').trim()!==PRES_PIN){ if(pin!==null) alert('קוד שגוי.'); return; } presUnlocked=true; }
+    }
     $('presModal').classList.add('open'); $('presBody').innerHTML='<div style="color:var(--muted)">טוען…</div>';
     try{
       const r=await apiGet('presenceList'); const rows=(r&&r.presence)||[]; const now=Date.now();
