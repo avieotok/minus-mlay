@@ -675,12 +675,13 @@
       }
       const roster=BUYERS.concat(REPORTERS);
       const buyers=BUYERS.filter(n=>n!==PRES_OWNER);
-      const reporters=REPORTERS.filter(n=>n!==PRES_OWNER);
-      const onlineCount=roster.filter(n=>n!==PRES_OWNER && isOnline(n)).length + Object.keys(latest).filter(n=>roster.indexOf(n)<0 && n!==PRES_OWNER && isOnline(n)).length;
+      const reporters=REPORTERS.filter(n=>n!==PRES_OWNER).concat(PRES_OWNER); // אבידן מוצג עם המחסנאים
+      const extras=Object.keys(latest).filter(n=>roster.indexOf(n)<0 && n!==PRES_OWNER);
+      const shown=buyers.concat(reporters, extras);
+      const onlineCount=shown.filter(isOnline).length;
       let html='<div style="font-weight:900;font-size:15px;margin:2px 0 6px;color:var(--green2)">🟢 מחוברים עכשׁיו: '+onlineCount+'</div>';
       html+=section('🛒 קניינים', buyers);
       html+=section('🏭 מחסנאים', reporters);
-      const extras=Object.keys(latest).filter(n=>roster.indexOf(n)<0 && n!==PRES_OWNER);
       if(extras.length) html+=section('👤 משתמשים נוספים', extras);
       $('presBody').innerHTML=html;
     }catch(e){ $('presBody').innerHTML='<div style="color:#f87171">שגיאה בטעינה — ייתכן שצריך לפרוס מחדש את Code.gs.</div>'; }
