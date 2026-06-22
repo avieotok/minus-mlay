@@ -640,7 +640,7 @@
   }
   async function apiGet(action, params){ return apiGetJsonp(action, params); }
   async function apiPost(action, payload){
-    if(action!=='catalogSet' && action!=='rosterSet' && action!=='importAll'){ return apiGetJsonp(action, payload||{}); }
+    if(action!=='catalogSet' && action!=='rosterSet' && action!=='importAll' && action!=='tplSet'){ return apiGetJsonp(action, payload||{}); }
     // קטלוג/שמות (רשימות גדולות) ב-POST בלבד
     const body=Object.assign({token:apiToken(),action:action}, payload||{});
     const r=await fetch(apiUrl(),{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)});
