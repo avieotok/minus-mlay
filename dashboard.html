@@ -1537,6 +1537,11 @@
   #tkModal .tk-kind{flex:1;background:#211e1c;border:1px solid #3f3f46;color:#a8a29e;border-radius:11px;padding:10px 0;font-size:14.5px;font-weight:800;cursor:pointer;font-family:'Rubik','Heebo',sans-serif}
   #tkModal .tk-kind.on{background:#2563eb;border-color:#3b82f6;color:#fff}
   #tkModal .tk-ph-top{display:flex;gap:8px;margin-bottom:13px}
+  #tkModal .tk-az{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:13px}
+  #tkModal .tk-azl{flex:0 0 auto;min-width:24px;padding:6px 8px;background:#1c1917;border:1px solid #292524;color:#57534e;border-radius:7px;font-size:13px;font-weight:800;cursor:pointer;text-align:center;font-family:'Rubik','Heebo',sans-serif}
+  #tkModal .tk-azl.has{color:#e7e5e4;border-color:#3f3f46}
+  #tkModal .tk-azl.on{background:#2563eb;border-color:#3b82f6;color:#fff}
+  #tkModal .tk-azdiv{background:#0c0a09;color:#60a5fa;font-weight:900;font-size:15px;border-radius:8px;padding:5px 12px;margin:12px 2px 8px;border-right:3px solid #2563eb}
   #tkModal .tk-ph-search{flex:1;background:#0c0a09;border:1px solid #3f3f46;border-radius:11px;padding:11px 13px;color:#fafaf9;font-size:14.5px;font-family:'Heebo',sans-serif}
   #tkModal .tk-ph-search:focus{outline:none;border-color:#e2231a}
   #tkModal .tk-ph-new{background:#06281b;border:1px solid #166534;color:#34d399;border-radius:11px;padding:0 16px;font-size:14px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;white-space:nowrap}
@@ -1593,6 +1598,7 @@
           <input class="tk-ph-search" id="tkPhSearch" placeholder="חיפוש ספק / איש קשר…">
           <button class="tk-ph-new" id="tkPhNew">➕ ספק חדש</button>
         </div>
+        <div class="tk-az" id="tkAz"></div>
         <div class="tk-ph-form" id="tkPhForm">
           <input id="tkPhSupplier" placeholder="שם הספק">
           <div class="tk-ph-2"><input id="tkPhC1" placeholder="איש קשר 1"><input id="tkPhC2" placeholder="איש קשר 2"></div>
@@ -1780,6 +1786,7 @@
   function savePhones(){ try{ localStorage.setItem(PK, JSON.stringify(PHONES)); }catch(e){} }
   var PHONES=loadPhones(); var SHAREDC=[]; var phEditId=null; var phEditShared=null; var sharedLoaded=false; var sharedState='idle';
   var phKind='supplier'; // ספק / לקוח
+  var phLetter=''; // חוצץ אות נבחר (ריק = הכל)
   var PH_OWNER='אבידן קוטאי', PH_PIN='30172', phAdmin=false; // מחיקה מהמשותף — רק לבעלים, אחרי קוד
   function isPhOwner(){ return String(myName()||'').trim()===PH_OWNER; }
   function kindWord(){ return phKind==='customer'?'לקוח':'ספק'; }
@@ -1816,13 +1823,19 @@
   function renderPhones(){
     setPhKindUI();
     var q=($('tkPhSearch').value||'').trim().toLowerCase();
-    var local=PHONES.filter(function(c){ return ckind(c)===phKind; }).sort(function(a,b){ return String(a.supplier||'').localeCompare(String(b.supplier||''),'he'); });
-    var shared=SHAREDC.filter(function(c){ return ckind(c)===phKind; }).sort(function(a,b){ return String(a.supplier||'').localeCompare(String(b.supplier||''),'he'); });
+    var localAll=PHONES.filter(function(c){ return ckind(c)===phKind; });
+    var sharedAll=SHAREDC.filter(function(c){ return ckind(c)===phKind; });
+    // אילו אותיות קיימות (לרצועת החוצצים)
+    var present={}; localAll.concat(sharedAll).forEach(function(c){ present[firstLetter(c.supplier)]=true; });
+    renderAzStrip(present);
+    var byName=function(a,b){ return String(a.supplier||'').localeCompare(String(b.supplier||''),'he'); };
+    var local=localAll.slice().sort(byName);
+    var shared=sharedAll.slice().sort(byName);
     if(q){ local=local.filter(function(c){return matchQ(c,q);}); shared=shared.filter(function(c){return matchQ(c,q);}); }
+    if(phLetter){ local=local.filter(function(c){return firstLetter(c.supplier)===phLetter;}); shared=shared.filter(function(c){return firstLetter(c.supplier)===phLetter;}); }
     var box=$('tkPhList'); var html='';
-    var W=kindWord(), Wp=(phKind==='customer'?'לקוחות':'ספקים');
-    // משותפים — עם חיווי מצב
-    var sharedCount=SHAREDC.filter(function(c){ return ckind(c)===phKind; }).length;
+    var Wp=(phKind==='customer'?'לקוחות':'ספקים');
+    var sharedCount=sharedAll.length;
     var st='';
     if(sharedState==='loading') st=' · טוען…';
     else if(sharedState==='ok') st=' · '+sharedCount+' '+Wp;
@@ -1830,19 +1843,44 @@
     else if(sharedState==='noconn') st=' · ⚠️ אין תשובה מהשרת — בדוק/י חיבור לאינטרנט';
     else if(sharedState==='noaction') st=' · ⚠️ השרת לא עודכן — צריך לפרוס מחדש את Code.gs';
     html+='<div class="tk-sec">🔗 '+Wp+' משותפים'+st+' <button id="tkPhReload" style="background:none;border:none;color:#60a5fa;font-weight:800;cursor:pointer;font-size:12.5px">↻ רענן</button></div>';
-    if(shared.length){ html+=shared.map(function(c){
-      var by=c.sharedBy?('<span class="tk-tag">משותף ע״י '+esc(c.sharedBy)+'</span>'):'<span class="tk-tag">משותף</span>';
-      var delBtn=isPhOwner()?'<button class="tk-card-del" title="מחק (לכולם)">🗑️</button>':'';
-      return '<div class="tk-card shared" data-id="'+esc(c.id)+'"><div class="tk-card-h"><span class="tk-card-name">'+esc(c.supplier||W)+'</span>'+by+'<button class="tk-card-edit" title="ערוך (לכולם)">✏️</button>'+delBtn+'</div>'+cardLines(c)+'</div>';
-    }).join(''); } else { html+='<div class="tk-empty">'+(q?'אין תוצאות משותפות':('אין '+Wp+' משותפים עדיין'))+'</div>'; }
-    // אישיים
+    if(shared.length){ html+=groupedHtml(shared, sharedCardHtml); }
+    else { html+='<div class="tk-empty">'+(q||phLetter?'אין תוצאות משותפות':('אין '+Wp+' משותפים עדיין'))+'</div>'; }
     html+='<div class="tk-sec" style="margin-top:14px">📱 ה'+Wp+' שלי (במכשיר זה)</div>';
-    if(local.length){ html+=local.map(function(c){
-      return '<div class="tk-card" data-id="'+c.id+'"><div class="tk-card-h"><span class="tk-card-name">'+esc(c.supplier||W)+'</span>'
-        +'<button class="tk-card-share" title="שתף לכולם">📤</button>'
-        +'<button class="tk-card-edit" title="ערוך">✏️</button><button class="tk-card-del" title="מחק">🗑️</button></div>'+cardLines(c)+'</div>';
-    }).join(''); } else { html+='<div class="tk-empty">'+(q?'אין תוצאות אישיות':('הוסף/י '+W+' חדש בכפתור למעלה'))+'</div>'; }
+    if(local.length){ html+=groupedHtml(local, localCardHtml); }
+    else { html+='<div class="tk-empty">'+(q||phLetter?'אין תוצאות אישיות':('הוסף/י '+kindWord()+' חדש בכפתור למעלה'))+'</div>'; }
     box.innerHTML=html;
+  }
+  // ===== חוצצים אלפביתיים (א׳–ת׳, בלי אותיות סופיות) =====
+  var HEB_LETTERS=['א','ב','ג','ד','ה','ו','ז','ח','ט','י','כ','ל','מ','נ','ס','ע','פ','צ','ק','ר','ש','ת'];
+  var LAT_LETTERS='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  var FINAL_MAP={'ך':'כ','ם':'מ','ן':'נ','ף':'פ','ץ':'צ'};
+  var HEB_ORDER=HEB_LETTERS.concat(LAT_LETTERS).concat(['#']);
+  function firstLetter(name){ var s=String(name||'').trim(); if(!s) return '#'; var ch=s.charAt(0); if(FINAL_MAP[ch]) ch=FINAL_MAP[ch]; if(HEB_LETTERS.indexOf(ch)>=0) return ch; if(/[A-Za-z]/.test(ch)) return ch.toUpperCase(); return '#'; }
+  function renderAzStrip(present){
+    var el=$('tkAz'); if(!el) return;
+    var html='<button type="button" class="tk-azl'+(phLetter===''?' on':'')+'" data-l="">הכל</button>';
+    HEB_LETTERS.forEach(function(L){ html+='<button type="button" class="tk-azl'+(phLetter===L?' on':'')+(present[L]?' has':'')+'" data-l="'+L+'">'+L+'</button>'; });
+    LAT_LETTERS.forEach(function(L){ html+='<button type="button" class="tk-azl'+(phLetter===L?' on':'')+(present[L]?' has':'')+'" data-l="'+L+'">'+L+'</button>'; });
+    if(present['#']) html+='<button type="button" class="tk-azl'+(phLetter==='#'?' on':'')+' has" data-l="#">#</button>';
+    el.innerHTML=html;
+  }
+  function groupedHtml(arr, builder){
+    var groups={}, order=[];
+    arr.forEach(function(c){ var L=firstLetter(c.supplier); if(!groups[L]){ groups[L]=[]; order.push(L); } groups[L].push(c); });
+    order.sort(function(a,b){ var ia=HEB_ORDER.indexOf(a), ib=HEB_ORDER.indexOf(b); if(ia<0)ia=99; if(ib<0)ib=99; return ia-ib; });
+    return order.map(function(L){ return '<div class="tk-azdiv">'+L+'</div>'+groups[L].map(builder).join(''); }).join('');
+  }
+  function sharedCardHtml(c){
+    var W=kindWord();
+    var by=c.sharedBy?('<span class="tk-tag">משותף ע״י '+esc(c.sharedBy)+'</span>'):'<span class="tk-tag">משותף</span>';
+    var delBtn=isPhOwner()?'<button class="tk-card-del" title="מחק (לכולם)">🗑️</button>':'';
+    return '<div class="tk-card shared" data-id="'+esc(c.id)+'"><div class="tk-card-h"><span class="tk-card-name">'+esc(c.supplier||W)+'</span>'+by+'<button class="tk-card-edit" title="ערוך (לכולם)">✏️</button>'+delBtn+'</div>'+cardLines(c)+'</div>';
+  }
+  function localCardHtml(c){
+    var W=kindWord();
+    return '<div class="tk-card" data-id="'+c.id+'"><div class="tk-card-h"><span class="tk-card-name">'+esc(c.supplier||W)+'</span>'
+      +'<button class="tk-card-share" title="שתף לכולם">📤</button>'
+      +'<button class="tk-card-edit" title="ערוך">✏️</button><button class="tk-card-del" title="מחק">🗑️</button></div>'+cardLines(c)+'</div>';
   }
   function openPhForm(c, isShared){
     phEditId = (c && !isShared) ? c.id : null;
@@ -1853,7 +1891,8 @@
   }
   function closePhForm(){ $('tkPhForm').classList.remove('open'); phEditId=null; phEditShared=null; }
   $('tkPhNew').addEventListener('click', function(){ openPhForm(null); });
-  $('tkPhKind').addEventListener('click', function(e){ var b=e.target.closest('.tk-kind'); if(!b) return; var k=b.getAttribute('data-k'); if(k===phKind) return; phKind=k; closePhForm(); renderPhones(); });
+  $('tkPhKind').addEventListener('click', function(e){ var b=e.target.closest('.tk-kind'); if(!b) return; var k=b.getAttribute('data-k'); if(k===phKind) return; phKind=k; phLetter=''; closePhForm(); renderPhones(); });
+  $('tkAz').addEventListener('click', function(e){ var b=e.target.closest('.tk-azl'); if(!b) return; var L=b.getAttribute('data-l'); phLetter=(L===phLetter?'':L); renderPhones(); });
   $('tkPhCancel').addEventListener('click', closePhForm);
   $('tkPhSearch').addEventListener('input', renderPhones);
   $('tkPhSave').addEventListener('click', function(){
