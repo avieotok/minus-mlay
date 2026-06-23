@@ -1804,11 +1804,25 @@
   #tkModal .tk-head{display:flex;align-items:center;justify-content:space-between;padding:15px 16px;border-bottom:1px solid #292524;background:#1c1917}
   #tkModal .tk-title{font-family:'Rubik','Heebo',sans-serif;font-weight:800;font-size:19px}
   #tkModal .tk-x{background:#292524;border:none;color:#fafaf9;width:34px;height:34px;border-radius:9px;font-size:16px;cursor:pointer}
-  #tkModal .tk-tabs{display:flex;gap:5px;padding:10px;border-bottom:1px solid #292524;background:#161312}
-  #tkModal .tk-tab{flex:1;background:#1c1917;border:1px solid #292524;color:#a8a29e;border-radius:10px;padding:10px 3px;font-size:12.5px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;white-space:nowrap}
+  #tkModal .tk-tabs{display:flex;flex-wrap:wrap;gap:5px;padding:10px;border-bottom:1px solid #292524;background:#161312}
+  #tkModal .tk-tab{flex:1 1 auto;min-width:60px;background:#1c1917;border:1px solid #292524;color:#a8a29e;border-radius:10px;padding:10px 3px;font-size:12.5px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;white-space:nowrap}
   #tkModal .tk-tab.on{background:#e2231a;border-color:#e2231a;color:#fff}
   #tkModal .tk-body{flex:1;overflow-y:auto;padding:16px}
   #tkModal .tk-pane[hidden]{display:none}
+  #tkModal .tk-rec-lang{display:flex;gap:8px;margin-bottom:12px}
+  #tkModal .tk-rl-btn{flex:1;background:#1c1917;border:1px solid #3f3f46;color:#a8a29e;border-radius:10px;padding:11px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;font-size:14px}
+  #tkModal .tk-rl-btn.on{background:#2563eb;border-color:#3b82f6;color:#fff}
+  #tkModal .tk-rec-btn{width:100%;background:#e2231a;border:none;color:#fff;border-radius:13px;padding:16px;font-size:16.5px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;margin-bottom:10px}
+  #tkModal .tk-rec-btn.rec{animation:tkpulse 1.2s infinite}
+  @keyframes tkpulse{0%,100%{box-shadow:0 0 0 0 rgba(226,35,26,.55)}50%{box-shadow:0 0 0 13px rgba(226,35,26,0)}}
+  #tkModal .tk-rec-status{font-size:13px;color:#a8a29e;text-align:center;min-height:18px;margin-bottom:8px;font-weight:700}
+  #tkModal .tk-rec-text{width:100%;min-height:150px;background:#0c0a09;border:1px solid #3f3f46;border-radius:12px;padding:13px;color:#fafaf9;font-size:16px;font-family:'Heebo',sans-serif;resize:vertical;line-height:1.65}
+  #tkModal .tk-rec-text:focus{outline:none;border-color:#e2231a}
+  #tkModal .tk-rec-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:11px}
+  #tkModal .tk-rec-acts button{flex:1 1 calc(50% - 4px);background:#1c1917;border:1px solid #3f3f46;color:#fafaf9;border-radius:11px;padding:13px;font-weight:800;font-family:'Heebo',sans-serif;cursor:pointer;font-size:14px}
+  #tkModal #tkRecWa{border-color:#166534;color:#34d399}
+  #tkModal .tk-rec-upload{display:block;text-align:center;margin-top:12px;color:#60a5fa;font-weight:700;font-size:13.5px;cursor:pointer}
+  #tkModal .tk-rec-note{font-size:12px;color:#78716c;margin-top:10px;line-height:1.55;text-align:center}
   #tkModal .tk-newlist{width:100%;background:#06281b;border:1px dashed #166534;color:#34d399;border-radius:13px;padding:13px;font-size:15px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;margin-bottom:14px}
   #tkModal .tk-list{background:#1c1917;border:1px solid #292524;border-radius:14px;padding:13px;margin-bottom:13px}
   #tkModal .tk-list-head{display:flex;gap:8px;align-items:center;margin-bottom:10px}
@@ -1903,6 +1917,7 @@
       <button class="tk-tab" data-tk="phone">📞 טלפונים</button>
       <button class="tk-tab" data-tk="cur">💱 מטבעות</button>
       <button class="tk-tab" data-tk="area">📐 שטחים</button>
+      <button class="tk-tab" data-tk="rec">🎙️ רשמקול</button>
     </div>
     <div class="tk-body">
       <div class="tk-pane" id="tkLists"></div>
@@ -1949,6 +1964,25 @@
           <div class="tk-result"><div class="tk-rv" id="tkAreaRes">—</div><div class="tk-rl" id="tkAreaRate"></div></div>
         </div>
       </div>
+      <div class="tk-pane" id="tkRec" hidden>
+        <div class="tk-rec-lang">
+          <button class="tk-rl-btn on" data-lang="he-IL">🇮🇱 עברית</button>
+          <button class="tk-rl-btn" data-lang="en-US">🇬🇧 English</button>
+        </div>
+        <button class="tk-rec-btn" id="tkRecBtn">🎙️ התחל הקלטה</button>
+        <div class="tk-rec-status" id="tkRecStatus"></div>
+        <textarea class="tk-rec-text" id="tkRecText" placeholder="הטקסט המתומלל יופיע כאן בזמן הדיבור… אפשר גם לערוך ידנית"></textarea>
+        <audio id="tkRecAudio" controls hidden style="width:100%;margin-top:9px"></audio>
+        <div class="tk-rec-acts">
+          <button id="tkRecCopy">📋 העתק</button>
+          <button id="tkRecWa">📲 שלח בוואטסאפ</button>
+          <button id="tkRecSaveTxt">💾 שמור טקסט</button>
+          <button id="tkRecDlAudio" hidden>⬇️ הורד הקלטה</button>
+          <button id="tkRecShareAudio" hidden>📲 שתף הקלטה</button>
+        </div>
+        <label class="tk-rec-upload">📎 העלה קובץ אודיו להאזנה/שיתוף<input type="file" id="tkRecUpload" accept="audio/*" hidden></label>
+        <div class="tk-rec-note" id="tkRecNote"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -1991,14 +2025,15 @@
   }
 
   var opener=$('tkOpen'); if(opener) opener.addEventListener('click', function(){ modal.classList.add('open'); renderLists(); });
-  $('tkClose').addEventListener('click', function(){ modal.classList.remove('open'); });
-  modal.addEventListener('click', function(e){ if(e.target===modal) modal.classList.remove('open'); });
+  $('tkClose').addEventListener('click', function(){ modal.classList.remove('open'); try{ recStop(); }catch(e){} });
+  modal.addEventListener('click', function(e){ if(e.target===modal){ modal.classList.remove('open'); try{ recStop(); }catch(e){} } });
   var tabs=modal.querySelectorAll('.tk-tab');
   tabs.forEach(function(t){ t.addEventListener('click', function(){
     tabs.forEach(function(x){ x.classList.toggle('on', x===t); });
     var v=t.getAttribute('data-tk');
-    $('tkLists').hidden=(v!=='lists'); $('tkPhone').hidden=(v!=='phone'); $('tkCur').hidden=(v!=='cur'); $('tkArea').hidden=(v!=='area');
-    if(v==='phone'){ renderPhones(); loadShared(); } if(v==='cur') openCur(); if(v==='area') openArea();
+    $('tkLists').hidden=(v!=='lists'); $('tkPhone').hidden=(v!=='phone'); $('tkCur').hidden=(v!=='cur'); $('tkArea').hidden=(v!=='area'); $('tkRec').hidden=(v!=='rec');
+    if(v!=='rec'){ try{ recStop(); }catch(e){} }
+    if(v==='phone'){ renderPhones(); loadShared(); } if(v==='cur') openCur(); if(v==='area') openArea(); if(v==='rec') initRec();
   }); });
 
   /* ---------- רשימות ---------- */
@@ -2326,6 +2361,64 @@
     var val=amt*areaFactor(f)/areaFactor(t);
     $('tkAreaRes').textContent=val.toLocaleString('he-IL',{maximumFractionDigits:4});
     $('tkAreaRate').textContent=amt.toLocaleString('he-IL')+' '+areaName(f)+' = '+val.toLocaleString('he-IL',{maximumFractionDigits:4})+' '+areaName(t);
+  }
+  /* ---------- 🎙️ רשמקול + תמלול ---------- */
+  var recInited=false, recLang='he-IL', recOn=false, srecog=null, mrec=null, recChunks=[], recBlob=null, recBase='';
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+  function recExt(t){ t=t||''; if(t.indexOf('mp4')>=0||t.indexOf('m4a')>=0) return 'm4a'; if(t.indexOf('ogg')>=0) return 'ogg'; if(t.indexOf('wav')>=0) return 'wav'; return 'webm'; }
+  function recDl(name, blob){ try{ var u=URL.createObjectURL(blob); var a=document.createElement('a'); a.href=u; a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){ URL.revokeObjectURL(u); },1500); }catch(e){} }
+  function recStatus(s){ var el=$('tkRecStatus'); if(el) el.textContent=s||''; }
+  function recNote(s){ var el=$('tkRecNote'); if(el) el.textContent=s||''; }
+  function initRec(){
+    if(recInited) return; recInited=true;
+    $('tkRec').querySelectorAll('.tk-rl-btn').forEach(function(b){ b.addEventListener('click', function(){
+      $('tkRec').querySelectorAll('.tk-rl-btn').forEach(function(x){ x.classList.toggle('on', x===b); });
+      recLang=b.getAttribute('data-lang'); if(recOn && srecog){ try{ srecog.stop(); }catch(e){} } // יופעל מחדש בשפה החדשה
+    }); });
+    $('tkRecBtn').addEventListener('click', function(){ if(recOn) recStop(); else recStart(); });
+    $('tkRecCopy').addEventListener('click', function(){ var t=$('tkRecText').value||''; if(!t){ recNote('אין טקסט להעתקה'); return; } if(navigator.clipboard){ navigator.clipboard.writeText(t).then(function(){ recNote('הועתק ✓'); },function(){ recNote('ההעתקה נכשלה'); }); } else { $('tkRecText').select(); try{ document.execCommand('copy'); recNote('הועתק ✓'); }catch(e){} } });
+    $('tkRecWa').addEventListener('click', function(){ var t=($('tkRecText').value||'').trim(); if(!t){ recNote('אין טקסט לשליחה'); return; } window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank'); });
+    $('tkRecSaveTxt').addEventListener('click', function(){ var t=$('tkRecText').value||''; if(!t){ recNote('אין טקסט לשמירה'); return; } recDl('תמלול-'+Date.now()+'.txt', new Blob([t],{type:'text/plain;charset=utf-8'})); recNote('הקובץ נשמר ✓'); });
+    $('tkRecDlAudio').addEventListener('click', function(){ if(!recBlob){ recNote('אין הקלטה'); return; } recDl('הקלטה-'+Date.now()+'.'+recExt(recBlob.type), recBlob); });
+    $('tkRecShareAudio').addEventListener('click', function(){ if(!recBlob){ recNote('אין הקלטה'); return; } var f=new File([recBlob],'הקלטה.'+recExt(recBlob.type),{type:recBlob.type||'audio/webm'}); if(navigator.canShare && navigator.canShare({files:[f]})){ navigator.share({files:[f],title:'הקלטה'}).catch(function(){}); } else { recDl(f.name, recBlob); recNote('שיתוף ישיר לא נתמך — ההקלטה הורדה'); } });
+    $('tkRecUpload').addEventListener('change', function(e){ var f=e.target.files&&e.target.files[0]; if(!f) return; recBlob=f; var au=$('tkRecAudio'); au.src=URL.createObjectURL(f); au.hidden=false; $('tkRecDlAudio').hidden=false; $('tkRecShareAudio').hidden=false; recNote('קובץ נטען — אפשר להאזין ולשתף. (תמלול אוטומטי לקובץ מוקלט אינו זמין — רק להקלטה חיה)'); });
+    if(!SR) recNote('💡 תמלול חי נתמך ב‑Chrome/אנדרואיד. באייפון לרוב אפשר להקליט ולשתף אודיו, אך לא לתמלל חי.');
+  }
+  function recStart(){
+    recBase=$('tkRecText').value ? ($('tkRecText').value.replace(/\s+$/,'')+' ') : '';
+    recChunks=[]; recBlob=null; recOn=true;
+    $('tkRecBtn').textContent='⏹️ עצור הקלטה'; $('tkRecBtn').classList.add('rec'); recNote(''); recStatus('מבקש גישה למיקרופון…');
+    // הקלטת אודיו (לקובץ)
+    if(navigator.mediaDevices && window.MediaRecorder){
+      navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+        recStream=stream;
+        try{ mrec=new MediaRecorder(stream); }catch(e){ mrec=null; }
+        if(mrec){ mrec.ondataavailable=function(ev){ if(ev.data&&ev.data.size) recChunks.push(ev.data); };
+          mrec.onstop=function(){ if(recChunks.length){ recBlob=new Blob(recChunks,{type:(mrec.mimeType||'audio/webm')}); var au=$('tkRecAudio'); au.src=URL.createObjectURL(recBlob); au.hidden=false; $('tkRecDlAudio').hidden=false; $('tkRecShareAudio').hidden=false; } };
+          try{ mrec.start(); }catch(e){} }
+        recStatus(SR?'🎙️ מקליט ומתמלל…':'🎙️ מקליט… (תמלול חי לא נתמך בדפדפן זה)');
+      }).catch(function(){ recStatus(SR?'🎙️ מתמלל… (ללא שמירת אודיו — אין גישה למיקרופון)':'אין גישה למיקרופון'); });
+    } else { recStatus(SR?'🎙️ מתמלל…':'הקלטה אינה נתמכת בדפדפן זה'); }
+    // תמלול חי
+    if(SR){ startRecog(); }
+  }
+  var recStream=null;
+  function startRecog(){
+    try{ srecog=new SR(); }catch(e){ srecog=null; return; }
+    srecog.lang=recLang; srecog.continuous=true; srecog.interimResults=true;
+    srecog.onresult=function(ev){ var interim=''; for(var i=ev.resultIndex;i<ev.results.length;i++){ var r=ev.results[i]; if(r.isFinal){ recBase+=r[0].transcript.replace(/\s+$/,'')+' '; } else { interim+=r[0].transcript; } } $('tkRecText').value=recBase+interim; $('tkRecText').scrollTop=$('tkRecText').scrollHeight; };
+    srecog.onerror=function(ev){ if(ev && ev.error==='not-allowed'){ recStatus('אין הרשאת מיקרופון לתמלול'); } };
+    srecog.onend=function(){ if(recOn){ try{ srecog.lang=recLang; srecog.start(); }catch(e){} } };
+    try{ srecog.start(); }catch(e){}
+  }
+  function recStop(){
+    if(!recOn && !srecog && !mrec) return;
+    recOn=false;
+    if(srecog){ try{ srecog.onend=null; srecog.stop(); }catch(e){} srecog=null; }
+    if(mrec && mrec.state!=='inactive'){ try{ mrec.stop(); }catch(e){} }
+    if(recStream){ try{ recStream.getTracks().forEach(function(t){ t.stop(); }); }catch(e){} recStream=null; }
+    var btn=$('tkRecBtn'); if(btn){ btn.textContent='🎙️ התחל הקלטה'; btn.classList.remove('rec'); }
+    recStatus('');
   }
 })();
 </script>
