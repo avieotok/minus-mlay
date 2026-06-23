@@ -1977,6 +1977,7 @@
           <button id="tkRecCopy">📋 העתק</button>
           <button id="tkRecWa">📲 שלח בוואטסאפ</button>
           <button id="tkRecSaveTxt">💾 שמור טקסט</button>
+          <button id="tkRecClear">🧹 נקה מסך</button>
           <button id="tkRecDlAudio" hidden>⬇️ הורד הקלטה</button>
           <button id="tkRecShareAudio" hidden>📲 שתף הקלטה</button>
         </div>
@@ -2379,6 +2380,7 @@
     $('tkRecCopy').addEventListener('click', function(){ var t=$('tkRecText').value||''; if(!t){ recNote('אין טקסט להעתקה'); return; } if(navigator.clipboard){ navigator.clipboard.writeText(t).then(function(){ recNote('הועתק ✓'); },function(){ recNote('ההעתקה נכשלה'); }); } else { $('tkRecText').select(); try{ document.execCommand('copy'); recNote('הועתק ✓'); }catch(e){} } });
     $('tkRecWa').addEventListener('click', function(){ var t=($('tkRecText').value||'').trim(); if(!t){ recNote('אין טקסט לשליחה'); return; } window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank'); });
     $('tkRecSaveTxt').addEventListener('click', function(){ var t=$('tkRecText').value||''; if(!t){ recNote('אין טקסט לשמירה'); return; } recDl('תמלול-'+Date.now()+'.txt', new Blob([t],{type:'text/plain;charset=utf-8'})); recNote('הקובץ נשמר ✓'); });
+    $('tkRecClear').addEventListener('click', function(){ try{ recStop(); }catch(e){} recBase=''; recBlob=null; recChunks=[]; $('tkRecText').value=''; var au=$('tkRecAudio'); au.removeAttribute('src'); au.hidden=true; $('tkRecDlAudio').hidden=true; $('tkRecShareAudio').hidden=true; var up=$('tkRecUpload'); if(up) up.value=''; recStatus(''); recNote('המסך נוקה ✓'); });
     $('tkRecDlAudio').addEventListener('click', function(){ if(!recBlob){ recNote('אין הקלטה'); return; } recDl('הקלטה-'+Date.now()+'.'+recExt(recBlob.type), recBlob); });
     $('tkRecShareAudio').addEventListener('click', function(){ if(!recBlob){ recNote('אין הקלטה'); return; } var f=new File([recBlob],'הקלטה.'+recExt(recBlob.type),{type:recBlob.type||'audio/webm'}); if(navigator.canShare && navigator.canShare({files:[f]})){ navigator.share({files:[f],title:'הקלטה'}).catch(function(){}); } else { recDl(f.name, recBlob); recNote('שיתוף ישיר לא נתמך — ההקלטה הורדה'); } });
     $('tkRecUpload').addEventListener('change', function(e){ var f=e.target.files&&e.target.files[0]; if(!f) return; recBlob=f; var au=$('tkRecAudio'); au.src=URL.createObjectURL(f); au.hidden=false; $('tkRecDlAudio').hidden=false; $('tkRecShareAudio').hidden=false; recNote('קובץ נטען — אפשר להאזין ולשתף. (תמלול אוטומטי לקובץ מוקלט אינו זמין — רק להקלטה חיה)'); });
