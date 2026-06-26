@@ -1,0 +1,2358 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>שרשרת האספקה — קניינים</title>
+<meta name="theme-color" content="#3aa0db">
+<meta name="apple-mobile-web-app-title" content="שרשרת האספקה">
+<link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjogIlx1MDVlOVx1MDVlOFx1MDVlOVx1MDVlOFx1MDVlYSBcdTA1ZDRcdTA1ZDBcdTA1ZTFcdTA1ZTRcdTA1ZTdcdTA1ZDQiLCAic2hvcnRfbmFtZSI6ICJcdTA1ZTlcdTA1ZThcdTA1ZTlcdTA1ZThcdTA1ZWEgXHUwNWQ0XHUwNWQwXHUwNWUxXHUwNWU0XHUwNWU3XHUwNWQ0IiwgInN0YXJ0X3VybCI6ICJodHRwczovL2F2aWVvdG9rLmdpdGh1Yi5pby9taW51cy1tbGF5L2Rhc2hib2FyZC5odG1sIiwgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMwYzBhMDkiLCAidGhlbWVfY29sb3IiOiAiIzNhYTBkYiIsICJpY29ucyI6IFt7InNyYyI6ICJodHRwczovL2F2aWVvdG9rLmdpdGh1Yi5pby9taW51cy1tbGF5L2ljb24tZGFzaC5wbmciLCAic2l6ZXMiOiAiNTEyeDUxMiIsICJ0eXBlIjogImltYWdlL3BuZyIsICJwdXJwb3NlIjogImFueSBtYXNrYWJsZSJ9XX0=">
+<link rel="apple-touch-icon" href="icon-dash.png">
+<link rel="icon" type="image/png" href="icon-dash.png">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Rubik:wght@600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0a0b0e; --surface:#15171c; --surface2:#1c1f26; --line:#242830; --line2:#343a45;
+    --text:#f2f4f8; --muted:#98a0ac; --faint:#697079;
+    --red:#e2231a; --amber:#f59e0b; --amber2:#fbbf24; --green:#22c55e; --green2:#34d399; --blue:#3b82f6; --blue2:#60a5fa;
+    --gold:#d9b56b; --gold2:#f0d6a0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{font-family:'Heebo',sans-serif;background:var(--ink);color:var(--text);min-height:100vh}
+  .wrap{max-width:760px;margin:0 auto}
+
+  /* header */
+  .top{position:sticky;top:0;z-index:20;background:rgba(12,10,9,0.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .top-in{display:flex;align-items:center;gap:12px;padding:14px 18px;max-width:760px;margin:0 auto}
+  .badge{width:42px;height:42px;border-radius:11px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
+  .badge img{width:100%;height:100%;object-fit:contain;padding:5px}
+  .ttl{font-family:'Rubik',sans-serif;font-weight:900;font-size:18px;line-height:1.1}
+  .tkt{font-family:'Rubik',sans-serif;font-weight:800;font-size:12.5px;color:#fbbf24;background:rgba(251,191,36,.10);border:1px solid rgba(251,191,36,.5);border-radius:999px;padding:2px 10px;white-space:nowrap}
+  .sub{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;margin-top:2px}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--faint);flex-shrink:0}
+  .dot.on{background:var(--green);box-shadow:0 0 0 0 rgba(34,197,94,.6);animation:pulse 2.4s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,.5)}70%{box-shadow:0 0 0 7px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+  .top-actions{margin-inline-start:auto;display:flex;gap:8px}
+  .ico{width:40px;height:40px;border-radius:11px;background:var(--surface);border:1px solid var(--line2);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:17px}
+  .ico:active{transform:scale(.94)}
+
+  main{padding:16px 18px 40px}
+
+  /* KPI */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:16px}
+  .kpi{background:var(--surface);border:1px solid var(--line);border-radius:15px;padding:13px 12px;cursor:pointer;text-align:right;position:relative;overflow:hidden;transition:border-color .15s}
+  .kpi:active{transform:scale(.985)}
+  .kpi.sel{border-color:var(--amber)}
+  .kpi .num{font-family:'Rubik',sans-serif;font-weight:900;font-size:27px;line-height:1}
+  .kpi .lbl{font-size:11.5px;color:var(--muted);margin-top:5px;font-weight:500}
+  .kpi .strip{position:absolute;inset-block:0;inset-inline-start:0;width:4px}
+  .k-wait .num{color:var(--amber2)} .k-wait .strip{background:var(--amber)}
+  .k-prog .num{color:var(--blue2)} .k-prog .strip{background:var(--blue)}
+  .k-urg .num{color:var(--red)} .k-urg .strip{background:var(--red)}
+  .k-done .num{color:var(--green2)} .k-done .strip{background:var(--green)}
+
+  /* filters */
+  .filters{display:flex;flex-direction:column;gap:9px;margin-bottom:14px}
+  .chips{display:flex;gap:7px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+  .chip{flex-shrink:0;background:var(--surface);border:1px solid var(--line2);color:var(--muted);border-radius:20px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;white-space:nowrap}
+  .chip.on{background:var(--text);color:var(--ink);border-color:var(--text)}
+  @property --ledang { syntax:'<angle>'; inherits:false; initial-value:0deg; }
+  @keyframes ledspin{ to{ --ledang:360deg; } }
+  @keyframes ledspinFallback{ 0%,100%{box-shadow:0 0 0 0 rgba(226,35,26,.6)} 50%{box-shadow:0 0 9px 3px rgba(226,35,26,.55)} }
+  .chip.chip-blink{position:relative;border-color:var(--red);animation:ledspinFallback 1.3s ease-in-out infinite}
+  .chip.chip-blink::before{content:'';position:absolute;inset:0;border-radius:inherit;padding:2.5px;background:conic-gradient(from var(--ledang), transparent 0deg, transparent 295deg, #ff6a5e 330deg, #e2231a 350deg, #ff8a7e 360deg);-webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:ledspin 1.3s linear infinite;pointer-events:none;filter:drop-shadow(0 0 3px #e2231a)}
+  .search{background:var(--surface);border:1px solid var(--line2);border-radius:12px;padding:12px 14px;color:var(--text);font-size:15px;font-family:'Heebo',sans-serif;width:100%}
+  .search:focus{outline:none;border-color:var(--green)}
+
+  /* alert card */
+  .list{display:flex;flex-direction:column;gap:11px}
+  .card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:15px 16px 15px 16px;overflow:hidden}
+  .card .rail{position:absolute;inset-block:0;inset-inline-end:0;width:5px}
+  .row1{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  .sku{font-family:'Rubik',sans-serif;font-weight:700;font-size:16.5px}
+  .desc{color:var(--muted);font-size:14px;margin-top:2px;font-weight:500}
+  .pill{flex-shrink:0;font-size:12px;font-weight:800;padding:5px 11px;border-radius:20px;border:1.5px solid;white-space:nowrap}
+  .meta{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:11px;font-size:12.5px;color:var(--faint)}
+  .meta b{color:var(--muted);font-weight:600}
+  .resp{margin-top:10px;background:var(--ink);border:1px solid var(--line2);border-radius:11px;padding:10px 12px;font-size:13px;color:var(--green2);display:flex;gap:7px;line-height:1.5}
+  .dcmp{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}
+  .dcmp th{color:var(--faint);font-weight:700;padding:6px;text-align:center;border-bottom:1px solid var(--line2)}
+  .dcmp th:nth-child(2){color:#fbbf24}.dcmp th:nth-child(3){color:#60a5fa}
+  .dcmp td{padding:7px 6px;text-align:center;border-bottom:1px solid var(--line2);color:var(--text)}
+  .dcmp td:first-child{color:var(--muted);font-weight:700}
+  .dphotos{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .dphotos img{width:92px;height:92px;object-fit:cover;border-radius:10px;border:1px solid var(--line2);display:block}
+  img.zoomable{cursor:zoom-in}
+  #imgLightbox{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:99999;padding:18px;cursor:zoom-out}
+  #imgLightbox.open{display:flex}
+  #imgLightbox img{max-width:100%;max-height:100%;border-radius:10px;box-shadow:0 12px 50px rgba(0,0,0,.7)}
+  #imgLightbox .lb-bar{position:fixed;bottom:22px;left:0;right:0;display:flex;gap:12px;justify-content:center}
+  #imgLightbox .lb-bar button{border:none;border-radius:12px;padding:12px 18px;font-size:15px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer}
+  #imgLightbox .lb-share{background:#25d366;color:#04210f}
+  #imgLightbox .lb-close{background:#3f3f46;color:#fff}
+  @keyframes blinkpulse{0%,100%{opacity:1}50%{opacity:.18}}
+  .pill.blink{animation:blinkpulse .55s ease-in-out infinite}
+  .acts{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .btn{flex:1;min-width:96px;border:1.5px solid var(--line2);background:var(--surface2);color:var(--text);border-radius:11px;padding:11px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif}
+  .btn:active{transform:scale(.98)}
+  .btn.prog.on{background:#0c2236;border-color:var(--blue);color:var(--blue2)}
+  .btn.done.on{background:#0f2417;border-color:var(--green);color:var(--green2)}
+  .btn.reply{flex:0 0 auto;min-width:0;padding:11px 14px}
+  .editor{margin-top:11px;display:none;flex-direction:column;gap:9px}
+  .editor.open{display:flex}
+  .editor textarea{background:var(--ink);border:1px solid var(--line2);border-radius:11px;padding:11px 12px;color:var(--text);font-size:14.5px;font-family:'Heebo',sans-serif;min-height:62px;resize:vertical}
+  .editor textarea:focus{outline:none;border-color:var(--green)}
+  .editor .save{background:var(--green);border:none;color:#052e16;border-radius:11px;padding:12px;font-size:15px;font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer}
+
+  .empty{text-align:center;color:var(--faint);padding:40px 20px;font-size:14.5px;line-height:1.7}
+  .empty .big{font-size:46px;margin-bottom:10px}
+  .cta{display:inline-block;margin-top:14px;background:var(--red);color:#fff;border:none;border-radius:12px;padding:13px 22px;font-size:15px;font-weight:800;cursor:pointer;font-family:'Heebo',sans-serif}
+
+  .foot{display:flex;gap:9px;margin-top:18px}
+  .foot button{flex:1;background:transparent;border:1.5px solid var(--line2);color:var(--muted);border-radius:12px;padding:12px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif}
+
+  /* modal */
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:60;display:none;align-items:flex-end;justify-content:center}
+  .modal.open{display:flex}
+  .sheet{background:var(--surface);width:100%;max-width:760px;max-height:90vh;overflow-y:auto;border-radius:20px 20px 0 0;border-top:1px solid var(--line);padding:20px 18px 26px}
+  .sheet h3{font-family:'Rubik',sans-serif;font-weight:800;font-size:17px;text-align:center;margin-bottom:14px}
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+  .field label{font-size:12.5px;color:var(--muted);font-weight:500}
+  .field input,.field select{background:var(--ink);border:1px solid var(--line2);border-radius:11px;padding:12px 13px;color:var(--text);font-size:15px;font-family:'Heebo',sans-serif;width:100%}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--green)}
+  .transfer{margin-top:10px;display:none;gap:9px;align-items:center}
+  .transfer.open{display:flex}
+  .order{margin-top:10px;display:none;flex-direction:column;gap:9px;background:#06281b;border:1px solid #166534;border-radius:12px;padding:12px}
+  .order.open{display:flex}
+  .order .osel{background:var(--surface);border:1px solid var(--line2);color:var(--text);border-radius:10px;padding:10px;font-size:14px;font-family:'Heebo',sans-serif}
+  .order .omsg{background:var(--ink);border:1px solid var(--line2);color:var(--text);border-radius:10px;padding:10px;font-size:14px;font-family:'Heebo',sans-serif;min-height:96px;resize:vertical}
+  .order .ogo{background:#25d366;border:none;color:#04210f;border-radius:10px;padding:11px;font-weight:800;font-size:14.5px;font-family:'Rubik','Heebo',sans-serif;cursor:pointer}
+  .cempty{color:var(--faint);font-size:13px;text-align:center;padding:6px}
+  .cbadge{display:inline-block;background:var(--blue);color:#fff;border-radius:999px;font-size:11px;font-weight:800;padding:1px 7px;margin-inline-start:3px}
+  .cbadge.gb{background:var(--green)}
+  .ubadge{display:inline-block;background:#e2231a;color:#fff;border-radius:999px;font-size:11px;font-weight:800;padding:1px 7px;margin-inline-start:4px;animation:upulse 1.4s ease-in-out infinite}
+  .btn.unread{border-color:#e2231a !important;color:#fca5a5 !important;box-shadow:0 0 0 1px rgba(226,35,26,.35)}
+  @keyframes upulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+  .vtabs{display:flex;gap:8px;margin-bottom:16px}
+  #soundBar{display:none;background:linear-gradient(90deg,#f59e0b,#fbbf24);color:#1c1917;font-weight:800;font-size:14px;text-align:center;padding:12px;border-radius:12px;margin-bottom:14px;cursor:pointer;font-family:'Rubik',sans-serif;box-shadow:0 2px 12px rgba(245,158,11,.3)}
+  .vtab{flex:1;background:var(--surface);border:1px solid var(--line);color:var(--muted);border-radius:12px;padding:12px;font-size:15px;font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer;position:relative}
+  .vtab.on{background:var(--red);border-color:var(--red);color:#fff}
+  .vbadge{display:none;background:#fbbf24;color:#1c1917;border-radius:999px;min-width:9px;height:9px;margin-inline-start:6px;vertical-align:middle;font-size:0;padding:0 4px}
+  .vbadge.show{display:inline-block}
+  #newsView{display:none}
+  main.news-mode #kpis,main.news-mode .filters,main.news-mode #list,main.news-mode .foot,main.news-mode #bossBar{display:none}
+  main.news-mode #newsView{display:block}
+  #kpiView{display:none}
+  main.kpi-mode #kpis,main.kpi-mode .filters,main.kpi-mode #list,main.kpi-mode .foot,main.kpi-mode #bossBar,main.kpi-mode #newsView{display:none}
+  main.kpi-mode #kpiView{display:block}
+  .kpi-head{font-family:'Rubik',sans-serif;font-weight:800;font-size:20px;margin-bottom:16px;color:var(--text)}
+  .kstat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+  .kstat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 14px;text-align:center;position:relative;overflow:hidden}
+  .kstat::before{content:'';position:absolute;inset-inline-start:0;top:0;bottom:0;width:4px;background:var(--muted)}
+  .kstat.s-open::before{background:var(--blue)} .kstat.s-wait::before{background:var(--amber)} .kstat.s-prog::before{background:#f59e0b}
+  .kstat.s-urg::before{background:var(--red)} .kstat.s-stuck::before{background:#dc2626} .kstat.s-done::before{background:var(--green)}
+  .kstat-n{font-family:'Rubik',sans-serif;font-weight:900;font-size:34px;line-height:1;color:var(--text)}
+  .kstat-l{font-size:12.5px;color:var(--muted);margin-top:6px;font-weight:600}
+  .kpi-2col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+  .kpi-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
+  .kpi-ttl{font-family:'Rubik',sans-serif;font-weight:800;font-size:15px;margin-bottom:12px;color:var(--text)}
+  .kpi-sub{font-size:12.5px;color:var(--faint);margin-top:8px}
+  .kbig{font-family:'Rubik',sans-serif;font-weight:900;font-size:40px;color:var(--green2);line-height:1}
+  .kpi-empty{color:var(--faint);font-size:13.5px;padding:10px 0;text-align:center}
+  .kbar-row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+  .kbar-lbl{flex:0 0 120px;font-size:13px;color:var(--text);font-weight:600;text-align:start;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .kbar-track{flex:1;height:14px;background:var(--ink);border-radius:7px;overflow:hidden}
+  .kbar-fill{display:block;height:100%;border-radius:7px;min-width:3px;transition:width .4s}
+  .kbar-val{flex:0 0 30px;text-align:center;font-weight:800;font-size:13.5px;color:var(--text)}
+  .ktrend{display:flex;align-items:flex-end;gap:5px;height:160px;padding-top:14px}
+  .ktcol{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:3px}
+  .ktnum{font-size:11px;font-weight:800;color:var(--muted);height:14px}
+  .ktbar{width:100%;max-width:26px;background:linear-gradient(180deg,var(--blue),var(--blue2));border-radius:5px 5px 0 0;min-height:2px}
+  .ktlbl{font-size:10px;color:var(--faint);white-space:nowrap}
+  .kstuck{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line);font-size:13px}
+  .kstuck:first-child{border-top:none}
+  .kst-tk{flex:0 0 auto;color:var(--amber);font-weight:800;font-size:12.5px}
+  .kst-desc{flex:1;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .kst-age{flex:0 0 auto;color:#fca5a5;font-weight:800}
+  .kst-by{flex:0 0 auto;color:var(--faint);font-size:12px}
+  @media(max-width:640px){ .kstat-grid{grid-template-columns:repeat(2,1fr)} .kpi-2col{grid-template-columns:1fr} .kbar-lbl{flex-basis:90px} .kst-by{display:none} }
+  .news-compose{margin-bottom:16px}
+  .nc-open{width:100%;background:var(--surface);border:1px dashed var(--line2);color:var(--green2);border-radius:13px;padding:14px;font-size:15px;font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer}
+  .nc-form{display:none;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;flex-direction:column;gap:10px}
+  .nc-form.open{display:flex}
+  .nc-cats{display:flex;gap:7px;flex-wrap:wrap}
+  .nc-cat{background:var(--ink);border:1px solid var(--line2);color:var(--muted);border-radius:999px;padding:7px 13px;font-size:13px;font-weight:700;cursor:pointer}
+  .nc-cat.on{background:rgba(226,35,26,.12);border-color:var(--red);color:#fca5a5}
+  .nc-title,.nc-body{background:var(--ink);border:1px solid var(--line2);border-radius:11px;padding:11px 13px;color:var(--text);font-size:15px;font-family:'Heebo',sans-serif}
+  .nc-title:focus,.nc-body:focus{outline:none;border-color:var(--red)}
+  .nc-body{min-height:90px;resize:vertical;line-height:1.55}
+  .nc-pending{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+  .nc-row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .nc-pin{font-size:13.5px;color:var(--muted);font-weight:700;display:flex;align-items:center;gap:5px;cursor:pointer}
+  .nc-photo{background:var(--surface2);border:1px solid var(--line2);color:var(--text);border-radius:11px;padding:8px 13px;font-size:13.5px;font-weight:700;cursor:pointer}
+  .nc-cancel{background:none;border:1px solid var(--line2);color:var(--muted);border-radius:11px;padding:8px 14px;font-size:13.5px;font-weight:700;cursor:pointer}
+  .nc-send{background:var(--red);border:none;color:#fff;border-radius:11px;padding:9px 20px;font-size:14.5px;font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer}
+  .news-item{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px;position:relative}
+  .news-item.pinned{border-color:rgba(251,191,36,.5);background:linear-gradient(180deg,rgba(251,191,36,.06),var(--surface))}
+  .ni-top{display:flex;align-items:center;gap:8px;margin-bottom:7px;flex-wrap:wrap}
+  .ni-cat{font-size:12px;font-weight:800;border-radius:999px;padding:2px 10px;border:1px solid}
+  .ni-cat.general{color:#93c5fd;border-color:#3b82f6}
+  .ni-cat.supplier{color:#6ee7b7;border-color:#10b981}
+  .ni-cat.urgent{color:#fca5a5;border-color:#e2231a}
+  .ni-cat.procedure{color:#fcd34d;border-color:#f59e0b}
+  .ni-pin{color:#fbbf24;font-size:13px;font-weight:800}
+  .ni-title{font-size:16.5px;font-weight:800;font-family:'Rubik',sans-serif;color:var(--text);margin-bottom:4px}
+  .ni-body{font-size:14.5px;color:var(--text);line-height:1.6;white-space:pre-wrap;word-break:break-word}
+  .ni-meta{font-size:12px;color:var(--faint);margin-top:8px;font-weight:600}
+  .ni-img{margin-top:10px}
+  .ni-img img{max-width:260px;max-height:260px;border-radius:10px;border:1px solid var(--line2);cursor:pointer;display:block}
+  .ni-acts{display:flex;gap:8px;margin-top:9px}
+  .ni-act{background:var(--surface2);border:1px solid var(--line2);color:var(--muted);border-radius:9px;padding:5px 11px;font-size:12.5px;font-weight:700;cursor:pointer}
+  .ni-act.del{color:#fca5a5;border-color:rgba(226,35,26,.4)}
+  .news-empty{text-align:center;color:var(--faint);padding:40px 20px;font-size:15px}
+  .genchat{margin-top:11px;display:none;flex-direction:column;gap:9px}
+  .genchat.open{display:flex}
+  .gthread{display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto;background:var(--ink);border:1px solid var(--line2);border-radius:11px;padding:10px}
+  .gmsg{background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;max-width:86%;align-self:flex-start}
+  .gmsg.me{align-self:flex-end;background:rgba(34,197,94,.10);border-color:rgba(34,197,94,.4)}
+  .gmeta{font-size:11.5px;color:var(--faint);margin-bottom:3px;font-weight:700}
+  .gtext{font-size:14px;color:var(--text);line-height:1.5;white-space:pre-wrap;word-break:break-word}
+  .gimg{margin-top:6px}
+  .gimg img{max-width:200px;max-height:200px;border-radius:9px;border:1px solid var(--line2);display:block;cursor:pointer}
+  .gpending{display:flex;align-items:center;flex-wrap:wrap}
+  .gpchip{font-size:12.5px;color:var(--green2);font-weight:700}
+  .gpx{background:none;border:none;color:#e2231a;font-weight:800;cursor:pointer;font-size:13px}
+  .ginrow{display:flex;gap:7px;align-items:stretch}
+  .gphoto{background:var(--surface2);border:1px solid var(--line2);border-radius:11px;font-size:18px;cursor:pointer;padding:0 12px}
+  .gin{flex:1;background:var(--ink);border:1px solid var(--line2);border-radius:11px;padding:10px 12px;color:var(--text);font-size:14.5px;font-family:'Heebo',sans-serif;min-height:44px;resize:vertical}
+  .gin:focus{outline:none;border-color:var(--green)}
+  .gsend{background:var(--green);border:none;color:#052e16;border-radius:11px;padding:0 18px;font-size:14.5px;font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer;white-space:nowrap}
+  .transfer select{flex:1;background:var(--ink);border:1px solid var(--line2);border-radius:11px;padding:11px 12px;color:var(--text);font-size:14.5px;font-family:'Heebo',sans-serif}
+  .transfer .tgo{flex:0 0 auto;background:var(--amber);border:none;color:var(--ink);border-radius:11px;padding:11px 16px;font-size:14px;font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer}
+  .mine-tag{color:var(--green2);font-weight:700}
+  .devrow{margin-top:11px;border-top:1px dashed var(--line2);padding-top:11px}
+  .del{background:transparent;border:1.5px solid #7f1d1d;color:#f87171;border-radius:10px;padding:9px 13px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif}
+  .del:active{transform:scale(.98)}
+  .prim{width:100%;background:var(--green);border:none;color:#052e16;border-radius:12px;padding:13px;font-size:15px;font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer}
+  .ghost{width:100%;background:transparent;border:1px solid var(--line2);color:var(--muted);border-radius:12px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;margin-top:9px}
+  .note{font-size:12.5px;color:var(--amber2);text-align:center;min-height:2px;margin-top:6px}
+
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:var(--ink);padding:11px 20px;border-radius:30px;font-size:14px;font-weight:700;opacity:0;transition:.25s;z-index:80;pointer-events:none}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  @media(max-width:520px){ .kpi .num{font-size:23px} .kpis{gap:7px} }
+
+  /* ===== עיצוב יוקרתי — אובסידיאן & שמפניה ===== */
+  body{ background:
+      radial-gradient(1100px 560px at 50% -220px, rgba(217,181,107,.055), transparent 60%),
+      radial-gradient(820px 460px at 100% 0%, rgba(59,130,246,.045), transparent 55%),
+      var(--ink); background-attachment:fixed; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
+  .top{ background:linear-gradient(180deg, rgba(16,18,23,.93), rgba(10,11,14,.80)); backdrop-filter:blur(16px) saturate(125%); -webkit-backdrop-filter:blur(16px) saturate(125%); border-bottom:1px solid transparent; box-shadow:0 1px 0 rgba(217,181,107,.20), 0 10px 26px -18px rgba(0,0,0,.85); }
+  .ttl{ letter-spacing:-.02em; }
+  .badge{ border-radius:12px; box-shadow:0 5px 16px -5px rgba(0,0,0,.65), 0 0 0 1px rgba(255,255,255,.06); }
+  .ico{ background:linear-gradient(180deg, var(--surface2), var(--surface)); border-color:rgba(255,255,255,.08); box-shadow:0 2px 7px -3px rgba(0,0,0,.55); transition:transform .12s, border-color .15s, background .2s; }
+  .ico:hover{ border-color:rgba(217,181,107,.45); }
+  .kpi{ background:linear-gradient(180deg, var(--surface2), var(--surface)); border-color:rgba(255,255,255,.06); border-radius:16px; box-shadow:0 9px 24px -15px rgba(0,0,0,.75), inset 0 1px 0 rgba(255,255,255,.045); transition:transform .14s, border-color .15s, box-shadow .2s; }
+  .kpi:hover{ border-color:var(--line2); box-shadow:0 13px 30px -15px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.07); }
+  .kpi.sel{ border-color:var(--gold); box-shadow:0 0 0 1px rgba(217,181,107,.45), 0 11px 28px -15px rgba(0,0,0,.85); }
+  .kpi .num{ letter-spacing:-.02em; }
+  .chips{ scrollbar-width:none; justify-content:center; flex-wrap:nowrap; gap:7px; overflow-x:auto; }
+  .chips::-webkit-scrollbar{ height:0; width:0; display:none; }
+  .histwrap{ display:flex; justify-content:center; }
+  .histchip{ border-radius:999px; padding:8px 18px; display:inline-flex; align-items:center; gap:6px; background:linear-gradient(180deg, var(--surface2), var(--surface)); border:1px solid rgba(255,255,255,.12); color:var(--muted); font-size:13px; font-weight:700; cursor:pointer; font-family:'Heebo',sans-serif; white-space:nowrap; box-shadow:0 2px 8px -4px rgba(0,0,0,.5); transition:transform .12s, border-color .15s, color .15s, background .2s, box-shadow .2s; }
+  .histchip:hover{ border-color:rgba(217,181,107,.45); color:var(--text); }
+  .histchip:active{ transform:scale(.97); }
+  .histchip.on{ background:linear-gradient(180deg,#f8f5ef,#e6e2d5); color:#171309; border-color:var(--gold); font-weight:800; box-shadow:0 6px 18px -7px rgba(217,181,107,.6), inset 0 1px 0 rgba(255,255,255,.6); }
+  .chip{ background:linear-gradient(180deg, var(--surface2), var(--surface)); border:1px solid rgba(255,255,255,.09); color:var(--muted); padding:8px 14px; font-size:13px; font-weight:700; border-radius:20px; box-shadow:0 2px 8px -4px rgba(0,0,0,.5); transition:transform .12s, border-color .15s, color .15s, background .2s, box-shadow .2s; }
+  .chip:not(.on):hover{ border-color:rgba(217,181,107,.45); color:var(--text); }
+  .chip:not(.on):active{ transform:scale(.96); }
+  .chip.on{ background:linear-gradient(180deg,#f8f5ef,#e6e2d5); color:#171309; border:1px solid var(--gold); font-weight:800; box-shadow:0 6px 18px -7px rgba(217,181,107,.6), inset 0 1px 0 rgba(255,255,255,.6); }
+  .search{ background:rgba(255,255,255,.035); border-color:rgba(255,255,255,.09); transition:border-color .15s, box-shadow .15s; }
+  .search:focus{ outline:none; border-color:var(--gold); box-shadow:0 0 0 3px rgba(217,181,107,.16); }
+  .card{ background:linear-gradient(180deg, var(--surface2), var(--surface)); border-color:rgba(255,255,255,.06); border-radius:18px; box-shadow:0 15px 36px -20px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.045); transition:box-shadow .2s, border-color .15s; }
+  .card:hover{ border-color:rgba(255,255,255,.1); box-shadow:0 20px 44px -20px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.07); }
+  .sku{ letter-spacing:-.01em; }
+  .tkt{ color:var(--gold2); background:linear-gradient(180deg, rgba(217,181,107,.16), rgba(217,181,107,.05)); border:1px solid rgba(217,181,107,.5); box-shadow:0 2px 11px -5px rgba(217,181,107,.32) }
+  .btn{ background:linear-gradient(180deg, var(--surface2), var(--surface)); border-color:rgba(255,255,255,.1); transition:transform .12s, border-color .15s, background .2s, box-shadow .2s; }
+  .btn:hover{ border-color:var(--line2); }
+  .cta{ background:linear-gradient(180deg,#ef3b32,#cf1a12); box-shadow:0 9px 24px -9px rgba(226,35,26,.55); transition:transform .12s, box-shadow .2s; }
+  .cta:hover{ box-shadow:0 13px 30px -9px rgba(226,35,26,.72); }
+  .editor .save{ background:linear-gradient(180deg,#2ed47f,#16a34a); box-shadow:0 9px 22px -9px rgba(34,197,94,.5); }
+  .foot button{ transition:border-color .15s, color .15s, background .2s; }
+  .foot button:hover{ border-color:var(--gold); color:var(--gold2); }
+  .modal{ background:rgba(6,7,9,.66); backdrop-filter:blur(7px); -webkit-backdrop-filter:blur(7px); }
+  .sheet{ background:linear-gradient(180deg, var(--surface2), var(--surface)); border-top:1px solid rgba(217,181,107,.32); box-shadow:0 -22px 64px -22px rgba(0,0,0,.92); border-radius:24px 24px 0 0; }
+  .sheet h3{ letter-spacing:-.01em; }
+  .controls{ position:static; }
+  .tplbar{ display:flex; gap:6px; overflow-x:auto; padding:6px 2px 7px; margin-bottom:6px; scrollbar-width:none; }
+  .tplbar::-webkit-scrollbar{ height:0; display:none; }
+  .tplchip{ flex:0 0 auto; background:linear-gradient(180deg,#1c1f26,#15171c); border:1px solid rgba(217,181,107,.4); color:var(--gold2); border-radius:999px; padding:8px 14px; font-size:13px; font-weight:700; cursor:pointer; font-family:'Heebo',sans-serif; white-space:nowrap; box-shadow:0 2px 8px -4px rgba(0,0,0,.5); }
+  .tplchip:active{ transform:scale(.96); }
+
+  /* === פתיחת רשומה במסך מלא (לחיצה על הרשומה) === */
+  .card{ cursor:pointer; }
+  .card .acts,.card .editor,.card .transfer,.card .genchat,.card .order,
+  .card button,.card a,.card input,.card textarea,.card select,.card label{ cursor:auto; }
+  .fc-open{ background:var(--surface2); border:1px solid var(--line2); color:var(--muted); border-radius:8px; width:32px; height:27px; font-size:15px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; flex:0 0 auto; }
+  .fc-open:active{ transform:scale(.95); }
+  #fcBackdrop{ position:fixed; inset:0; z-index:79; background:rgba(6,7,9,.72); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); }
+  body.has-fullcard{ overflow:hidden; }
+  .card.fullcard{
+    position:fixed; inset:0; z-index:80;
+    width:100vw; max-width:100vw; height:100vh; height:100dvh;
+    margin:0; border:none; border-radius:0; box-shadow:none;
+    overflow-x:hidden; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    padding:62px 20px calc(40px + env(safe-area-inset-bottom,0px));
+    background:linear-gradient(180deg, var(--surface2), var(--surface));
+  }
+  .card.fullcard .rail{ width:6px; }
+  .card.fullcard .fc-open{ display:none; }
+  .card.fullcard .row1 .sku{ font-size:19px; }
+  .card.fullcard .desc{ font-size:15px; }
+  .card.fullcard .meta{ font-size:13.5px; }
+  .fc-close{
+    position:fixed; top:calc(12px + env(safe-area-inset-top,0px)); inset-inline-end:16px; z-index:82;
+    width:44px; height:44px; border-radius:13px;
+    background:var(--surface2); border:1px solid var(--line2); color:var(--text);
+    font-size:20px; font-weight:800; line-height:1; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .fc-close:active{ transform:scale(.95); }
+</style>
+</head>
+<body>
+<div id="setGate" style="position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9998;display:none;align-items:center;justify-content:center;padding:24px">
+  <div style="background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px;max-width:340px;width:100%;text-align:center;display:flex;flex-direction:column;gap:14px">
+    <div style="font-family:'Rubik',sans-serif;font-weight:800;font-size:18px">🔒 הגדרות מערכת</div>
+    <div style="color:var(--muted);font-size:13.5px">אזור למפתח בלבד. הזן סיסמה כדי להמשיך.</div>
+    <input id="setPin" type="tel" inputmode="numeric" placeholder="סיסמה" style="background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:13px;color:var(--text);font-family:'Heebo',sans-serif;font-size:16px;text-align:center">
+    <div id="setPinMsg" style="color:#f87171;font-size:12.5px;min-height:14px"></div>
+    <button class="prim" id="setPinOk">כניסה</button>
+    <button class="ghost" id="setPinCancel">ביטול</button>
+  </div>
+</div>
+<div id="idGate" style="position:fixed;inset:0;background:#0c0a09;z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center">
+  <div style="font-family:'Rubik',sans-serif;font-weight:900;font-size:24px;color:#fafaf9">מי אתה?</div>
+  <div style="color:#a8a29e;font-size:14.5px;max-width:340px;line-height:1.7">בחר את שמך מהרשימה כדי להיכנס ללוח. הבחירה נשמרת וננעלת למכשיר זה.</div>
+  <select id="gateSel" style="width:100%;max-width:320px;background:#1c1917;border:1px solid #44403c;border-radius:12px;padding:15px;color:#fafaf9;font-size:16px;font-family:'Heebo',sans-serif"><option value="">— בחר את שמך —</option></select>
+  <button class="prim" id="gateOk" style="max-width:320px;width:100%">כניסה</button>
+  <div id="gateMsg" style="color:#f87171;font-size:13px;min-height:16px"></div>
+  <button id="gateDev" style="background:none;border:none;color:#57534e;font-size:12px;cursor:pointer;text-decoration:underline">מפתח</button>
+</div>
+<div class="wrap">
+  <div class="top">
+    <div class="top-in">
+      <div class="badge"><img src="icon.png" alt="אפקון" onerror="this.outerHTML='<span style=\'font-family:Rubik;font-weight:900;color:#e2231a;font-size:22px\'>A</span>'"></div>
+      <div>
+        <div class="ttl">שרשרת האספקה</div>
+        <div class="sub"><span class="dot" id="dot"></span><span id="status">לא מחובר</span></div>
+        <div id="meBar" style="font-size:12.5px;color:var(--green2);font-weight:700;margin-top:2px"></div>
+      </div>
+      <div class="top-actions">
+        <button class="ico" id="tkOpen" title="כלי עזר" style="width:auto;padding:0 12px;font-size:13.5px;font-weight:800;gap:5px">כלי עזר 🧰</button>
+        <button class="ico" id="refreshBtn" title="רענן">🔄</button>
+        <button class="ico" id="aboutBtn" title="אודות">ℹ️</button>
+        <button class="ico" id="presBtn" title="נוכחות משתמשים" style="display:none">👥</button>
+        <button class="ico" id="gearBtn" title="הגדרות">⚙️</button>
+      </div>
+    </div>
+  </div>
+
+  <main>
+    <div class="controls" id="controls">
+    <div id="soundBar">🔔 הקש להפעלת התראות לנייד ‹ כדי לקבל פופ-אפ + צליל על כל דיווח חדש</div>
+    <div class="vtabs">
+      <button class="vtab on" id="vtBoard">📋 פניות</button>
+      <button class="vtab" id="vtKpi">📊 מחוונים</button>
+      <button class="vtab" id="vtNews">📢 ידיעון<span id="newsBadge" class="vbadge">●</span></button>
+    </div>
+    <div class="kpis" id="kpis">
+      <div class="kpi k-wait" data-f="ממתין"><span class="strip"></span><div class="num" id="kWait">0</div><div class="lbl">ממתינות</div></div>
+      <div class="kpi k-prog" data-f="בטיפול"><span class="strip"></span><div class="num" id="kProg">0</div><div class="lbl">בטיפול</div></div>
+      <div class="kpi k-urg" data-f="urgent"><span class="strip"></span><div class="num" id="kUrg">0</div><div class="lbl">דחופות פתוחות</div></div>
+      <div class="kpi k-done" data-f="today"><span class="strip"></span><div class="num" id="kDone">0</div><div class="lbl">טופלו היום</div></div>
+    </div>
+
+    <div id="bossBar" class="hidden" style="background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:11px 15px;margin-bottom:14px;font-size:13.5px;color:var(--muted);display:flex;gap:7px;align-items:center;flex-wrap:wrap"></div>
+
+    <div class="filters">
+      <div class="chips" id="scopeChips">
+        <button class="chip on" data-m="all">כל הצוות</button>
+        <button class="chip" data-m="mine">רק שלי</button>
+      </div>
+      <div class="chips" id="statusChips">
+        <button class="chip on" data-s="all">פעילות</button>
+        <button class="chip" data-s="ממתין">ממתין</button>
+        <button class="chip" data-s="בטיפול">בטיפול</button>
+      </div>
+      <div class="chips" id="urgChips">
+        <button class="chip on" data-u="all">כל הדחיפויות</button>
+        <button class="chip" data-u="דחוף">⚠️ דחוף</button>
+        <button class="chip" data-u="אזל לגמרי">🔴 אזל</button>
+        <button class="chip" data-u="כמות נמוכה">🟠 כמות נמוכה</button>
+      </div>
+      <div class="chips" id="typeChips">
+        <button class="chip on" data-t="all">כל הסוגים</button>
+        <button class="chip" data-t="חוסר מלאי">🟠 חוסר מלאי</button>
+        <button class="chip" data-t="פריט פגום">🔴 פגום</button>
+        <button class="chip" data-t="אי-התאמה">🔵 אי-התאמה</button>
+      </div>
+      <div class="histwrap">
+        <button class="histchip" id="histBtn" data-s="history">🗄️ היסטוריה (טופלו)</button>
+      </div>
+      <input class="search" id="search" placeholder="חיפוש מק״ט / תיאור / מדווח…">
+    </div>
+    </div>
+
+    <div class="list" id="list"></div>
+
+    <div class="foot">
+      <button id="exportBtn">⬇️ ייצוא לאקסל</button>
+      <button id="exportWaBtn">📲 שלח בוואטסאפ</button>
+      <button id="fullReportBtn" style="display:none">📊 דוח מלא (הכל)</button>
+      <button id="sheetBtn">📊 פתח גיליון</button>
+    </div>
+
+    <div id="newsView">
+      <div class="news-compose">
+        <button class="nc-open" id="ncOpen">➕ פרסם הודעה חדשה בידיעון</button>
+        <div class="nc-form" id="ncForm">
+          <div class="nc-cats" id="ncCats">
+            <button class="nc-cat on" data-cat="general">📢 כללי</button>
+            <button class="nc-cat" data-cat="supplier">🚚 ספק/סחורה</button>
+            <button class="nc-cat" data-cat="urgent">⚠️ חשוב</button>
+            <button class="nc-cat" data-cat="procedure">📋 נוהל</button>
+          </div>
+          <input class="nc-title" id="ncTitle" placeholder="כותרת ההודעה">
+          <textarea class="nc-body" id="ncBody" placeholder="תוכן ההודעה…"></textarea>
+          <div class="nc-pending" id="ncPending"></div>
+          <div class="nc-row">
+            <label class="nc-pin"><input type="checkbox" id="ncPin"> 📌 הצמד לראש</label>
+            <button class="nc-photo" id="ncPhotoBtn" title="אפשר גם להדביק תמונה (Ctrl+V)">📷 תמונה</button>
+            <input type="file" id="ncFile" accept="image/*" style="display:none">
+            <span style="flex:1"></span>
+            <button class="nc-cancel" id="ncCancel">ביטול</button>
+            <button class="nc-send" id="ncSend">פרסם</button>
+          </div>
+        </div>
+      </div>
+      <div id="newsList"></div>
+    </div>
+
+    <div id="kpiView"></div>
+  </main>
+</div>
+
+<div class="modal" id="modal">
+  <div class="sheet">
+    <h3>הגדרות</h3>
+
+    <div style="background:var(--ink);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px">
+      <div style="width:54px;height:54px;border-radius:13px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden"><img src="icon.png" style="width:100%;height:100%;object-fit:contain;padding:6px" alt="אפקון" onerror="this.outerHTML='<span style=\'font-family:Rubik;font-weight:900;color:#e2231a;font-size:24px\'>A</span>'"></div>
+      <div style="font-family:'Rubik',sans-serif;font-weight:900;font-size:17px">אפקון — פורטל שרשרת האספקה</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.6">מערכת לניהול חוסרים במחסן: המחסנאים מדווחים, הקניינים מטפלים, והמנהל עוקב. כל דיווח נרשם ומתועד אוטומטית.</div>
+      <div style="font-size:12px;color:var(--faint);margin-top:2px">© אבידן קוטאי · כל הזכויות שמורות</div>
+    </div>
+
+    <button class="ghost" id="advBtn">🔒 הגדרות (מפתח)</button>
+    <div id="advPinRow" style="display:none;gap:8px;margin-top:10px">
+      <input id="advPin" type="tel" inputmode="numeric" placeholder="סיסמת מפתח" style="flex:1;background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--text);font-family:'Heebo',sans-serif;font-size:16px">
+      <button class="prim" id="advPinOk" style="max-width:110px">אישור</button>
+    </div>
+
+    <div id="advBox" class="hidden" style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px">
+      <div class="field"><label>מי אתה? (בחר מרשימת הקניינים)</label><select id="mName"><option value="">— בחר —</option></select></div>
+      <p id="idLock" class="hidden" style="color:#22c55e;font-size:12.5px;margin:-8px 0 14px">🔒 השם נבחר וננעל. לשינוי — אפס זהות למטה.</p>
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:14px;font-size:14.5px;font-weight:700"><input type="checkbox" id="mBoss" style="width:22px;height:22px;accent-color:#22c55e;flex:0 0 auto"><span>אני מנהל — צפייה ומעקב בלבד (בלי כפתורי טיפול)</span></label>
+      <button class="prim" id="mSave">שמור זהות / מנהל</button>
+      <div class="note" id="mNote"></div>
+      <div style="border-top:1px solid var(--line);margin:14px 0;padding-top:4px"></div>
+      <div class="field"><label>כתובת המערכת (Web App URL)</label><input id="mUrl" placeholder="https://script.google.com/macros/s/..."></div>
+      <div class="field"><label>טוקן סודי</label><input id="mTok" placeholder="אותו סוד שבקוד השרת"></div>
+      <div class="field"><label>קישור לגיליון (לא חובה — לכפתור "פתח גיליון")</label><input id="mSheet" placeholder="https://docs.google.com/spreadsheets/..."></div>
+      <button class="prim" id="advSave">בדוק חיבור ושמור</button>
+      <div class="note" id="advNote"></div>
+
+      <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:4px">📦 קטלוג פריטים מרכזי</div>
+        <p style="font-size:12.5px;color:var(--faint);line-height:1.6;margin-bottom:10px">העלה קובץ אקסל/CSV — עמודה A: מק״ט, עמודה B: תיאור. הקטלוג יידחף לכל המחסנאים אוטומטית.</p>
+        <input type="file" id="catFile" accept=".xlsx,.xls,.csv" style="display:none">
+        <button class="ghost" id="catPush" style="border-color:var(--amber);color:var(--amber2)">⬆️ דחוף קטלוג לכולם</button>
+        <div class="note" id="catNote"></div>
+      </div>
+
+      <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:4px">💬 תבניות לצ'אט (משותף לכל המכשירים)</div>
+        <p style="font-size:12.5px;color:var(--faint);line-height:1.6;margin-bottom:10px">תבניות מהירות לכל תווית. יופיעו בלחיצה על שורת הצ'אט בפנייה מאותו סוג. "כללי" יופיע בכל הסוגים.</p>
+        <div id="tplTypeTabs" style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:11px">
+          <button class="chip on" data-tt="חוסר מלאי">🟠 חוסר מלאי</button>
+          <button class="chip" data-tt="פריט פגום">🔴 פגום</button>
+          <button class="chip" data-tt="אי-התאמה">🔵 אי-התאמה</button>
+          <button class="chip" data-tt="">כללי</button>
+        </div>
+        <div id="tplList" style="display:flex;flex-direction:column;gap:7px;margin-bottom:10px"></div>
+        <div style="display:flex;gap:8px">
+          <input id="tplNew" placeholder="טקסט תבנית חדשה…" style="flex:1;background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--text);font-family:'Heebo',sans-serif;font-size:14px">
+          <button class="ghost" id="tplAdd" style="border-color:var(--green);color:var(--green2)">➕ הוסף</button>
+        </div>
+        <div class="note" id="tplNote"></div>
+      </div>
+
+      <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:8px">📲 קודי QR להתקנה</div>
+        <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+            <div id="qrWh" style="background:#fff;padding:9px;border-radius:12px;width:140px;height:140px;display:flex;align-items:center;justify-content:center"></div>
+            <div style="font-weight:800;font-size:13px">📦 למחסנאים</div>
+            <div style="font-size:11px;color:var(--faint)">דיווח חוסרים</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+            <div id="qrBuy" style="background:#fff;padding:9px;border-radius:12px;width:140px;height:140px;display:flex;align-items:center;justify-content:center"></div>
+            <div style="font-weight:800;font-size:13px">🛒 לקניינים ולמנהל</div>
+            <div style="font-size:11px;color:var(--faint)">לוח בקרה</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:4px">👥 ניהול שמות</div>
+        <p style="font-size:12.5px;color:var(--faint);line-height:1.6;margin-bottom:10px">הוסף, ערוך או הסר שמות. הקניינים והמחסנאים בוחרים מתוך הרשימות האלה.</p>
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <button class="chip on" id="nameTabBuyers" data-k="buyers">קניינים</button>
+          <button class="chip" id="nameTabReporters" data-k="reporters">מחסנאים</button>
+        </div>
+        <div id="nameList" style="display:flex;flex-direction:column;gap:7px;margin-bottom:10px"></div>
+        <div style="display:flex;gap:8px">
+          <input id="nameNew" placeholder="שם מלא חדש (שם ושם משפחה)" style="flex:1;background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--text);font-family:'Heebo',sans-serif;font-size:14px">
+          <button class="ghost" id="nameAdd" style="border-color:var(--green);color:var(--green2)">➕ הוסף</button>
+        </div>
+        <div class="note" id="nameNote"></div>
+      </div>
+
+      <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:8px">🔄 איפוס זהות</div>
+        <p style="font-size:12.5px;color:var(--faint);line-height:1.6;margin-bottom:10px">מאפס את השם שנבחר במכשיר זה, כדי לאפשר בחירת שם מחדש.</p>
+        <button class="ghost" id="resetIdent" style="border-color:#7f1d1d;color:#f87171">🔄 אפס זהות במכשיר זה</button>
+      </div>
+
+      <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:8px">📢 פרסום גרסה</div>
+        <p style="font-size:12.5px;color:var(--faint);line-height:1.6;margin-bottom:10px">אחרי שהעלית גרסה חדשה לאתר — לחץ כאן, וכל המכשירים הפתוחים יתרעננו אוטומטית לגרסה החדשה.</p>
+        <button class="ghost" id="pubVer" style="border-color:var(--green);color:var(--green2)">📢 פרסם גרסה לכולם</button>
+        <div class="note" id="pubNote"></div>
+      </div>
+
+      <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:8px;color:#f87171">🧹 איפוס כל ההתראות</div>
+        <p style="font-size:12.5px;color:var(--faint);line-height:1.6;margin-bottom:10px">מוחק את <b>כל</b> ההתראות מהמערכת לצמיתות (ממתינות, בטיפול וטופלו). השמות והקטלוג יישארו. פעולה זו אינה הפיכה.</p>
+        <button class="ghost" id="clearAll" style="border-color:#7f1d1d;color:#f87171">🧹 אפס את כל ההתראות</button>
+        <div class="note" id="clearNote"></div>
+      </div>
+      <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:8px;color:#f87171">📞 ספר הטלפונים המשותף</div>
+        <p style="font-size:12.5px;color:var(--faint);line-height:1.6;margin-bottom:10px">מוחק את <b>כל</b> הספקים ששותפו לכולם (ב„כלי עזר ▸ טלפונים"). הספקים האישיים שכל אחד שמר במכשירו לא יושפעו. פעולה זו אינה הפיכה.</p>
+        <button class="ghost" id="clearPhones" style="border-color:#7f1d1d;color:#f87171">🗑️ מחק את כל ספר הטלפונים המשותף</button>
+        <div class="note" id="clearPhNote"></div>
+      </div>
+      <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:8px">🗂️ גיבוי הנתונים</div>
+        <p style="font-size:12.5px;color:var(--faint);line-height:1.6;margin-bottom:10px">גיבוי יומי אוטומטי של כל הנתונים נשמר בתיקיית Drive (נשמרים 30 הגיבויים האחרונים). אפשר גם לגבות עכשיו ידנית כדי לבדוק.</p>
+        <button class="ghost" id="backupNow" style="border-color:var(--line2)">🗂️ גבה עכשיו</button>
+        <div class="note" id="backupNote"></div>
+        <div style="margin-top:12px">
+          <button class="ghost" id="loadBackups" style="border-color:var(--line2)">↩️ שחזור מגיבוי…</button>
+          <div id="restoreBox" style="display:none;margin-top:10px">
+            <select id="restoreSel" style="width:100%;background:var(--ink);border:1px solid var(--line2);color:var(--text);border-radius:10px;padding:10px;font-size:13.5px;font-family:'Heebo',sans-serif"></select>
+            <button class="ghost" id="doRestore" style="border-color:#7f1d1d;color:#f87171;margin-top:8px;width:100%">↩️ שחזר מהגיבוי שנבחר</button>
+          </div>
+          <div class="note" id="restoreNote"></div>
+        </div>
+        <div style="border-top:1px dashed var(--line2);margin-top:14px;padding-top:14px">
+          <div style="font-weight:700;font-size:14px;margin-bottom:4px">💾 גיבוי לקובץ במחשב <span style="color:var(--green);font-size:11.5px;font-weight:800">(מומלץ)</span></div>
+          <p style="font-size:12.5px;color:var(--faint);line-height:1.6;margin-bottom:10px">מוריד את <b>כל</b> הנתונים לקובץ אחד במחשב שלך — פניות, ספר טלפונים, ידיעון, קטלוג, שמות <b>וגם התמונות</b>. לא דורש הרשאות. השחזור טוען קובץ כזה ומחזיר את הכל.</p>
+          <button class="ghost" id="dlBackup" style="border-color:#166534;color:#34d399;width:100%">⬇️ הורד גיבוי לקובץ</button>
+          <div class="note" id="dlNote" style="margin-bottom:8px"></div>
+          <button class="ghost" id="upRestore" style="border-color:#7f1d1d;color:#f87171;width:100%">⬆️ שחזר מקובץ במחשב</button>
+          <input type="file" id="restoreFile" accept="application/json,.json" style="display:none">
+          <div class="note" id="upNote"></div>
+        </div>
+      </div>
+    </div>
+
+    <button class="ghost" id="mClose">סגור</button>
+  </div>
+</div>
+
+<div class="modal" id="presModal">
+  <div class="sheet">
+    <h3>👥 נוכחות משתמשים</h3>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:6px"><button id="presRefresh" style="background:none;border:none;color:#60a5fa;font-weight:800;cursor:pointer;font-size:13px">↻ רענן</button></div>
+    <div id="presBody"></div>
+    <button class="btn" id="presClose" style="margin-top:12px;width:100%;background:var(--surface2);border:1px solid var(--line2);color:var(--text);border-radius:11px;padding:11px;font-weight:800;cursor:pointer">סגור</button>
+  </div>
+</div>
+<div class="modal" id="aboutModal">
+  <div class="sheet">
+    <h3>אודות</h3>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:13px;text-align:center">
+      <div style="font-size:12px;color:var(--faint)">© אבידן קוטאי · כל הזכויות שמורות</div>
+      <div style="width:72px;height:72px;border-radius:16px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden"><img src="icon.png" style="width:100%;height:100%;object-fit:contain;padding:8px" alt="אפקון" onerror="this.outerHTML='<span style=\'font-family:Rubik;font-weight:900;color:#e2231a;font-size:30px\'>A</span>'"></div>
+      <div style="font-family:'Rubik',sans-serif;font-weight:900;font-size:21px">פורטל שרשרת האספקה</div>
+      <div style="color:var(--muted);font-size:14px;line-height:1.8;max-width:440px">מערכת מקצה‑לקצה לניהול חוסרים ורכש בין המחסן לקנייני שרשרת האספקה — דיווח, טיפול, מעקב, תקשורת ותיעוד, הכול במקום אחד ובזמן אמת.</div>
+      <div style="background:var(--ink);border:1px solid var(--line);border-radius:14px;padding:15px 16px;max-width:450px;width:100%;text-align:start;font-size:13.5px;color:var(--text);line-height:1.95;display:flex;flex-direction:column;gap:6px">
+        <div style="font-weight:800;font-size:14px;margin-bottom:3px">מה יש בפורטל</div>
+        <div>📦 דיווח חוסר / פריט פגום / אי‑התאמה מהמחסן — ברקוד או מק״ט עם השלמת תיאור</div>
+        <div>🎫 מספר קריאה ייחודי לכל פנייה — למעקב ותיעוד</div>
+        <div>🛒 לוח קניינים/מנהל — שיוך, סטטוס (ממתין · בטיפול · טופל), העברה בין קניינים והיסטוריה</div>
+        <div>💬 צ'אט פנייה דו‑כיווני עם המחסן — כולל תמונות</div>
+        <div>🔔 התראות קוליות ורטט על קריאות והודעות חדשות</div>
+        <div>📢 ידיעון — הודעות לכל הצוות, עם נעיצה וקטגוריות</div>
+        <div>📊 לוח מחוונים למנהל — נתונים, זמני טיפול ופילוחים</div>
+        <div>🧰 כלי עזר — רשימות (הקלדה / הקלטת שמע / כתב יד), ממיר מטבעות, ממיר שטחים</div>
+        <div>📞 ספר טלפונים — אישי ומשותף, עם חיוג ישיר וניווט בלחיצה</div>
+        <div>🗄️ תיעוד מלא ב‑Google Sheets וייצוא לאקסל</div>
+      </div>
+    </div>
+    <button class="ghost" id="aboutClose" style="margin-top:18px">סגור</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+  // ===== הגדלת תמונה במקום (lightbox) — לחיצה על תמונה מגדילה, לא פותחת לשונית =====
+  function openLightbox(src){ if(!src) return; var ov=document.getElementById('imgLightbox'); if(!ov){ ov=document.createElement('div'); ov.id='imgLightbox'; ov.innerHTML='<img alt=\"תמונה\"><div class=\"lb-bar\"><button type=\"button\" class=\"lb-share\">📲 שתף בוואטסאפ</button><button type=\"button\" class=\"lb-close\">✕ סגור</button></div>'; document.body.appendChild(ov); ov.addEventListener('click',function(e){ if(e.target===ov) ov.classList.remove('open'); }); ov.querySelector('.lb-close').addEventListener('click',function(e){ e.stopPropagation(); ov.classList.remove('open'); }); ov.querySelector('.lb-share').addEventListener('click',function(e){ e.stopPropagation(); shareLightbox(); }); } ov.querySelector('img').src=src; ov.classList.add('open'); }
+  function dataURLtoFile(durl,name){ var arr=durl.split(','),mm=(arr[0].match(/:(.*?);/)||[])[1]||'image/jpeg',bstr=atob(arr[1]),n=bstr.length,u8=new Uint8Array(n); while(n--) u8[n]=bstr.charCodeAt(n); return new File([u8],name,{type:mm}); }
+  async function shareLightbox(){ var ov=document.getElementById('imgLightbox'); if(!ov) return; var src=ov.querySelector('img').getAttribute('src'); if(!src) return; var file=null; try{ file=dataURLtoFile(src,'afcon-photo.jpg'); }catch(e){} if(file && navigator.canShare && navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file], title:'תמונה — שרשרת האספקה'}); }catch(e){} return; } try{ var a=document.createElement('a'); a.href=src; a.download='afcon-photo.jpg'; document.body.appendChild(a); a.click(); a.remove(); alert('שיתוף ישיר אינו נתמך במכשיר זה — התמונה הורדה, אפשר לצרף אותה ידנית בוואטסאפ.'); }catch(_){} }
+  document.addEventListener('click', function(e){ var im=(e.target&&e.target.closest)?e.target.closest('img.zoomable'):null; if(im){ e.preventDefault(); e.stopPropagation(); openLightbox(im.getAttribute('src')); } }, true);
+
+  const APP_URL='https://avieotok.github.io/minus-mlay';
+  function renderQRs(){
+    if(typeof QRCode==='undefined') return;
+    const mk=(id,url)=>{ const el=document.getElementById(id); if(!el||el.dataset.done) return;
+      try{ new QRCode(el,{text:url,width:122,height:122,colorDark:'#0c0a09',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M}); el.dataset.done='1'; }catch(e){} };
+    mk('qrWh', APP_URL);
+    mk('qrBuy', APP_URL+'/dashboard.html');
+  }
+  const $ = id => document.getElementById(id);
+  const K = { api:'afcon_api_url', token:'afcon_api_token', me:'afcon_me', sheet:'afcon_sheet', boss:'afcon_boss' };
+  // חיבור מוטמע מראש — הלוח מחובר אוטומטית בלי הגדרה ידנית
+  const EMBED_API='https://script.google.com/macros/s/AKfycbxtEKo2wDVseqk5TrPPF7FvTtvZTCaqFvowgYtkinGE3MECd_Y1ZYc1xdJUD1-Wc1Eq1A/exec';
+  const EMBED_TOKEN='afcon2026';
+  try{ if(localStorage.getItem(K.api)!==EMBED_API){ localStorage.setItem(K.api, EMBED_API); } if(localStorage.getItem(K.token)!==EMBED_TOKEN){ localStorage.setItem(K.token, EMBED_TOKEN); } }catch(e){}
+
+  function apiUrl(){ return (localStorage.getItem(K.api)||EMBED_API||'').trim(); }
+  function apiToken(){ return (localStorage.getItem(K.token)||EMBED_TOKEN||'').trim(); }
+  try{ window.__AFCON_API={get url(){return apiUrl();}, get token(){return apiToken();}}; }catch(e){}
+  function apiOn(){ return !!apiUrl(); }
+  function apiGetJsonp(action, params){
+    return new Promise(function(resolve, reject){
+      let url;
+      try{ url=new URL(apiUrl()); }catch(e){ reject(e); return; }
+      const cb='__cb'+Date.now()+Math.floor(Math.random()*100000);
+      url.searchParams.set('token', apiToken());
+      url.searchParams.set('action', action);
+      if(params) for(const k in params){ if(params[k]!=null) url.searchParams.set(k, params[k]); }
+      url.searchParams.set('callback', cb);
+      url.searchParams.set('_', Date.now());
+      const s=document.createElement('script');
+      let done=false;
+      function cleanup(){ try{ delete window[cb]; }catch(e){ window[cb]=undefined; } if(s&&s.parentNode) s.parentNode.removeChild(s); }
+      window[cb]=function(data){ done=true; cleanup(); resolve(data); };
+      s.onerror=function(){ if(!done){ cleanup(); reject(new Error('jsonp error')); } };
+      setTimeout(function(){ if(!done){ cleanup(); reject(new Error('jsonp timeout')); } }, 20000);
+      s.src=url.toString();
+      document.head.appendChild(s);
+    });
+  }
+  async function apiGet(action, params){ return apiGetJsonp(action, params); }
+  async function apiPost(action, payload){
+    if(action!=='catalogSet' && action!=='rosterSet' && action!=='importAll' && action!=='tplSet'){ return apiGetJsonp(action, payload||{}); }
+    // קטלוג/שמות (רשימות גדולות) ב-POST בלבד
+    const body=Object.assign({token:apiToken(),action:action}, payload||{});
+    const r=await fetch(apiUrl(),{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)});
+    const txt=await r.text(); return JSON.parse(txt);
+  }
+  function esc(s){ return (s||'').toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+  // ===== תמונות לצ'אט: דחיסה + העלאה (ניסיון יחיד, בלי כפילויות) =====
+  const PHOTO_TARGET=55000;
+  function loadImg(file){ return new Promise(function(res,rej){ const r=new FileReader(); r.onload=function(){ const img=new Image(); img.onload=function(){res(img);}; img.onerror=rej; img.src=r.result; }; r.onerror=rej; r.readAsDataURL(file); }); }
+  function drawJpeg(img,maxDim,quality){ let w=img.width,h=img.height; const m=Math.max(w,h); if(m>maxDim){ const s=maxDim/m; w=Math.round(w*s); h=Math.round(h*s); } const c=document.createElement('canvas'); c.width=w; c.height=h; const ctx=c.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,w,h); ctx.drawImage(img,0,0,w,h); return c.toDataURL('image/jpeg',quality); }
+  function dataUrlBytes(d){ const i=d.indexOf(','); return i<0?0:Math.round((d.length-i-1)*0.75); }
+  async function compressPhoto(file){ const img=await loadImg(file); let dim=800,q=0.5,d=drawJpeg(img,dim,q),guard=0;
+    while(dataUrlBytes(d)>PHOTO_TARGET && guard++<12){ if(q>0.34){ q=Math.round((q-0.08)*100)/100; } else { dim=Math.round(dim*0.82); q=0.5; if(dim<420) break; } d=drawJpeg(img,dim,q); } return d; }
+  async function uploadPhotos(id, photos){
+    try{ await fetch(apiUrl(),{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({token:apiToken(),action:'addPhotos',id:id,photos:photos})}); }catch(e){}
+  }
+
+  const URANK={'דחוף':3,'אזל לגמרי':2,'כמות נמוכה':1};
+  const UCOLOR={'דחוף':'#b91c1c','אזל לגמרי':'#e2231a','כמות נמוכה':'#f59e0b'};
+  const SPILL={
+    'ממתין':{c:'#fbbf24',bg:'rgba(245,158,11,.12)'},
+    'בטיפול':{c:'#60a5fa',bg:'rgba(59,130,246,.12)'},
+    'טופל':{c:'#34d399',bg:'rgba(34,197,94,.12)'}
+  };
+
+  let ALERTS=[], BUYERS=[], REPORTERS=[], fStatus='all', fUrg='all', fType='all', fSearch='', fMine=false, auto=true, timer=null, busy=false, seen=null;
+  const photoCache={};
+  function photoBlock(a){
+    if(!a.photo || !(Number(a.photo)>0)) return '';
+    const id=String(a.id);
+    if(photoCache[id]) return '<div class="dphotos">'+photoCache[id].map(d=>'<img class="zoomable" src="'+d+'" loading="lazy" alt="תמונה">').join('')+'</div>';
+    return '<div class="dphotos" data-pid="'+esc(id)+'"><span style="color:#a8a29e;font-size:12.5px">📷 טוען תמונות…</span></div>';
+  }
+  async function fetchPendingPhotos(){
+    const els=document.querySelectorAll('#list .dphotos[data-pid]');
+    for(const el of els){ const id=el.getAttribute('data-pid'); if(!id||photoCache[id]) continue;
+      try{ const r=await apiGet('photos',{id:id}); if(r&&r.ok&&Array.isArray(r.photos)){ photoCache[id]=r.photos; } else { continue; } }catch(e){ continue; }
+      el.removeAttribute('data-pid'); el.innerHTML=(photoCache[id]||[]).map(d=>'<img class="zoomable" src="'+d+'" loading="lazy" alt="תמונה">').join('');
+    }
+  }
+  const me=()=> (localStorage.getItem(K.me)||'').trim();
+  const isBoss=()=> localStorage.getItem(K.boss)==='1';
+
+  // התראה ("צלצול") כשנכנסת קריאה חדשה
+  let AC=null;
+  function ensureAudio(){ try{ const C=window.AudioContext||window.webkitAudioContext; if(!C) return null; AC=AC||new C(); if(AC.state==='suspended') AC.resume(); return AC; }catch(e){ return null; } }
+  function vibe(p){ try{ if(navigator.vibrate) navigator.vibrate(p); }catch(e){} }
+  function chime(kind){
+    const ctx=ensureAudio(); if(!ctx) return; const t0=ctx.currentTime;
+    const seq = (kind==='call') ? [[880,0],[1175,0.18],[1568,0.36]] : [[880,0],[1245,0.16]];
+    seq.forEach(function(p){ const f=p[0],off=p[1]; const o=ctx.createOscillator(),g=ctx.createGain(); o.connect(g); g.connect(ctx.destination);
+      o.type='sine'; o.frequency.value=f; g.gain.setValueAtTime(0.0001,t0+off); g.gain.exponentialRampToValueAtTime(0.32,t0+off+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t0+off+0.32); o.start(t0+off); o.stop(t0+off+0.34); });
+    vibe(kind==='call'?[300,120,300,120,400]:[200,100,200]);
+  }
+  function beep(){ chime('msg'); }
+  function ring(n){
+    toast('📥 '+(n>1?(n+' קריאות חדשות'):'נכנסה קריאה חדשה'));
+    chime('call'); setTimeout(function(){ chime('call'); }, 850);
+    try{ if('Notification' in window && Notification.permission==='granted')
+      new Notification('אפקון — קריאה חדשה', { body:(n>1?(n+' קריאות חדשות לטיפול'):'נכנסה קריאה חדשה לטיפול'), tag:'afcon-call', renotify:true }); }catch(e){}
+  }
+  // ===== Service Worker + התראות מערכת עם פרטי הדיווח =====
+  var SWREG=null;
+  function syncSticky(){ var t=document.querySelector('.top'); if(t) document.documentElement.style.setProperty('--hH', t.offsetHeight+'px'); }
+  window.addEventListener('resize', syncSticky);
+  // ===== תבניות צ'אט (משותפות לכל המכשירים, לפי תווית) =====
+  const TPL_KEY='afcon_tpl_v2';
+  let TPLS=[]; let tplAdminType='חוסר מלאי';
+  function tplCacheGet(){ try{ const a=JSON.parse(localStorage.getItem(TPL_KEY)||'[]'); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
+  function tplCacheSet(a){ try{ localStorage.setItem(TPL_KEY, JSON.stringify(a)); }catch(e){} }
+  async function tplLoad(){ try{ const r=await apiGet('tpl'); if(r && r.ok && Array.isArray(r.templates)){ TPLS=r.templates; tplCacheSet(TPLS); renderTplAdmin(); } }catch(e){} }
+  async function tplSave(){ tplCacheSet(TPLS); const n=$('tplNote'); if(n) n.textContent='שומר…'; try{ const r=await apiPost('tplSet',{data:TPLS}); if(n) n.textContent=(r&&r.ok)?'נשמר ✓ זמין בכל המכשירים':'נשמר מקומית — בדוק חיבור'; }catch(e){ if(n) n.textContent='נשמר מקומית — אין חיבור לשרת'; } }
+  function tplTypeOf(ta){ const card=ta.closest&&ta.closest('.card'); if(!card) return ''; const a=ALERTS.find(x=>String(x.id)===String(card.dataset.id)); return a?String(a.type||'חוסר מלאי'):''; }
+  function tplInsert(ta, text){ const v=ta.value, s=(ta.selectionStart!=null?ta.selectionStart:v.length), e=(ta.selectionEnd!=null?ta.selectionEnd:v.length); ta.value=v.slice(0,s)+text+v.slice(e); const pos=s+text.length; try{ ta.selectionStart=ta.selectionEnd=pos; }catch(_){} ta.focus(); ta.dispatchEvent(new Event('input',{bubbles:true})); }
+  function tplBuildBar(ta){ const ty=tplTypeOf(ta); const arr=TPLS.filter(t=>!t.type||t.type===ty); if(!arr.length) return null; const bar=document.createElement('div'); bar.className='tplbar'; arr.forEach(t=>{ const b=document.createElement('button'); b.type='button'; b.className='tplchip'; b.textContent=(t.text.length>28?t.text.slice(0,28)+'…':t.text); b.title=t.text; b.addEventListener('mousedown', ev=>{ ev.preventDefault(); tplInsert(ta, t.text); }); bar.appendChild(b); }); return bar; }
+  document.addEventListener('focusin', e=>{ const ta=e.target; if(!ta||!ta.matches||!ta.matches('.gin, .editor textarea')) return; const prev=ta.previousElementSibling; if(prev && prev.classList && prev.classList.contains('tplbar')) return; const bar=tplBuildBar(ta); if(bar) ta.parentNode.insertBefore(bar, ta); });
+  document.addEventListener('focusout', e=>{ const ta=e.target; if(!ta||!ta.matches||!ta.matches('.gin, .editor textarea')) return; setTimeout(()=>{ const bar=ta.previousElementSibling; if(bar && bar.classList && bar.classList.contains('tplbar') && document.activeElement!==ta) bar.remove(); }, 200); });
+  function renderTplAdmin(){ const box=$('tplList'); if(!box) return; const rows=TPLS.map((t,i)=>({t,i})).filter(o=>String(o.t.type||'')===tplAdminType); if(!rows.length){ box.innerHTML='<div style="color:var(--faint);font-size:13px">אין תבניות לתווית זו עדיין</div>'; return; } box.innerHTML=rows.map(o=>'<div style="display:flex;gap:8px;align-items:center;background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:9px 11px"><span style="flex:1;font-size:13.5px;white-space:pre-wrap;word-break:break-word">'+esc(o.t.text)+'</span><button data-i="'+o.i+'" class="tpl-ed" style="background:none;border:none;cursor:pointer;font-size:15px">✏️</button><button data-i="'+o.i+'" class="tpl-del" style="background:none;border:none;cursor:pointer;font-size:15px">🗑️</button></div>').join(''); }
+  function registerSW(){ if(!('serviceWorker' in navigator)) return; navigator.serviceWorker.register('sw.js').then(function(reg){ SWREG=reg; }).catch(function(){}); }
+  // ===== נוכחות: פעימת לב + מסך מנהל =====
+  const APP_NAME='dashboard';
+  const PRES_OWNER='אבידן קוטאי', PRES_PIN='30172'; let presUnlocked=false;
+  function presCanView(){ return isBoss()||me()===MGR||me()===PRES_OWNER; }
+  function presencePing(){ try{ if(!apiOn()) return; var nm=me(); if(!nm) return; apiGet('presence',{me:nm, app:APP_NAME}); }catch(e){} }
+  function updatePresBtn(){ var b=$('presBtn'); if(b) b.style.display=presCanView()?'':'none'; var f=$('fullReportBtn'); if(f) f.style.display=presCanView()?'':'none'; }
+  function presAgo(iso, now){ var t=Date.parse(iso); if(!t) return ''; var m=Math.round((now-t)/60000); if(m<1) return 'עכשׁיו'; if(m<60) return 'לפני '+m+' דק׳'; var hh=Math.round(m/60); if(hh<24) return 'לפני '+hh+' ש׳'; return 'לפני '+Math.round(hh/24)+' ימים'; }
+  function presHHMM(iso){ var d=new Date(iso); if(isNaN(d.getTime())) return ''; return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }
+  function presApp(a){ return a==='warehouse'?'🏭 מחסן':(a==='dashboard'?'🛒 לוח':a); }
+  async function openPresence(){
+    var mgr=(isBoss()||me()===MGR);
+    if(!mgr){
+      if(me()!==PRES_OWNER) return;
+      if(!presUnlocked && !devOpen){ var pin=prompt('הקש/י קוד כדי לצפות בנוכחות:'); if(String(pin||'').trim()!==PRES_PIN){ if(pin!==null) alert('קוד שגוי.'); return; } presUnlocked=true; }
+    }
+    $('presModal').classList.add('open'); $('presBody').innerHTML='<div style="color:var(--muted)">טוען…</div>';
+    try{
+      if(!BUYERS.length && !REPORTERS.length){ try{ await loadRoster(); }catch(e){} }
+      const r=await apiGet('presenceList'); const rows=(r&&r.presence)||[]; const now=Date.now();
+      const latest={}; rows.forEach(x=>{ const t=Date.parse(x.lastSeen)||0; const cur=latest[x.name]; if(!cur||t>cur.t) latest[x.name]={t:t, iso:x.lastSeen, app:x.app}; });
+      const isOnline=n=>{ const L=latest[n]; return !!(L && (now-L.t)<=180000); };
+      function userRow(name){
+        const L=latest[name], onl=isOnline(name);
+        const right = onl
+          ? '<span style="color:#34d399;font-weight:800;font-size:13.5px">🟢 מחובר עכשׁיו · '+presApp(L.app)+'</span>'
+          : (L ? '<span style="color:var(--muted);font-size:13px">נראה '+presAgo(L.iso,now)+' · '+presApp(L.app)+'</span>'
+               : '<span style="color:var(--faint);font-size:13px">לא נכנס עדיין</span>');
+        const box = onl ? 'background:#06281b;border:1px solid #166534' : 'background:var(--ink);border:1px solid var(--line)';
+        return '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;'+box+';border-radius:10px;padding:10px 12px;margin-bottom:6px"><span style="font-weight:700">'+(onl?'🟢 ':'⚪ ')+esc(name)+'</span>'+right+'</div>';
+      }
+      function section(title, arr){
+        const list=(arr||[]).slice().sort((a,b)=>{ const oa=isOnline(a)?1:0, ob=isOnline(b)?1:0; if(oa!==ob) return ob-oa; return ((latest[b]?latest[b].t:0)-(latest[a]?latest[a].t:0)); });
+        let h='<div style="font-weight:800;margin:8px 0 8px;color:var(--blue2)">'+title+' ('+list.length+')</div>';
+        h+= list.length ? list.map(userRow).join('') : '<div style="color:var(--faint);font-size:13px">אין</div>';
+        return h;
+      }
+      const roster=BUYERS.concat(REPORTERS);
+      const buyers=BUYERS.filter(n=>n!==PRES_OWNER);
+      const reporters=REPORTERS.filter(n=>n!==PRES_OWNER).concat(PRES_OWNER); // אבידן מוצג עם המחסנאים
+      const extras=Object.keys(latest).filter(n=>roster.indexOf(n)<0 && n!==PRES_OWNER);
+      const shown=buyers.concat(reporters, extras);
+      const onlineCount=shown.filter(isOnline).length;
+      let html='<div style="font-weight:900;font-size:15px;margin:2px 0 6px;color:var(--green2)">🟢 מחוברים עכשׁיו: '+onlineCount+'</div>';
+      html+=section('🛒 קניינים', buyers);
+      html+=section('🏭 מחסנאים', reporters);
+      if(extras.length) html+=section('👤 משתמשים נוספים', extras);
+      $('presBody').innerHTML=html;
+    }catch(e){ $('presBody').innerHTML='<div style="color:#f87171">שגיאה בטעינה — ייתכן שצריך לפרוס מחדש את Code.gs.</div>'; }
+  }
+  function notifyOS(title, body, tag){
+    try{
+      if(!('Notification' in window) || Notification.permission!=='granted') return;
+      var opts={ body:body, tag:tag||'afcon-new', renotify:true, icon:'icon-dash.png', badge:'icon-dash.png', data:{ url: location.href } };
+      if(SWREG && SWREG.showNotification){ SWREG.showNotification(title, opts); return; }
+      if(navigator.serviceWorker && navigator.serviceWorker.ready){ navigator.serviceWorker.ready.then(function(r){ try{ r.showNotification(title, opts); }catch(e){ try{ new Notification(title, opts); }catch(_){} } }); return; }
+      var nn=new Notification(title, opts); nn.onclick=function(){ try{ window.focus(); }catch(e){} nn.close(); };
+    }catch(e){}
+  }
+  function typeEmoji(t){ t=String(t||'חוסר מלאי'); return t==='פריט פגום'?'🔴':(t==='אי-התאמה'?'🔵':'🟠'); }
+  function notifyNew(list){
+    toast('📥 '+(list.length>1?(list.length+' דיווחים חדשים'):'נכנס דיווח חדש'));
+    chime('call'); setTimeout(function(){ chime('call'); }, 850);
+    var title, body;
+    if(list.length===1){
+      var a=list[0]; var ty=String(a.type||'חוסר מלאי');
+      title='דיווח חדש — '+typeEmoji(ty)+' '+ty;
+      body='מק״ט '+(a.sku||'—')+(a.desc?(' · '+a.desc):'')+(a.reporter?(' · '+a.reporter):'');
+    } else {
+      title='📥 '+list.length+' דיווחים חדשים';
+      body='נכנסו '+list.length+' דיווחים חדשים לטיפול';
+    }
+    notifyOS(title, body, 'afcon-new');
+  }
+  // שחרור שמע בכל מגע ראשון (נדרש בנייד)
+  document.addEventListener('click', function(){ ensureAudio(); }, true);
+  function soundOn(){ return localStorage.getItem('afcon_sound_on')==='1'; }
+  function showSoundBar(){ const b=$('soundBar'); if(b) b.style.display=soundOn()?'none':'block'; }
+
+  // ===== הודעות צ'אט שלא נקראו (כדי שלא יפספסו) =====
+  let CSEEN={}; try{ CSEEN=JSON.parse(localStorage.getItem('afcon_chat_seen')||'{}')||{}; }catch(e){ CSEEN={}; }
+  function cseenSave(){ try{ localStorage.setItem('afcon_chat_seen', JSON.stringify(CSEEN)); }catch(e){} }
+  function unreadFor(a){ const s=CSEEN[String(a.id)]; if(s===undefined) return 0; return Math.max(0, genCount(a)-s); }
+  function totalUnread(){ let t=0; ALERTS.forEach(a=>t+=unreadFor(a)); return t; }
+  const BASE_TITLE='שרשרת האספקה — קניינים';
+  function updateTitle(){ const t=totalUnread(); document.title=(t>0?('🔴 ('+t+') '):'')+BASE_TITLE; }
+  function markChatSeen(id){ const a=ALERTS.find(x=>String(x.id)===String(id)); CSEEN[String(id)]=a?genCount(a):0; cseenSave(); updateTitle(); }
+  let prevUnread=0, reconciledOnce=false;
+  function reconcileChat(){
+    ALERTS.forEach(a=>{ const id=String(a.id); if(CSEEN[id]===undefined){ CSEEN[id]=genCount(a); } });
+    cseenSave();
+    const t=totalUnread();
+    if(reconciledOnce && t>prevUnread){ try{ beep(); }catch(e){} toast('💬 הודעה חדשה בצ׳אט'); }
+    prevUnread=t; reconciledOnce=true; updateTitle();
+  }
+
+  async function loadRoster(){
+    if(!apiOn()) return;
+    try{ const r=await apiGet('roster'); if(r&&r.ok&&Array.isArray(r.buyers)){ BUYERS=r.buyers; REPORTERS=Array.isArray(r.reporters)?r.reporters:[]; fillIdentity(); fillGate(); maybeGate(); renderNames&&renderNames(); if(ALERTS.length) render(); } }catch(e){}
+  }
+  // שער זהות — קופץ בכניסה ראשונה וחוסם עד שבוחרים שם
+  function fillGate(){ const sel=$('gateSel'); if(!sel) return; sel.innerHTML='<option value="">— בחר את שמך —</option>'+BUYERS.map(b=>'<option value="'+esc(b)+'">'+esc(b)+'</option>').join(''); }
+  function maybeGate(){ const g=$('idGate'); if(!g) return; if(!me()){ fillGate(); g.style.display='flex'; } else { g.style.display='none'; } }
+  function fillIdentity(){
+    const sel=$('mName'); if(!sel) return; const cur=me();
+    let opts='<option value="">— בחר —</option>'+BUYERS.map(b=>'<option value="'+esc(b)+'">'+esc(b)+'</option>').join('');
+    if(cur && BUYERS.indexOf(cur)<0) opts+='<option value="'+esc(cur)+'">'+esc(cur)+'</option>';
+    sel.innerHTML=opts; sel.value=cur;
+    sel.disabled=!!cur;
+    if($('idLock')) $('idLock').classList.toggle('hidden',!cur);
+    updateMeBar();
+  }
+  function updateMeBar(){ const el=$('meBar'); if(!el) return; const n=me(); el.textContent = n ? ('👤 '+n+(isBoss()?' · מנהל':'')) : ''; updateKpiTabVis(); }
+  function buyerOptions(){ return '<option value="">העבר לקניין…</option>'+BUYERS.map(b=>'<option value="'+esc(b)+'">'+esc(b)+'</option>').join(''); }
+  // ===== הזמנה מספק ב-WhatsApp =====
+  var SUPPLIERS_CACHE=null;
+  function loadSuppliers(cb){
+    if(SUPPLIERS_CACHE){ cb(SUPPLIERS_CACHE); return; }
+    apiGet('contacts').then(function(r){
+      var arr=(r&&r.ok&&r.contacts)?r.contacts:[];
+      SUPPLIERS_CACHE=arr.filter(function(c){ return String(c.kind||'supplier')!=='customer'; });
+      cb(SUPPLIERS_CACHE);
+    }).catch(function(){ cb([]); });
+  }
+  function waPhone(num){ var d=String(num||'').replace(/[^0-9]/g,''); if(!d) return ''; if(d.indexOf('972')===0) return d; if(d.charAt(0)==='0') return '972'+d.substring(1); if(d.length===9 && d.charAt(0)==='5') return '972'+d; return d; }
+  function orderMsg(a){
+    var L=['שלום 🙂','כאן '+(me()||'')+' מאפקון.','נא לספק את הפריט הבא:'];
+    L.push('• מק״ט '+(a.sku||'—')+(a.desc?(' — '+a.desc):''));
+    if(a.qty) L.push('• כמות: '+a.qty);
+    if(a.ticket) L.push('(מס׳ קריאה: '+a.ticket+')');
+    L.push('תודה רבה!');
+    return L.join('\n');
+  }
+  function openOrderPanel(card, id){
+    var panel=card.querySelector('.order'); if(!panel) return;
+    var open=panel.classList.toggle('open'); if(!open) return;
+    var a=ALERTS.find(function(x){return String(x.id)===String(id);})||{};
+    var msg=panel.querySelector('.omsg'); if(msg && !msg.value.trim()) msg.value=orderMsg(a);
+    var sel=panel.querySelector('.osel'); sel.innerHTML='<option value="">טוען ספקים…</option>';
+    loadSuppliers(function(sup){
+      var withPhone=sup.filter(function(c){ return waPhone(c.p1)||waPhone(c.p2); });
+      if(!withPhone.length){ sel.innerHTML='<option value="">אין ספקים עם טלפון בספר הטלפונים</option>'; return; }
+      withPhone.sort(function(x,y){ return String(x.supplier||'').localeCompare(String(y.supplier||''),'he'); });
+      sel.innerHTML='<option value="">בחר ספק…</option>'+withPhone.map(function(c){ var ph=waPhone(c.p1)||waPhone(c.p2); return '<option value="'+ph+'">'+esc(c.supplier||'ספק')+' · '+esc(c.p1||c.p2)+'</option>'; }).join('');
+    });
+  }
+
+  function fmt(iso){ if(!iso) return ''; try{ return new Date(iso).toLocaleString('he-IL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }catch(e){ return ''; } }
+  function fmtLog(s){ s=String(s==null?'':s); if(!s) return '';
+    return s.split(' | ').map(function(part){ var m=part.match(/^(.*?)\s*\((.*)\)\s*$/);
+      return m ? (m[1].trim()+' ('+fmt(m[2])+')') : part.trim(); }).join('  ;  '); }
+  function isOpen(a){ return String(a.status)!=='טופל'; }
+  // ===== צ'אט מנהל / הנחיות לקניין =====
+  const MGR='יהודה פור';
+  // לוח המחוונים — רק למנהל (יהודה פור) או במצב מנהל
+  function updateKpiTabVis(){ const t=$('vtKpi'); if(!t) return; const allowed=(me()===MGR)||isBoss(); t.style.display=allowed?'':'none'; if(!allowed && document.querySelector('main.kpi-mode')) setView('board'); }
+  function fmtGenChat(s){ s=String(s==null?'':s); if(!s) return '';
+    return s.split('\u0002').map(function(m){ var p=m.split('\u0001'); var t=(p[2]||''); if(p[3]) t=(t?t+' ':'')+'📷'; return (p[0]||'')+' ['+fmt(p[1]||'')+']: '+t; }).join('  •  '); }
+
+  // ===== צ'אט הפנייה (כללי — מחסנאי/קניינים/מנהל, דו-כיווני, עם תמונות) =====
+  const pendingChatImg={};
+  function parseMsgs(raw){ raw=String(raw||''); if(!raw) return [];
+    return raw.split('\u0002').map(function(m){ const p=m.split('\u0001'); return {author:p[0]||'', ts:p[1]||'', text:p[2]||'', photo:p[3]||''}; }); }
+  function genCount(a){ const s=String(a.chat||''); return s?s.split('\u0002').length:0; }
+  function genMsgHtml(m){
+    const mine=(String(m.author||'').trim()===me());
+    const isMgr=(String(m.author||'').trim()===MGR);
+    const img=m.photo?('<div class="gimg" data-cphoto="'+esc(m.photo)+'"><span style="color:#a8a29e;font-size:12px">📷 טוען…</span></div>'):'';
+    return '<div class="gmsg'+(mine?' me':'')+'"><div class="gmeta">'+(isMgr?'💼 ':'')+esc(m.author||'—')+' · '+esc(fmt(m.ts))+'</div>'
+      +(m.text?('<div class="gtext">'+esc(m.text)+'</div>'):'')+img+'</div>';
+  }
+  function genThreadHtml(a){ const msgs=parseMsgs(a.chat); if(!msgs.length) return '<div class="cempty">אין הודעות עדיין — פתח/י שיחה</div>';
+    return msgs.map(genMsgHtml).join(''); }
+  function genBtn(a){ const cc=genCount(a); const un=unreadFor(a);
+    return '<button class="btn reply'+(un>0?' unread':'')+'" data-act="gchat">💬 צ׳אט הפנייה'
+      +(un>0?(' <span class="ubadge">'+un+'</span>'):(cc?(' <span class="cbadge gb">'+cc+'</span>'):''))+'</button>'; }
+  function genPanel(a){
+    return '<div class="genchat"><div class="gthread">'+genThreadHtml(a)+'</div>'
+      +'<div class="gpending"></div>'
+      +'<div class="ginrow"><button class="gphoto" title="צרף או הדבק תמונה (Ctrl+V)">📷</button>'
+      +'<input type="file" class="gfile" accept="image/*" style="display:none">'
+      +'<textarea class="gin" placeholder="כתוב/י הודעה…"></textarea>'
+      +'<button class="gsend">שלח</button></div></div>';
+  }
+  async function fetchChatPhotos(){
+    const els=document.querySelectorAll('#list .gimg[data-cphoto]');
+    for(const el of els){ const pid=el.getAttribute('data-cphoto'); if(!pid) continue;
+      if(!photoCache[pid]){ try{ const r=await apiGet('photos',{id:pid}); if(r&&r.ok&&Array.isArray(r.photos)){ photoCache[pid]=r.photos; } else { continue; } }catch(e){ continue; } }
+      el.removeAttribute('data-cphoto');
+      el.innerHTML=(photoCache[pid]||[]).map(d=>'<img class="zoomable" src="'+d+'">').join('');
+    }
+  }
+  async function sendGenMsg(card, id){
+    if(needMe()) return;
+    const inp=card.querySelector('.gin'); const text=(inp?inp.value:'').trim();
+    const img=pendingChatImg[id]||'';
+    if(!text && !img) return;
+    const ts=new Date().toISOString(); let photoId='';
+    if(img){ photoId='C'+Date.now()+Math.floor(Math.random()*1000); await uploadPhotos(photoId,[img]); }
+    const a=ALERTS.find(x=>String(x.id)===String(id)); const entry=me()+'\u0001'+ts+'\u0001'+text+'\u0001'+photoId;
+    if(a){ a.chat = a.chat?(a.chat+'\u0002'+entry):entry; }
+    if(photoId) photoCache[photoId]=[img];
+    const thread=card.querySelector('.gthread');
+    if(thread){ const em=thread.querySelector('.cempty'); if(em) thread.innerHTML=''; thread.insertAdjacentHTML('beforeend', genMsgHtml({author:me(),ts:ts,text:text,photo:photoId})); thread.scrollTop=thread.scrollHeight; }
+    if(inp) inp.value=''; delete pendingChatImg[id]; const pv=card.querySelector('.gpending'); if(pv) pv.innerHTML='';
+    markChatSeen(id);
+    fetchChatPhotos();
+    try{ await apiPost('msgAdd',{id:id, author:me(), text:text, photo:photoId}); }catch(e){ toast('השליחה נכשלה — נסה שוב'); }
+  }
+  async function onChatFile(card, id, file){
+    if(!file) return;
+    try{ const d=await compressPhoto(file); pendingChatImg[id]=d;
+      const pv=card.querySelector('.gpending');
+      if(pv) pv.innerHTML='<span class="gpchip">📎 תמונה מצורפת <button class="gpx" title="הסר">✕</button></span><img src="'+d+'" style="height:46px;border-radius:8px;border:1px solid var(--line2);margin-inline-start:8px">';
+    }catch(e){ toast('בעיה בעיבוד התמונה'); }
+  }
+  function isToday(iso){ if(!iso) return false; const d=new Date(iso); const n=new Date(); return d.toDateString()===n.toDateString(); }
+  // כל רשומה שטופלה עוברת מיד להיסטוריה. לא‑מטופלת נשארת פעילה.
+  function isArchived(a){
+    return String(a.status)==='טופל';
+  }
+  let devOpen=false; // ננעל מחדש בכל טעינת דף — נפתח רק עם 30172
+  let selDel=new Set(); // רשומות שסומנו למחיקה (מצב מפתח)
+  function updSelN(){ const el=$('selN'); if(el) el.textContent=selDel.size; }
+  async function deleteSelected(){
+    const ids=[...selDel];
+    if(!ids.length){ toast('לא נבחרו רשומות'); return; }
+    if(!confirm('למחוק '+ids.length+' רשומות לצמיתות? פעולה זו אינה הפיכה.')) return;
+    toast('מוחק '+ids.length+'…');
+    let okN=0, failN=0;
+    for(const id of ids){
+      let done=false;
+      for(let attempt=0; attempt<2 && !done; attempt++){
+        try{ const r=await apiPost('delete',{id:id}); if(r && r.ok){ done=true; okN++; } }
+        catch(e){}
+        if(!done) await new Promise(res=>setTimeout(res,400));
+      }
+      if(!done) failN++;
+    }
+    selDel.clear();
+    await load();
+    toast(failN ? ('נמחקו '+okN+', נכשלו '+failN+' — נסה שוב') : ('נמחקו '+okN+' רשומות ✓'));
+  }
+
+  function setConn(){
+    const on=apiOn();
+    $('dot').classList.toggle('on',on);
+    $('status').textContent = on ? '—' : 'לא מחובר · פתח הגדרות';
+  }
+
+  async function load(){
+    if(!apiOn()){ renderEmptyConfig(); setConn(); return; }
+    if(busy) return; busy=true;
+    try{
+      const res=await apiGet('all');
+      if(res && res.ok){
+        ALERTS=res.alerts||[];
+        const ids=ALERTS.map(a=>String(a.id));
+        if(seen===null){ seen=new Set(ids); }
+        else { const freshIds=ids.filter(id=>!seen.has(id)); ids.forEach(id=>seen.add(id)); if(freshIds.length){ const fresh=ALERTS.filter(a=>freshIds.indexOf(String(a.id))>=0); notifyNew(fresh); } }
+        reconcileChat();
+        $('status').textContent='מעודכן '+new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}); render(); loadNews();
+        if(document.querySelector('main.kpi-mode')) renderKpiDash();
+      }
+      else { $('status').textContent='שגיאה — בדוק טוקן'; }
+    }catch(e){ $('status').textContent='אין חיבור — בדוק כתובת/רשת'; }
+    busy=false;
+  }
+
+  function kpis(){
+    let w=0,p=0,u=0,d=0;
+    ALERTS.forEach(a=>{ if(a.status==='ממתין')w++; else if(a.status==='בטיפול')p++;
+      if(isOpen(a)&&(a.urgency==='דחוף'||a.urgency==='אזל לגמרי'))u++;
+      if(a.status==='טופל'&&isToday(a.updated||a.ackAt||a.created))d++; });
+    $('kWait').textContent=w; $('kProg').textContent=p; $('kUrg').textContent=u; $('kDone').textContent=d;
+  }
+
+  function filtered(){
+    let r=ALERTS.slice();
+    if(fStatus==='history' || fStatus==='טופל'){ r=r.filter(a=>String(a.status)==='טופל'); }
+    else { r=r.filter(a=>String(a.status)!=='טופל'); if(fStatus!=='all') r=r.filter(a=>String(a.status)===fStatus); }
+    if(fMine) r=r.filter(a=>String(a.assignee||'')===me());
+    if(fUrg!=='all') r=r.filter(a=>String(a.urgency)===fUrg);
+    if(fType!=='all') r=r.filter(a=>String(a.type||'חוסר מלאי')===fType);
+    if(fSearch){ const q=fSearch.toLowerCase();
+      r=r.filter(a=>([a.ticket,a.sku,a.desc,a.reporter,a.response,a.po,a.note,a.type,a.chat].join(' ')).toLowerCase().indexOf(q)>=0); }
+    if(fStatus==='history' || fStatus==='טופל'){
+      r.sort((a,b)=>((b.ackAt||b.updated||b.created||'').localeCompare(a.ackAt||a.updated||a.created||'')));
+    } else {
+      r.sort((a,b)=>{ const oa=isOpen(a)?1:0, ob=isOpen(b)?1:0; if(oa!==ob) return ob-oa;
+        const ua=URANK[a.urgency]||0, ub=URANK[b.urgency]||0; if(ua!==ub) return ub-ua;
+        return (b.created||'').localeCompare(a.created||''); });
+    }
+    return r;
+  }
+
+  /* === פתיחת רשומה במסך מלא === */
+  var fullCardId=null;
+  function openFullCard(id){ if(fullCardId===String(id)) return; fullCardId=String(id); applyFullCard(); }
+  function closeFullCard(){ fullCardId=null; applyFullCard(); }
+  function applyFullCard(){
+    var list=document.getElementById('list'); if(!list) return;
+    list.querySelectorAll('.card.fullcard').forEach(function(c){ c.classList.remove('fullcard'); });
+    list.querySelectorAll('.fc-close').forEach(function(b){ b.remove(); });
+    var bd=document.getElementById('fcBackdrop'); if(bd) bd.remove();
+    if(!fullCardId){ document.body.classList.remove('has-fullcard'); return; }
+    var cards=list.querySelectorAll('.card'), card=null;
+    for(var i=0;i<cards.length;i++){ if(cards[i].dataset.id===fullCardId){ card=cards[i]; break; } }
+    if(!card){ fullCardId=null; document.body.classList.remove('has-fullcard'); return; }
+    bd=document.createElement('div'); bd.id='fcBackdrop'; bd.addEventListener('click', closeFullCard);
+    document.body.appendChild(bd);
+    var x=document.createElement('button'); x.type='button'; x.className='fc-close'; x.setAttribute('aria-label','סגור'); x.textContent='✕';
+    card.appendChild(x);
+    card.classList.add('fullcard'); document.body.classList.add('has-fullcard');
+    try{ card.scrollTop=0; }catch(e){}
+  }
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape' && fullCardId){ closeFullCard(); } });
+
+  function render(){
+    updatePresBtn();
+    syncSticky();
+    kpis();
+    const boss=isBoss();
+    const bb=$('bossBar');
+    if(boss){
+      const total=ALERTS.length, done=ALERTS.filter(a=>a.status==='טופל').length, open=ALERTS.filter(a=>isOpen(a)).length, un=ALERTS.filter(a=>isOpen(a)&&!a.assignee).length;
+      bb.innerHTML='👁️ <b style="color:#fafaf9">מצב מנהל</b> · צפייה ומעקב'
+        +' &nbsp;|&nbsp; סה״כ קריאות: '+total
+        +' &nbsp;|&nbsp; פתוחות: '+open
+        +' &nbsp;|&nbsp; לא משויכות: '+un
+        +' &nbsp;|&nbsp; טופלו: '+done;
+      bb.classList.remove('hidden');
+    } else { bb.classList.add('hidden'); }
+    document.querySelectorAll('.kpi').forEach(k=>{
+      const f=k.dataset.f;
+      k.classList.toggle('sel', f===fStatus);
+    });
+    const list=$('list'), items=filtered();
+    const openState={}; const orderDraft={};
+    list.querySelectorAll('.card').forEach(c=>{ const cid=c.dataset.id; const o=[];
+      if(c.querySelector('.editor.open'))o.push('editor'); if(c.querySelector('.transfer.open'))o.push('transfer'); if(c.querySelector('.genchat.open'))o.push('genchat');
+      const _op=c.querySelector('.order.open'); if(_op){ o.push('order'); orderDraft[cid]={ msg:(_op.querySelector('.omsg')||{}).value||'', ph:(_op.querySelector('.osel')||{}).value||'' }; }
+      if(o.length)openState[cid]=o; });
+    if(!items.length){ list.innerHTML='<div class="empty"><div class="big">📭</div>אין דיווחים שתואמים לסינון.</div>'; applyFullCard(); return; }
+    const bar = '';
+    list.innerHTML = bar + items.map(a=>{
+      const sp=SPILL[a.status]||SPILL['ממתין']; const rail=UCOLOR[a.urgency]||'#57534e';
+      const mineNow=a.assignee && String(a.assignee)===me();
+      const assignTxt = a.assignee ? (esc(a.assignee)+(mineNow?' <span class="mine-tag">• שלי</span>':'')) : '<span style="color:#a8a29e">לא משויך</span>';
+      const ty=String(a.type||'חוסר מלאי');
+      const TT={'חוסר מלאי':{t:'🟠 חוסר מלאי',c:'#fbbf24'},'פריט פגום':{t:'🔴 פריט פגום',c:'#f87171'},'אי-התאמה':{t:'🔵 אי-התאמה',c:'#60a5fa'}};
+      const td=TT[ty]||{t:ty,c:'#a8a29e'};
+      const isMis=(ty==='אי-התאמה'), isDef=(ty==='פריט פגום');
+      const blink=(String(a.status)!=='טופל')?' blink':'';
+      const mgr=(isBoss()||me()===MGR); // מנהל — רשאי למחוק פנייה
+      return '<div class="card" data-id="'+esc(a.id)+'">'
+        +'<span class="rail" style="background:'+rail+'"></span>'
+        +'<div style="margin-bottom:7px;display:flex;align-items:center;gap:7px;flex-wrap:wrap"><span class="pill'+blink+'" style="color:'+td.c+';background:transparent;border-color:'+td.c+'">'+esc(td.t)+'</span>'+(a.ticket?('<span class="tkt">🎫 '+esc(a.ticket)+'</span>'):'')+'<button class="fc-open" type="button" title="פתח במסך מלא" aria-label="פתח במסך מלא" style="margin-inline-start:auto">⤢</button>'+(mgr?('<button class="del" data-del="'+esc(a.id)+'" style="background:none;border:1px solid #7f1d1d;color:#f87171;border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer">🗑️ מחק</button>'):'')+'</div>'
+        +'<div class="row1"><div><div class="sku">מק״ט '+esc(a.sku||'—')+'</div>'
+        +(a.desc?('<div class="desc">'+esc(a.desc)+'</div>'):'')+'</div>'
+        +'<span class="pill" style="color:'+sp.c+';background:'+sp.bg+';border-color:'+sp.c+'">'+esc(a.status||'')+'</span></div>'
+        +'<div class="meta">'
+        +'<span><b>אחראי:</b> '+assignTxt+'</span>'
+        +((ty==='חוסר מלאי' && a.urgency)?('<span><b>דחיפות:</b> '+esc(a.urgency)+'</span>'):'')
+        +(isMis?('<span><b>הזמנה:</b> '+esc(a.po||'—')+'</span>')
+               :((a.qty)?('<span><b>'+(isDef?'פגומות':'נותרו')+':</b> '+esc(a.qty)+'</span>'):''))
+        +'<span><b>דווח:</b> '+esc(a.reporter||'—')+'</span>'
+        +(a.created?('<span>🕒 '+fmt(a.created)+'</span>'):'')
+        +'</div>'
+        +(isMis?('<table class="dcmp"><tr><th></th><th>הוזמן</th><th>התקבל</th></tr>'
+            +'<tr><td>תיאור</td><td>'+esc(a.desc||'—')+'</td><td>'+esc(a.descRecv||'—')+'</td></tr>'
+            +'<tr><td>כמות</td><td>'+esc(a.qty||'—')+'</td><td>'+esc(a.qtyRecv||'—')+'</td></tr></table>'):'')
+        +(a.note?('<div class="resp" style="color:#d6d3d1">📝 <span>'+esc(a.note)+'</span></div>'):'')
+        +(a.log?('<div class="resp" style="color:#fbbf24;background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.25)">↪️ <span>'+esc(fmtLog(a.log))+'</span></div>'):'')
+        +(a.response?('<div class="resp">📋 <span>'+esc(a.response)+'</span></div>'):'')
+        +photoBlock(a)
+        +(boss ? '' : (
+          (String(a.status)==='טופל')
+          ? ('<div class="acts"><button class="btn prog" data-act="reopen">↩️ החזר לטיפול</button>'+genBtn(a)+'</div>'+genPanel(a))
+          : ('<div class="acts">'
+          +'<button class="btn prog'+(a.status==='בטיפול'?' on':'')+'" data-act="בטיפול">'+((String(a.status)==='בטיפול'&&String(a.assignee||'')===me())?'↩️ החזר לממתין':'🟠 קח לטיפול')+'</button>'
+          +'<button class="btn done'+(a.status==='טופל'?' on':'')+'" data-act="טופל">✅ טופל</button>'
+          +'<button class="btn reply" data-act="transfer">↪️ העבר</button>'
+          +'<button class="btn reply" data-act="reply">📋</button>'
+          +genBtn(a)
+          +'</div>'
+          +'<div class="transfer"><select class="tsel">'+buyerOptions()+'</select><button class="tgo">העבר</button></div>'
+          +'<div class="editor"><div style="font-size:12.5px;color:#a8a29e;margin-bottom:5px;font-weight:700">📋 פעולות לטיפול בפנייה (חובה לסגירת הפנייה)</div><textarea placeholder="מה בוצע? לדוגמה: הוזמן מספק X · מספר הזמנה 123 · מגיע יום ג׳">'+esc(a.response||'')+'</textarea>'
+          +'<button class="save">שמור פעולות ועדכן</button></div>'
+          +genPanel(a))
+        ))
+        +'</div>';
+    }).join('');
+    if(devOpen){ list.querySelectorAll('.selbox').forEach(b=>{ b.checked=selDel.has(b.dataset.sel); }); updSelN(); }
+    Object.keys(openState).forEach(cid=>{ const c=list.querySelector('.card[data-id="'+cid+'"]'); if(c) openState[cid].forEach(cls=>{ const el=c.querySelector('.'+cls); if(el){ el.classList.add('open');
+      if(cls==='order'){ const d=orderDraft[cid]||{}; const mg=el.querySelector('.omsg'); if(mg) mg.value=d.msg||orderMsg(ALERTS.find(x=>String(x.id)===cid)||{});
+        const sl=el.querySelector('.osel'); loadSuppliers(function(sup){ var wp=sup.filter(function(x){return waPhone(x.p1)||waPhone(x.p2);}); wp.sort(function(x,y){return String(x.supplier||'').localeCompare(String(y.supplier||''),'he');}); sl.innerHTML='<option value="">בחר ספק…</option>'+wp.map(function(x){var ph=waPhone(x.p1)||waPhone(x.p2);return '<option value="'+ph+'"'+(ph===d.ph?' selected':'')+'>'+esc(x.supplier||'ספק')+' · '+esc(x.p1||x.p2)+'</option>';}).join(''); }); }
+    } }); });
+    fetchPendingPhotos();
+    fetchChatPhotos();
+    updateTypeChipsBlink();
+    applyFullCard();
+  }
+
+  // הבהוב לחצן סוג — כל עוד יש בו דיווח אחד או יותר במצב "ממתין". נפסק רק כשאין יותר ממתינים בקטגוריה.
+  function updateTypeChipsBlink(){
+    var byType={}, any=false;
+    (ALERTS||[]).forEach(function(a){ if(String(a.status)==='ממתין'){ byType[String(a.type||'חוסר מלאי')]=true; any=true; } });
+    document.querySelectorAll('#typeChips .chip').forEach(function(ch){
+      var t=ch.dataset.t; var has=(t==='all')?any:!!byType[t];
+      ch.classList.toggle('chip-blink', has);
+    });
+  }
+
+  function renderEmptyConfig(){
+    $('list').innerHTML='<div class="empty"><div class="big">🔗</div>הלוח עדיין לא מחובר למערכת.<br>הזן את כתובת המערכת והטוקן שקיבלת.<br>'
+      +'<button class="cta" id="emptyCta">חבר את הלוח</button></div>';
+    const b=$('emptyCta'); if(b) b.addEventListener('click',openModal);
+  }
+
+  // actions — each maps to one backend call
+  async function reopenAlert(id){
+    const a=ALERTS.find(x=>String(x.id)===String(id));
+    if(a){ a.status='בטיפול'; a.updated=new Date().toISOString(); }
+    render();
+    try{ await apiPost('status',{id:id, status:'בטיפול'}); toast('הוחזר לטיפול ✓'); setTimeout(load,400); }
+    catch(e){ toast('הפעולה נכשלה — נסה שוב'); }
+  }
+  async function assignTo(id, assignee, status, resp){
+    resp=(resp||'').trim();
+    const a=ALERTS.find(x=>String(x.id)===String(id));
+    if(a){ a.assignee=assignee; if(status) a.status=status; if(resp){ a.response=resp; a.ackBy=me(); } a.updated=new Date().toISOString(); }
+    render();
+    try{
+      await apiPost('assign',{id:id, assignee:assignee, status:status});
+      if(resp){ await apiPost('ack',{id:id, ackBy:me(), response:resp, status:(status||(a&&a.status)||'בטיפול')}); }
+      toast('עודכן ✓'); setTimeout(load,400);
+    }
+    catch(e){ toast('העדכון נכשל — רענן ונסה שוב'); }
+  }
+  async function backToPending(id){
+    const a=ALERTS.find(x=>String(x.id)===String(id));
+    if(a){ a.status='ממתין'; a.assignee=''; a.updated=new Date().toISOString(); }
+    render();
+    try{ await apiPost('assign',{id:id, assignee:'', status:'ממתין'}); toast('הוחזר לממתין ✓'); setTimeout(load,400); }
+    catch(e){ toast('הפעולה נכשלה — נסה שוב'); }
+  }
+  async function saveResp(id, text){
+    const a=ALERTS.find(x=>String(x.id)===String(id));
+    const status=(a&&a.status==='טופל')?'טופל':'בטיפול';
+    if(a){ a.response=text; a.status=status; a.ackBy=me(); a.updated=new Date().toISOString(); }
+    render();
+    try{ await apiPost('ack',{id:id, ackBy:me(), response:text, status:status}); toast('נשמר ✓'); setTimeout(load,400); }
+    catch(e){ toast('השמירה נכשלה — רענן ונסה שוב'); }
+  }
+  function needMe(){ if(!me()){ toast('בחר את שמך בהגדרות ⚙️'); openModal(); return true; } return false; }
+
+  $('list').addEventListener('change', e=>{
+    const cb=e.target;
+    if(cb.classList && cb.classList.contains('gfile')){ const card=cb.closest('.card'); if(card){ onChatFile(card, card.dataset.id, cb.files&&cb.files[0]); cb.value=''; } return; }
+    if(cb.classList && cb.classList.contains('selbox')){ if(cb.checked) selDel.add(cb.dataset.sel); else selDel.delete(cb.dataset.sel); updSelN(); return; }
+    if(cb.id==='selAll'){ $('list').querySelectorAll('.selbox').forEach(b=>{ b.checked=cb.checked; if(cb.checked) selDel.add(b.dataset.sel); else selDel.delete(b.dataset.sel); }); updSelN(); return; }
+  });
+
+  // ===== 📢 ידיעון =====
+  let NEWS=[], newsActive=false, pendingNewsImg='', newsCat='general';
+  let NSEEN=null; try{ const raw=localStorage.getItem('afcon_news_seen'); NSEEN=raw?JSON.parse(raw):null; }catch(e){ NSEEN=null; }
+  function nseenSave(){ try{ localStorage.setItem('afcon_news_seen', JSON.stringify(NSEEN||[])); }catch(e){} }
+  function unreadNews(){ if(!NSEEN) return 0; const s=new Set(NSEEN); return NEWS.filter(n=>!s.has(String(n.id))).length; }
+  function markNewsSeen(){ NSEEN=NEWS.map(n=>String(n.id)); nseenSave(); updateNewsBadge(); }
+  function updateNewsBadge(){ const b=$('newsBadge'); if(!b) return; b.classList.toggle('show', unreadNews()>0 && !newsActive); }
+  const NCATS={general:'📢 כללי',supplier:'🚚 ספק/סחורה',urgent:'⚠️ חשוב',procedure:'📋 נוהל'};
+  async function loadNews(){
+    if(!apiOn()) return;
+    try{ const r=await apiGet('news'); if(r&&r.ok&&Array.isArray(r.news)){ NEWS=r.news;
+      if(NSEEN===null){ NSEEN=NEWS.map(n=>String(n.id)); nseenSave(); }
+      updateNewsBadge(); if(newsActive) renderNews();
+    } }catch(e){}
+  }
+  async function fetchNewsPhotos(){
+    const els=document.querySelectorAll('.ni-img[data-cphoto]');
+    for(const el of els){ const pid=el.getAttribute('data-cphoto'); if(!pid) continue;
+      if(!photoCache[pid]){ try{ const r=await apiGet('photos',{id:pid}); if(r&&r.ok&&Array.isArray(r.photos)){ photoCache[pid]=r.photos; } else continue; }catch(e){ continue; } }
+      el.removeAttribute('data-cphoto'); el.innerHTML=(photoCache[pid]||[]).map(d=>'<img class="zoomable" src="'+d+'">').join('');
+    }
+  }
+  function renderNews(){
+    const L=$('newsList'); if(!L) return;
+    if(!NEWS.length){ L.innerHTML='<div class="news-empty">📭 אין הודעות בידיעון עדיין.<br>היה/י הראשון/ה לפרסם!</div>'; return; }
+    const meName=me();
+    L.innerHTML=NEWS.map(n=>{ const cat=String(n.cat||'general'); const isAuthor=(String(n.author||'').trim()===meName); const canPin=isAuthor||(meName===MGR); const canDel=isAuthor;
+      const img=n.photo?('<div class="ni-img" data-cphoto="'+esc(n.photo)+'"><span style="color:var(--faint);font-size:12px">📷 טוען…</span></div>'):'';
+      return '<div class="news-item'+(n.pinned?' pinned':'')+'" data-nid="'+esc(n.id)+'">'
+        +'<div class="ni-top">'+(n.pinned?'<span class="ni-pin">📌 נעוץ</span>':'')+'<span class="ni-cat '+cat+'">'+(NCATS[cat]||NCATS.general)+'</span></div>'
+        +(n.title?('<div class="ni-title">'+esc(n.title)+'</div>'):'')
+        +(n.body?('<div class="ni-body">'+esc(n.body)+'</div>'):'')+img
+        +'<div class="ni-meta">'+esc(n.author||'—')+' · '+esc(fmt(n.created))+'</div>'
+        +((canPin||canDel)?('<div class="ni-acts">'+(canPin?('<button class="ni-act" data-npin="'+(n.pinned?'0':'1')+'">'+(n.pinned?'בטל הצמדה':'📌 הצמד')+'</button>'):'')+(canDel?'<button class="ni-act del" data-ndel="1">🗑️ מחק</button>':'')+'</div>'):'')
+        +'</div>';
+    }).join('');
+    fetchNewsPhotos();
+  }
+  function setView(v){ const m=document.querySelector('main'); if(!m) return;
+    newsActive=(v==='news');
+    m.classList.toggle('news-mode', v==='news');
+    m.classList.toggle('kpi-mode', v==='kpi');
+    $('vtBoard').classList.toggle('on', v==='board');
+    $('vtKpi').classList.toggle('on', v==='kpi');
+    $('vtNews').classList.toggle('on', v==='news');
+    if(v==='news'){ markNewsSeen(); loadNews(); renderNews(); }
+    if(v==='kpi'){ renderKpiDash(); }
+    updateNewsBadge();
+  }
+  function showNews(on){ setView(on?'news':'board'); }
+
+  // ===== 📊 דשבורד מנהל =====
+  function hoursBetween(a,b){ try{ return (new Date(b).getTime()-new Date(a).getTime())/3600000; }catch(e){ return 0; } }
+  function fmtDur(h){ if(!isFinite(h)||h<0) return '—'; if(h<1) return Math.round(h*60)+' דק׳'; if(h<24) return (Math.round(h*10)/10)+' שע׳'; return (Math.round(h/24*10)/10)+' ימים'; }
+  function bars(rows, color){ const max=Math.max(1, ...rows.map(r=>r.v)); if(!rows.length) return '<div class="kpi-empty">אין נתונים</div>';
+    return rows.map(r=>'<div class="kbar-row"><span class="kbar-lbl">'+esc(r.k)+'</span><span class="kbar-track"><span class="kbar-fill" style="width:'+Math.round(r.v/max*100)+'%;background:'+(color||'var(--blue)')+'"></span></span><span class="kbar-val">'+r.v+'</span></div>').join('');
+  }
+  function renderKpiDash(){
+    const V=$('kpiView'); if(!V) return;
+    const A=ALERTS||[]; const now=Date.now();
+    const open=A.filter(a=>String(a.status)!=='טופל');
+    const waiting=A.filter(a=>String(a.status)==='ממתין').length;
+    const prog=A.filter(a=>String(a.status)==='בטיפול').length;
+    const urgent=open.filter(a=>a.urgency==='דחוף'||a.urgency==='אזל לגמרי').length;
+    const doneToday=A.filter(a=>String(a.status)==='טופל'&&isToday(a.updated||a.ackAt||a.created)).length;
+    const doneWeek=A.filter(a=>{ if(String(a.status)!=='טופל') return false; const t=a.updated||a.ackAt||a.created; return t&&hoursBetween(t,new Date().toISOString())<=168; }).length;
+    const stuck=open.filter(a=>a.created&&(now-new Date(a.created).getTime())>48*3600000);
+    // ממוצע זמן טיפול (לפניות שטופלו)
+    const doneArr=A.filter(a=>String(a.status)==='טופל'&&a.created&&(a.ackAt||a.updated));
+    let avgH=0; if(doneArr.length){ avgH=doneArr.reduce((s,a)=>s+hoursBetween(a.created, a.ackAt||a.updated),0)/doneArr.length; }
+    // לפי קניין (פתוחות)
+    const byBuyerMap={}; open.forEach(a=>{ const k=(a.assignee||'').trim()||'— לא משויך'; byBuyerMap[k]=(byBuyerMap[k]||0)+1; });
+    const byBuyer=Object.keys(byBuyerMap).map(k=>({k:k,v:byBuyerMap[k]})).sort((x,y)=>y.v-x.v);
+    // לפי סוג (פתוחות)
+    const byTypeMap={}; open.forEach(a=>{ const k=(a.type||'חוסר מלאי'); byTypeMap[k]=(byTypeMap[k]||0)+1; });
+    const byType=Object.keys(byTypeMap).map(k=>({k:k,v:byTypeMap[k]})).sort((x,y)=>y.v-x.v);
+    // מגמה — פניות חדשות ב-14 יום
+    const days=14; const counts=new Array(days).fill(0); const labels=[];
+    const today=new Date(); today.setHours(0,0,0,0);
+    for(let i=0;i<days;i++){ const d=new Date(today); d.setDate(d.getDate()-(days-1-i)); labels.push(d); }
+    A.forEach(a=>{ if(!a.created) return; const d=new Date(a.created); d.setHours(0,0,0,0); const diff=Math.round((today-d)/86400000); const idx=days-1-diff; if(idx>=0&&idx<days) counts[idx]++; });
+    const maxC=Math.max(1, ...counts);
+    const trend='<div class="ktrend">'+counts.map((c,i)=>{ const dd=labels[i]; const lbl=(dd.getDate())+'/'+(dd.getMonth()+1);
+      return '<div class="ktcol" title="'+lbl+': '+c+'"><span class="ktnum">'+(c||'')+'</span><span class="ktbar" style="height:'+Math.round(c/maxC*100)+'%"></span><span class="ktlbl">'+lbl+'</span></div>'; }).join('')+'</div>';
+    // פניות תקועות
+    const stuckSorted=stuck.slice().sort((a,b)=>new Date(a.created)-new Date(b.created));
+    const stuckHtml = stuckSorted.length ? stuckSorted.slice(0,12).map(a=>{ const hrs=hoursBetween(a.created,new Date().toISOString());
+      return '<div class="kstuck"><span class="kst-tk">🎫 '+esc(a.ticket||'—')+'</span><span class="kst-desc">'+esc((a.desc||a.sku||'').slice(0,40))+'</span><span class="kst-age">'+fmtDur(hrs)+'</span><span class="kst-by">'+esc((a.assignee||'לא משויך'))+'</span></div>';
+    }).join('') : '<div class="kpi-empty">🎉 אין פניות תקועות מעל יומיים</div>';
+
+    function stat(num,lbl,cls){ return '<div class="kstat '+(cls||'')+'"><div class="kstat-n">'+num+'</div><div class="kstat-l">'+lbl+'</div></div>'; }
+    V.innerHTML=
+      '<div class="kpi-head">📊 לוח מחוונים — מבט מנהל</div>'
+      +'<div class="kstat-grid">'
+        +stat(open.length,'פניות פתוחות','s-open')
+        +stat(waiting,'ממתינות','s-wait')
+        +stat(prog,'בטיפול','s-prog')
+        +stat(urgent,'דחופות פתוחות','s-urg')
+        +stat(stuck.length,'תקועות (>יומיים)','s-stuck')
+        +stat(doneWeek,'טופלו השבוע','s-done')
+      +'</div>'
+      +'<div class="kpi-2col">'
+        +'<div class="kpi-card"><div class="kpi-ttl">⏱️ ממוצע זמן טיפול</div><div class="kbig">'+fmtDur(avgH)+'</div><div class="kpi-sub">על '+doneArr.length+' פניות שטופלו · '+doneToday+' טופלו היום</div></div>'
+        +'<div class="kpi-card"><div class="kpi-ttl">📦 פתוחות לפי סוג</div>'+bars(byType,'var(--amber)')+'</div>'
+      +'</div>'
+      +'<div class="kpi-card"><div class="kpi-ttl">👤 פניות פתוחות לפי קניין</div>'+bars(byBuyer,'var(--blue)')+'</div>'
+      +'<div class="kpi-card"><div class="kpi-ttl">📈 פניות חדשות — 14 ימים אחרונים</div>'+trend+'</div>'
+      +'<div class="kpi-card"><div class="kpi-ttl">⚠️ פניות תקועות (פתוחות מעל יומיים)</div>'+stuckHtml+'</div>';
+  }
+  async function postNews(payload){ try{ await fetch(apiUrl(),{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({token:apiToken(),action:'newsAdd'},payload))}); }catch(e){} }
+  async function sendNews(){
+    if(needMe()) return;
+    const title=($('ncTitle').value||'').trim(); const body=($('ncBody').value||'').trim();
+    if(!title && !body){ toast('כתוב/י כותרת או תוכן'); return; }
+    const btn=$('ncSend'); if(btn.disabled) return; btn.disabled=true; btn.textContent='מפרסם…';
+    const pin=$('ncPin').checked?'1':''; let photoId='';
+    try{
+      if(pendingNewsImg){ photoId='C'+Date.now()+Math.floor(Math.random()*1000); await uploadPhotos(photoId,[pendingNewsImg]); if(photoId) photoCache[photoId]=[pendingNewsImg]; }
+      const nid='N'+Date.now()+Math.floor(Math.random()*1000);
+      await postNews({id:nid, author:me(), cat:newsCat, title:title, body:body, pinned:pin, photo:photoId});
+      $('ncTitle').value=''; $('ncBody').value=''; $('ncPin').checked=false; pendingNewsImg=''; $('ncPending').innerHTML=''; $('ncForm').classList.remove('open');
+      toast('פורסם בידיעון ✓');
+      setTimeout(()=>{ loadNews(); markNewsSeen(); }, 600);
+    } finally { btn.disabled=false; btn.textContent='פרסם'; }
+  }
+  $('vtBoard').addEventListener('click',()=>setView('board'));
+  $('vtKpi').addEventListener('click',()=>setView('kpi'));
+  $('vtNews').addEventListener('click',()=>setView('news'));
+  $('soundBar').addEventListener('click',()=>{ ensureAudio(); chime('call'); try{ if('Notification' in window && Notification.permission==='default') Notification.requestPermission(); }catch(e){} registerSW(); localStorage.setItem('afcon_sound_on','1'); showSoundBar(); toast('התראות וצליל הופעלו ✓'); });
+  $('ncOpen').addEventListener('click',()=>{ $('ncForm').classList.toggle('open'); });
+  $('ncCancel').addEventListener('click',()=>{ $('ncForm').classList.remove('open'); $('ncTitle').value=''; $('ncBody').value=''; $('ncPin').checked=false; pendingNewsImg=''; $('ncPending').innerHTML=''; });
+  $('ncCats').addEventListener('click',e=>{ const b=e.target.closest('.nc-cat'); if(!b) return; newsCat=b.dataset.cat; $('ncCats').querySelectorAll('.nc-cat').forEach(x=>x.classList.toggle('on',x===b)); });
+  $('ncSend').addEventListener('click', sendNews);
+  $('ncPhotoBtn').addEventListener('click',()=>$('ncFile').click());
+  $('ncFile').addEventListener('change', async e=>{ const f=e.target.files&&e.target.files[0]; e.target.value=''; if(!f) return;
+    try{ pendingNewsImg=await compressPhoto(f); $('ncPending').innerHTML='<span style="font-size:12.5px;color:var(--green2);font-weight:700">📎 תמונה מצורפת <button id="ncPx" style="background:none;border:none;color:#e2231a;font-weight:800;cursor:pointer">✕</button></span><img src="'+pendingNewsImg+'" style="height:48px;border-radius:8px;border:1px solid var(--line2);margin-inline-start:8px">';
+      $('ncPx').addEventListener('click',()=>{ pendingNewsImg=''; $('ncPending').innerHTML=''; }); }catch(err){ toast('בעיה בעיבוד התמונה'); } });
+
+  // הדבקת תמונה (Ctrl+V) — מנותבת לפי ההקשר: צ'אט פנייה / ידיעון
+  function pasteImageFile(e){ const items=(e.clipboardData&&e.clipboardData.items)||[]; for(let i=0;i<items.length;i++){ const it=items[i]; if(it.type&&it.type.indexOf('image')===0) return it.getAsFile(); } return null; }
+  document.addEventListener('paste', async e=>{
+    const f=pasteImageFile(e); if(!f) return;
+    const ae=document.activeElement;
+    if(ae && ae.classList && ae.classList.contains('gin')){ const card=ae.closest('.card'); if(card){ e.preventDefault();
+      try{ const d=await compressPhoto(f); pendingChatImg[card.dataset.id]=d; const pv=card.querySelector('.gpending');
+        if(pv) pv.innerHTML='<span class="gpchip">📎 תמונה הודבקה <button class="gpx" title="הסר">✕</button></span><img src="'+d+'" style="height:46px;border-radius:8px;border:1px solid var(--line2);margin-inline-start:8px">';
+      }catch(_){ toast('בעיה בעיבוד התמונה'); } } return; }
+    if(newsActive || (ae && ae.closest && ae.closest('#ncForm'))){ e.preventDefault(); if(!$('ncForm').classList.contains('open')) $('ncForm').classList.add('open');
+      try{ pendingNewsImg=await compressPhoto(f);
+        $('ncPending').innerHTML='<span style="font-size:12.5px;color:var(--green2);font-weight:700">📎 תמונה הודבקה <button id="ncPx" style="background:none;border:none;color:#e2231a;font-weight:800;cursor:pointer">✕</button></span><img src="'+pendingNewsImg+'" style="height:48px;border-radius:8px;border:1px solid var(--line2);margin-inline-start:8px">';
+        const px=$('ncPx'); if(px) px.addEventListener('click',()=>{ pendingNewsImg=''; $('ncPending').innerHTML=''; });
+      }catch(_){ toast('בעיה בעיבוד התמונה'); } return; }
+  });
+  $('newsList').addEventListener('click', e=>{
+    const item=e.target.closest('.news-item'); if(!item) return; const nid=item.dataset.nid;
+    const pinBtn=e.target.closest('[data-npin]');
+    if(pinBtn){ const val=pinBtn.dataset.npin; apiGet('newsPin',{id:nid, pinned:val}).then(()=>{ toast(val==='1'?'הוצמד ✓':'הוסרה הצמדה'); setTimeout(loadNews,400); }).catch(()=>toast('הפעולה נכשלה')); return; }
+    if(e.target.closest('[data-ndel]')){ if(confirm('למחוק את ההודעה מהידיעון?')){ apiGet('newsDel',{id:nid}).then(()=>{ toast('נמחק ✓'); setTimeout(loadNews,400); }).catch(()=>toast('המחיקה נכשלה')); } return; }
+  });
+
+  $('list').addEventListener('click', e=>{
+    if(e.target.closest('#delSel')){ deleteSelected(); return; }
+    const card=e.target.closest('.card'); if(!card) return; const id=card.dataset.id;
+    if(e.target.closest('.fc-close')){ closeFullCard(); return; }
+    if(e.target.closest('.fc-open')){ openFullCard(id); return; }
+    const btn=e.target.closest('[data-act]');
+    if(btn){ const a=btn.dataset.act;
+      if(a==='reply'){ card.querySelector('.editor').classList.toggle('open'); return; }
+      if(a==='gchat'){ const panel=card.querySelector('.genchat'); panel.classList.toggle('open'); if(panel.classList.contains('open')){ markChatSeen(id); render(); } return; }
+      if(a==='transfer'){ card.querySelector('.transfer').classList.toggle('open'); return; }
+      if(a==='order'){ openOrderPanel(card, id); return; }
+      if(a==='reopen'){ reopenAlert(id); return; }
+      if(a==='בטיפול'){ if(needMe()) return;
+        const al=ALERTS.find(x=>String(x.id)===String(id));
+        if(al && String(al.status)==='בטיפול' && String(al.assignee||'')===me()){ backToPending(id); return; } // לחיצה שנייה → חזרה לממתין
+        const ed=card.querySelector('.editor textarea'); assignTo(id, me(), 'בטיפול', ed?ed.value:''); return; }
+      if(a==='טופל'){ if(needMe()) return; const ed=card.querySelector('.editor textarea'); const txt=ed?ed.value.trim():'';
+        if(!txt){ card.querySelector('.editor').classList.add('open'); if(ed) ed.focus(); toast('יש למלא "פעולות לטיפול" לפני סגירת הפנייה'); return; }
+        assignTo(id, me(), 'טופל', txt); return; }
+      return;
+    }
+    if(e.target.closest('.gsend')){ sendGenMsg(card, id); return; }
+    if(e.target.closest('.gphoto')){ const f=card.querySelector('.gfile'); if(f) f.click(); return; }
+    if(e.target.closest('.gpx')){ delete pendingChatImg[id]; const pv=card.querySelector('.gpending'); if(pv) pv.innerHTML=''; return; }
+    if(e.target.closest('.ogo')){
+      const panel=card.querySelector('.order'); if(!panel) return;
+      const ph=panel.querySelector('.osel').value;
+      const msg=panel.querySelector('.omsg').value;
+      if(!ph){ toast('בחר ספק מהרשימה'); return; }
+      window.open('https://wa.me/'+ph+'?text='+encodeURIComponent(msg), '_blank');
+      return;
+    }
+    if(e.target.closest('.tgo')){
+      const to=card.querySelector('.tsel').value;
+      if(!to){ toast('בחר קניין להעברה'); return; }
+      assignTo(id, to); toast('הועבר ל-'+to); return;
+    }
+    if(e.target.closest('.del') && e.target.closest('.del').dataset.del){
+      const delId=e.target.closest('.del').dataset.del;
+      if(confirm('למחוק את הרשומה לצמיתות? פעולה זו אינה הפיכה.')){
+        apiPost('delete',{id:delId}).then(async r=>{ if(r&&r.ok){ await load(); toast('נמחק ✓'); } else { toast('המחיקה נכשלה — נסה שוב'); } }).catch(()=>toast('המחיקה נכשלה'));
+      }
+      return;
+    }
+    if(e.target.closest('.save')){
+      if(needMe()) return;
+      saveResp(id, card.querySelector('.editor textarea').value.trim());
+      return;
+    }
+    // לחיצה על אזור "נייטרלי" של הרשומה (לא על כפתור/שדה) → פתיחה במסך מלא
+    if(e.target.closest('button,a,input,textarea,select,label,[data-act],img.zoomable,.acts,.editor,.transfer,.genchat,.order')) return;
+    openFullCard(id);
+  });
+
+  // filters
+  $('scopeChips').addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b) return;
+    if(b.dataset.m==='mine' && !me()){ toast('בחר את שמך בהגדרות ⚙️'); openModal(); return; }
+    fMine=(b.dataset.m==='mine'); document.querySelectorAll('#scopeChips .chip').forEach(x=>x.classList.toggle('on',x===b)); render(); });
+  function markStatus(s){ fStatus=s; document.querySelectorAll('#statusChips .chip').forEach(x=>x.classList.toggle('on', x.dataset.s===s)); var hb=$('histBtn'); if(hb) hb.classList.toggle('on', s==='history'); }
+  $('statusChips').addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b) return;
+    markStatus(b.dataset.s); render(); });
+  $('histBtn').addEventListener('click',()=>{ markStatus('history'); render(); });
+  $('urgChips').addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b) return;
+    fUrg=b.dataset.u; document.querySelectorAll('#urgChips .chip').forEach(x=>x.classList.toggle('on',x===b)); render(); });
+  $('typeChips').addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b) return;
+    fType=b.dataset.t; document.querySelectorAll('#typeChips .chip').forEach(x=>x.classList.toggle('on',x===b)); render(); });
+  $('search').addEventListener('input',e=>{ fSearch=e.target.value.trim(); render(); });
+
+  // KPI cards as quick filters
+  $('kpis').addEventListener('click',e=>{ const k=e.target.closest('.kpi'); if(!k) return; const f=k.dataset.f;
+    const setStatusChip=s=>markStatus(s);
+    const setUrgChip=u=>{ fUrg=u; document.querySelectorAll('#urgChips .chip').forEach(x=>x.classList.toggle('on',x.dataset.u===u)); };
+    if(f==='ממתין'){ setStatusChip('ממתין'); setUrgChip('all'); }
+    else if(f==='בטיפול'){ setStatusChip('בטיפול'); setUrgChip('all'); }
+    else if(f==='urgent'){ setStatusChip('all'); setUrgChip('דחוף'); }
+    else if(f==='today'){ setStatusChip('history'); setUrgChip('all'); }
+    render();
+  });
+
+  // refresh + auto
+  $('refreshBtn').addEventListener('click', load);
+  function isTyping(){ const el=document.activeElement; return !!(el && el.closest && el.closest('#list') && /TEXTAREA|INPUT|SELECT/.test(el.tagName)); }
+  function startAuto(){ if(timer) clearInterval(timer); timer=setInterval(()=>{ if(auto&&document.visibilityState==='visible'&&!isTyping()) load(); }, 30000); }
+
+  // export — אקסל אחד, לשונית לכל תווית (חוסר מלאי / פגום / אי-התאמה)
+  function buildExportWb(useAll){
+    if(typeof XLSX==='undefined'){ toast('מנוע האקסל נטען — נסה שוב'); return null; }
+    let data;
+    if(useAll){ data=ALERTS.slice().sort((a,b)=>String(b.created||'').localeCompare(String(a.created||''))); } // הכל — כל הסטטוסים, מהקמה ועד גמר טיפול
+    else { const savedType=fType; fType='all'; data=filtered(); fType=savedType; } // כל הסוגים, לפי שאר הסינונים
+    if(!data.length){ toast('אין נתונים לייצוא'); return null; }
+    const inHist = (fStatus==='history' || fStatus==='טופל');
+    const HEAD=['מספר קריאה','סוג','מק״ט','תיאור שהוזמן','מספר הזמנה','כמות שהוזמנה','כמות שהתקבלה','תיאור שהתקבל','דחיפות','הערת מדווח','דווח ע״י','סטטוס','קניין אחראי','תיעוד טיפול (העברות / החזרות)','טופל ע״י','תאריך טיפול','פעולות לטיפול','צ׳אט הפנייה','תמונות','נוצר','עודכן'];
+    const COLS=[{wch:12},{wch:11},{wch:22},{wch:14},{wch:13},{wch:13},{wch:22},{wch:12},{wch:24},{wch:14},{wch:9},{wch:14},{wch:30},{wch:14},{wch:15},{wch:28},{wch:40},{wch:16},{wch:16}];
+    const rowFor=a=>[(a.ticket||''),(a.type||'חוסר מלאי'),a.sku,a.desc,a.po,a.qty,a.qtyRecv,a.descRecv,a.urgency,a.note,a.reporter,a.status,a.assignee,fmtLog(a.log),a.ackBy,(a.status==='טופל'?fmt(a.ackAt||a.updated):''),a.response,fmtGenChat(a.chat),(Number(a.photo)>0?('📷 '+a.photo):''),fmt(a.created),fmt(a.updated)];
+    const wb=XLSX.utils.book_new();
+    const TABS=[{t:'חוסר מלאי',n:'חוסר מלאי'},{t:'פריט פגום',n:'פגום'},{t:'אי-התאמה',n:'אי-התאמה'}];
+    TABS.forEach(tb=>{
+      const arr=data.filter(a=>String(a.type||'חוסר מלאי')===tb.t);
+      const ws=XLSX.utils.aoa_to_sheet([HEAD].concat(arr.map(rowFor))); ws['!cols']=COLS;
+      XLSX.utils.book_append_sheet(wb,ws,tb.n);
+    });
+    const tag = useAll ? 'דוח-מלא' : (inHist?'היסטוריה':'דיווחים');
+    return { wb:wb, filename:'afcon-'+tag+'-'+new Date().toISOString().slice(0,10)+'.xlsx' };
+  }
+  $('exportBtn').addEventListener('click',()=>{ const r=buildExportWb(false); if(r) XLSX.writeFile(r.wb, r.filename); });
+  $('fullReportBtn').addEventListener('click',()=>{ const r=buildExportWb(true); if(r){ XLSX.writeFile(r.wb, r.filename); toast('דוח מלא הופק ✓'); } });
+  $('exportWaBtn').addEventListener('click', async ()=>{
+    const r=buildExportWb(false); if(!r) return;
+    try{
+      const buf=XLSX.write(r.wb,{type:'array',bookType:'xlsx'});
+      const file=new File([buf], r.filename, {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        try{ await navigator.share({ files:[file], title:'דוח שרשרת האספקה', text:'דוח שרשרת האספקה' }); }catch(e){}
+        return;
+      }
+      // נפילה: הורדה רגילה
+      XLSX.writeFile(r.wb, r.filename);
+      toast('שיתוף ישיר לא נתמך — הקובץ הורד, אפשר לצרפו ידנית בוואטסאפ');
+    }catch(e){ toast('שגיאה בהכנת הקובץ'); }
+  });
+  $('sheetBtn').addEventListener('click',()=>{ const u=(localStorage.getItem(K.sheet)||'').trim();
+    if(u) window.open(u,'_blank'); else toast('לא הוגדר קישור לגיליון. מנהל יכול להוסיפו דרך גלגל השיניים (קוד מפתח).'); });
+
+  // settings modal
+  function openModal(){ fillIdentity(); $('mName').value=me(); $('mUrl').value=apiUrl(); $('mTok').value=apiToken(); $('mSheet').value=localStorage.getItem(K.sheet)||''; $('mBoss').checked=isBoss(); $('mNote').textContent=''; $('advNote').textContent=''; $('catNote').textContent=''; $('advBox').classList.add('hidden'); $('modal').classList.add('open'); if(apiOn()) loadRoster(); }
+  function closeModal(){ $('modal').classList.remove('open'); }
+  function openSettingsUnlocked(){ openModal(); $('advPinRow').style.display='none'; $('advBox').classList.remove('hidden'); devOpen=true; renderTplAdmin(); render(); renderQRs(); renderNames(); if(apiOn()) loadRoster(); }
+  $('tplTypeTabs').addEventListener('click', e=>{ const b=e.target.closest('.chip'); if(!b) return; tplAdminType=b.getAttribute('data-tt'); document.querySelectorAll('#tplTypeTabs .chip').forEach(x=>x.classList.toggle('on',x===b)); renderTplAdmin(); });
+  $('tplAdd').addEventListener('click', ()=>{ const v=($('tplNew').value||'').trim(); if(!v) return; TPLS.push({type:tplAdminType, text:v}); $('tplNew').value=''; renderTplAdmin(); tplSave(); });
+  $('tplNew').addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); $('tplAdd').click(); } });
+  $('tplList').addEventListener('click', e=>{ const ed=e.target.closest('.tpl-ed'), del=e.target.closest('.tpl-del'); if(ed){ const i=+ed.dataset.i; const v=prompt('עריכת תבנית:', TPLS[i].text); if(v!=null){ const t=v.trim(); if(t){ TPLS[i].text=t; renderTplAdmin(); tplSave(); } } } else if(del){ const i=+del.dataset.i; if(confirm('למחוק תבנית זו?')){ TPLS.splice(i,1); renderTplAdmin(); tplSave(); } } });
+  $('gearBtn').addEventListener('click', ()=>{ $('setPin').value=''; $('setPinMsg').textContent=''; $('setGate').style.display='flex'; setTimeout(()=>$('setPin').focus(),50); });
+  $('aboutBtn').addEventListener('click', ()=>$('aboutModal').classList.add('open'));
+  $('presBtn').addEventListener('click', openPresence);
+  $('presClose').addEventListener('click', ()=>$('presModal').classList.remove('open'));
+  $('presRefresh').addEventListener('click', openPresence);
+  $('presModal').addEventListener('click', e=>{ if(e.target===$('presModal')) $('presModal').classList.remove('open'); });
+  $('aboutClose').addEventListener('click', ()=>$('aboutModal').classList.remove('open'));
+  $('aboutModal').addEventListener('click', e=>{ if(e.target===$('aboutModal')) $('aboutModal').classList.remove('open'); });
+  function trySettingsPin(){ const v=($('setPin').value||'').trim(); if(v===DEV_PIN){ $('setGate').style.display='none'; openSettingsUnlocked(); } else { $('setPinMsg').textContent='סיסמה שגויה'; $('setPin').value=''; } }
+  $('setPinOk').addEventListener('click', trySettingsPin);
+  $('setPin').addEventListener('keydown', e=>{ if(e.key==='Enter') trySettingsPin(); });
+  $('setPinCancel').addEventListener('click', ()=>{ $('setGate').style.display='none'; });
+  $('mClose').addEventListener('click', closeModal);
+  $('modal').addEventListener('click',e=>{ if(e.target===$('modal')) closeModal(); });
+
+  // שמירה רגילה — זהות + מצב מנהל (זמין לכולם)
+  $('mSave').addEventListener('click', ()=>{
+    localStorage.setItem(K.me, $('mName').value.trim());
+    localStorage.setItem(K.boss, $('mBoss').checked?'1':'0');
+    setConn(); render(); updateMeBar();
+    try{ if('Notification' in window && Notification.permission==='default') Notification.requestPermission(); }catch(e){}
+    $('mNote').textContent = apiOn() ? 'נשמר ✓' : 'נשמר. כדי לחבר למערכת — פתח הגדרות מתקדמות.';
+  });
+
+  // נעילת מפתח — חושף את הכתובת/טוקן/קטלוג רק עם הסיסמה
+  const DEV_PIN='30172';
+  $('advBtn').addEventListener('click', ()=>{
+    if(!$('advBox').classList.contains('hidden')){ $('advBox').classList.add('hidden'); $('advPinRow').style.display='none'; return; }
+    $('advPinRow').style.display = ($('advPinRow').style.display==='flex') ? 'none' : 'flex';
+    if($('advPinRow').style.display==='flex'){ $('advPin').value=''; setTimeout(()=>$('advPin').focus(),50); }
+  });
+  function tryDevPin(){
+    const v=($('advPin').value||'').trim();
+    if(v===DEV_PIN){ $('advPinRow').style.display='none'; $('advBox').classList.remove('hidden'); devOpen=true; render(); renderQRs(); renderNames(); if(apiOn()) loadRoster(); }
+    else { toast('סיסמה שגויה'); $('advPin').value=''; }
+  }
+  $('advPinOk').addEventListener('click', tryDevPin);
+  $('advPin').addEventListener('keydown', e=>{ if(e.key==='Enter') tryDevPin(); });
+
+  // שמירת חיבור (מאחורי הנעילה)
+  $('advSave').addEventListener('click', async ()=>{
+    localStorage.setItem(K.api, $('mUrl').value.trim());
+    localStorage.setItem(K.token, $('mTok').value.trim());
+    localStorage.setItem(K.sheet, $('mSheet').value.trim());
+    setConn();
+    if(!apiOn()){ $('advNote').textContent='הזן כתובת מערכת.'; return; }
+    $('advNote').textContent='בודק…';
+    try{ const r=await apiGet('ping'); if(r&&r.ok){ $('advNote').textContent='מחובר ✓'; loadRoster(); load(); }
+      else $('advNote').textContent='הכתובת הגיבה עם שגיאה — בדוק טוקן.'; }
+    catch(e){ $('advNote').textContent='לא ניתן להתחבר — ודא Web App ופרסום ל-Anyone.'; }
+  });
+
+  // דחיפת קטלוג מרכזי (מאחורי הנעילה)
+  $('catPush').addEventListener('click', ()=>{ if(!apiOn()){ $('catNote').textContent='חבר קודם למערכת.'; return; } $('catFile').click(); });
+  $('catFile').addEventListener('change', e=>{
+    const file=e.target.files[0]; if(!file) return;
+    if(typeof XLSX==='undefined'){ $('catNote').textContent='מנוע האקסל עדיין נטען — נסה שוב.'; e.target.value=''; return; }
+    const r=new FileReader();
+    r.onload=async ev=>{
+      try{
+        const wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'});
+        const ws=wb.Sheets[wb.SheetNames[0]];
+        const rows=XLSX.utils.sheet_to_json(ws,{header:1,blankrows:false});
+        let start=0; const h=((rows[0]&&rows[0][0]||'')+' '+(rows[0]&&rows[0][1]||'')).toString().toLowerCase();
+        if(/sku|מק|קוד|תיאור|desc|שם|name|item|barcode|ברקוד/.test(h)) start=1;
+        const items=[];
+        for(let i=start;i<rows.length;i++){ const sku=String(rows[i]&&rows[i][0]==null?'':rows[i][0]).trim(); const desc=String(rows[i]&&rows[i][1]==null?'':rows[i][1]).trim(); if(sku) items.push([sku,desc]); }
+        if(!items.length){ $('catNote').textContent='לא נמצאו פריטים. ודא: עמודה A = מק״ט, עמודה B = תיאור.'; e.target.value=''; return; }
+        $('catNote').textContent='דוחף '+items.length+' פריטים…';
+        try{ await apiPost('catalogSet',{items:items}); }catch(_){ }
+        await new Promise(res=>setTimeout(res,500));
+        let okCount=null;
+        try{ const chk=await apiGet('catalog'); if(chk&&chk.ok&&Array.isArray(chk.items)) okCount=chk.items.length; }catch(_){ }
+        if(okCount!=null){ $('catNote').textContent='✓ נדחפו '+okCount+' פריטים — כל המסופונים יתעדכנו אוטומטית בפתיחה'; }
+        else { $('catNote').textContent='נשלח. אם לא הופיע במסופון — רענן ונסה שוב.'; }
+      }catch(err){ $('catNote').textContent='שגיאה בקריאת הקובץ.'; }
+      e.target.value='';
+    };
+    r.readAsArrayBuffer(file);
+  });
+
+  // ניהול שמות (קניינים/מחסנאים) — מאחורי נעילת המפתח
+  let nameKind='buyers';
+  const curNames=()=> nameKind==='reporters'?REPORTERS:BUYERS;
+  const setCurNames=arr=>{ if(nameKind==='reporters') REPORTERS=arr; else BUYERS=arr; };
+  function renderNames(){
+    const el=$('nameList'); if(!el) return;
+    const arr=curNames();
+    el.innerHTML = arr.length ? arr.map((n,i)=>'<div style="display:flex;align-items:center;gap:8px;background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px 11px">'
+      +'<span style="flex:1;font-size:14px">'+esc(n)+'</span>'
+      +'<button class="nm-edit" data-i="'+i+'" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px">✎</button>'
+      +'<button class="nm-del" data-i="'+i+'" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:15px">🗑</button>'
+      +'</div>').join('') : '<div style="color:var(--faint);font-size:13px">אין שמות ברשימה. הוסף למטה.</div>';
+  }
+  async function saveNames(){
+    $('nameNote').textContent='שומר…';
+    try{ const r=await apiPost('rosterSet',{kind:nameKind, names:curNames()});
+      if(r&&r.ok){ $('nameNote').textContent='נשמר ✓'; fillIdentity(); } else $('nameNote').textContent='השמירה נכשלה.'; }
+    catch(e){ $('nameNote').textContent='השמירה נכשלה — בדוק חיבור.'; }
+  }
+  $('nameTabBuyers').addEventListener('click',()=>{ nameKind='buyers'; $('nameTabBuyers').classList.add('on'); $('nameTabReporters').classList.remove('on'); renderNames(); });
+  $('resetIdent').addEventListener('click',()=>{ if(confirm('לאפס את הזהות שנבחרה במכשיר זה?')){ localStorage.removeItem(K.me); fillIdentity(); closeModal(); maybeGate(); toast('הזהות אופסה'); } });
+  $('nameTabReporters').addEventListener('click',()=>{ nameKind='reporters'; $('nameTabReporters').classList.add('on'); $('nameTabBuyers').classList.remove('on'); renderNames(); });
+  $('nameAdd').addEventListener('click',()=>{ const v=$('nameNew').value.trim(); if(!v){ $('nameNote').textContent='הקלד שם.'; return; }
+    const arr=curNames().slice(); if(arr.indexOf(v)>=0){ $('nameNote').textContent='השם כבר קיים.'; return; }
+    arr.push(v); setCurNames(arr); $('nameNew').value=''; renderNames(); saveNames(); });
+  $('nameList').addEventListener('click',e=>{
+    const ed=e.target.closest('.nm-edit'), dl=e.target.closest('.nm-del');
+    if(ed){ const i=+ed.dataset.i; const arr=curNames().slice(); const nv=prompt('עריכת שם:',arr[i]);
+      if(nv!==null){ const t=nv.trim(); if(t){ arr[i]=t; setCurNames(arr); renderNames(); saveNames(); } } return; }
+    if(dl){ const i=+dl.dataset.i; const arr=curNames().slice(); if(confirm('להסיר את "'+arr[i]+'"?')){ arr.splice(i,1); setCurNames(arr); renderNames(); saveNames(); } return; }
+  });
+
+  // toast
+  let tT=null;
+  function toast(t){ const el=$('toast'); el.textContent=t; el.classList.add('show'); if(tT)clearTimeout(tT); tT=setTimeout(()=>el.classList.remove('show'),1900); }
+
+  // init
+  setConn(); startAuto();
+  let LOADED_VER=null;
+  async function checkVersion(){
+    if(!apiOn()) return;
+    try{ const r=await apiGet('version'); if(r&&r.ok){ const v=Number(r.version);
+      if(LOADED_VER===null){ LOADED_VER=v; }
+      else if(v!==LOADED_VER){ const ae=document.activeElement, t=ae&&ae.tagName;
+        if(t==='INPUT'||t==='TEXTAREA'||t==='SELECT') return;
+        location.replace(location.pathname+'?v='+v);
+      } } }catch(e){}
+  }
+  checkVersion(); setInterval(checkVersion, 45000);
+  const pv=$('pubVer'); if(pv) pv.addEventListener('click', async ()=>{
+    $('pubNote').textContent='מפרסם…';
+    try{ const r=await apiPost('versionSet'); if(r&&r.ok){ LOADED_VER=Number(r.version); $('pubNote').textContent='✓ פורסם — כל המכשירים יתעדכנו תוך דקה'; } else $('pubNote').textContent='הפרסום נכשל.'; }
+    catch(e){ $('pubNote').textContent='הפרסום נכשל — בדוק חיבור.'; }
+  });
+  const ca=$('clearAll'); if(ca) ca.addEventListener('click', async ()=>{
+    if(!confirm('לאפס את כל ההתראות במערכת? כל הדיווחים (ממתינים, בטיפול וטופלו) יימחקו לצמיתות, ומספור הקריאות יתאפס חזרה ל-0001.')) return;
+    const typed=prompt('פעולה בלתי הפיכה. הקלד את המילה: מחק');
+    if((typed||'').trim()!=='מחק'){ $('clearNote').textContent='בוטל.'; return; }
+    $('clearNote').textContent='מאפס…';
+    try{ const r=await apiPost('clearAll'); if(r&&r.ok){ selDel.clear(); await load(); $('clearNote').textContent='✓ נמחקו '+(r.cleared||0)+' התראות · המספור אופס'; } else $('clearNote').textContent='האיפוס נכשל.'; }
+    catch(e){ $('clearNote').textContent='האיפוס נכשל — בדוק חיבור.'; }
+  });
+  const cp=$('clearPhones'); if(cp) cp.addEventListener('click', async ()=>{
+    if(!confirm('למחוק את כל ספר הטלפונים המשותף? כל הספקים ששותפו יוסרו אצל כולם. (ספקים אישיים במכשירים לא יושפעו.)')) return;
+    $('clearPhNote').textContent='מוחק…';
+    try{ const r=await apiPost('contactsClear'); if(r&&r.ok){ $('clearPhNote').textContent='✓ נמחקו '+(r.cleared||0)+' ספקים משותפים'; } else $('clearPhNote').textContent='המחיקה נכשלה.'; }
+    catch(e){ $('clearPhNote').textContent='המחיקה נכשלה — בדוק חיבור.'; }
+  });
+  const bk=$('backupNow'); if(bk) bk.addEventListener('click', async ()=>{
+    $('backupNote').textContent='מגבה…';
+    try{ const r=await apiGet('backup'); if(r&&r.ok){ $('backupNote').textContent='✓ נוצר גיבוי: '+(r.name||''); } else $('backupNote').textContent='הגיבוי נכשל. ודא/י שהופעל הגיבוי בעורך (הרצת installBackupTrigger ואישור הרשאות).'; }
+    catch(e){ $('backupNote').textContent='הגיבוי נכשל — בדוק חיבור.'; }
+  });
+  const lb=$('loadBackups'); if(lb) lb.addEventListener('click', async ()=>{
+    $('restoreNote').textContent='טוען רשימת גיבויים…';
+    try{ const r=await apiGet('backupsList'); if(r&&r.ok&&r.backups&&r.backups.length){ const sel=$('restoreSel'); sel.innerHTML=r.backups.map(b=>'<option value="'+b.id+'">'+b.name+'</option>').join(''); $('restoreBox').style.display='block'; $('restoreNote').textContent=r.backups.length+' גיבויים זמינים — בחר/י ולחץ/י שחזר.'; } else if(r&&r.ok){ $('restoreNote').textContent='אין עדיין גיבויים.'; } else $('restoreNote').textContent='לא ניתן לטעון — ייתכן שהשרת לא עודכן (פרוס מחדש Code.gs).'; }
+    catch(e){ $('restoreNote').textContent='הטעינה נכשלה — בדוק חיבור.'; }
+  });
+  const dr=$('doRestore'); if(dr) dr.addEventListener('click', async ()=>{
+    const sel=$('restoreSel'); const id=sel.value; const name=(sel.options[sel.selectedIndex]||{}).text||'';
+    if(!id) return;
+    if(!confirm('שחזור ידרוס את כל הנתונים הנוכחיים בנתוני הגיבוי:\n"'+name+'"\n\n(לפני כן תישמר אוטומטית נקודת גיבוי של המצב הנוכחי, כך שאפשר לחזור אחורה.)\n\nלהמשיך?')) return;
+    $('restoreNote').textContent='משחזר… זה עשוי לקחת מספר שניות, נא לא לסגור.';
+    try{ const r=await apiGet('restore',{id:id, name:name}); if(r&&r.ok){ $('restoreNote').textContent='✓ שוחזר מהגיבוי "'+name+'". רענן/י את הדף כדי לראות את הנתונים.'; } else $('restoreNote').textContent='השחזור נכשל — ייתכן שהשרת לא עודכן (פרוס מחדש), או שהפעולה ארכה מדי (נסה/י שחזור מהעורך).'; }
+    catch(e){ $('restoreNote').textContent='השחזור נכשל / ארך מדי — אפשר לשחזר מהעורך (restoreLatestBackup).'; }
+  });
+  // ===== גיבוי לקובץ במחשב + שחזור מקובץ =====
+  const dlb=$('dlBackup'); if(dlb) dlb.addEventListener('click', async ()=>{
+    $('dlNote').textContent='אוסף נתונים (כולל תמונות — עשוי לקחת רגע)…';
+    try{
+      const [all,contacts,news,roster,catalog,photos]=await Promise.all([
+        apiGet('all'), apiGet('contacts'), apiGet('news'), apiGet('roster'), apiGet('catalog'), apiGet('photosAll')
+      ]);
+      const snap={ _app:'afcon-portal', _ver:1, _exported:new Date().toISOString(),
+        alerts:(all&&all.alerts)||[], contacts:(contacts&&contacts.contacts)||[],
+        news:(news&&news.news)||[], catalog:(catalog&&catalog.items)||{},
+        buyers:(roster&&roster.buyers)||[], reporters:(roster&&roster.reporters)||[],
+        photos:(photos&&photos.photos)||[] };
+      const blob=new Blob([JSON.stringify(snap)],{type:'application/json'});
+      const url=URL.createObjectURL(blob); const a=document.createElement('a');
+      const stamp=new Date().toISOString().slice(0,16).replace(/[:T]/g,'-');
+      a.href=url; a.download='גיבוי-שרשרת-האספקה-'+stamp+'.json';
+      document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+      $('dlNote').textContent='✓ גיבוי מלא הורד למחשב ('+(snap.alerts.length)+' פניות, '+(snap.contacts.length)+' אנשי קשר, '+(snap.photos.length)+' תמונות).';
+    }catch(e){ $('dlNote').textContent='ההורדה נכשלה — בדוק חיבור ונסה שוב.'; }
+  });
+  const upr=$('upRestore'); if(upr) upr.addEventListener('click', ()=>{ $('restoreFile').click(); });
+  const rf=$('restoreFile'); if(rf) rf.addEventListener('change', async (ev)=>{
+    const file=ev.target.files&&ev.target.files[0]; if(!file) return;
+    $('upNote').textContent='קורא את הקובץ…';
+    try{
+      const text=await file.text(); let snap;
+      try{ snap=JSON.parse(text); }catch(e){ $('upNote').textContent='הקובץ אינו קובץ גיבוי תקין.'; rf.value=''; return; }
+      if(!snap||snap._app!=='afcon-portal'){ if(!confirm('הקובץ לא נראה כמו גיבוי של המערכת. להמשיך בכל זאת?')){ rf.value=''; $('upNote').textContent=''; return; } }
+      const n=(snap.alerts||[]).length;
+      if(!confirm('שחזור ידרוס את כל הנתונים הנוכחיים בנתוני הקובץ:\n'+n+' פניות, '+((snap.contacts||[]).length)+' אנשי קשר, '+((snap.news||[]).length)+' ידיעות.\n\nמומלץ להוריד גיבוי של המצב הנוכחי לפני כן.\n\nלהמשיך בשחזור?')) { rf.value=''; $('upNote').textContent=''; return; }
+      $('upNote').textContent='משחזר… נא לא לסגור.';
+      const r=await apiPost('importAll',{data:snap});
+      if(r&&r.ok){ $('upNote').textContent='✓ שוחזר בהצלחה: '+((r.restored||[]).join(', '))+'. רענן/י את הדף.'; }
+      else $('upNote').textContent='השחזור נכשל — ייתכן שהשרת לא עודכן (פרוס מחדש Code.gs).';
+    }catch(e){ $('upNote').textContent='השחזור נכשל — '+e; }
+    rf.value='';
+  });
+  $('gateOk').addEventListener('click',()=>{ const v=$('gateSel').value.trim(); if(!v){ $('gateMsg').textContent='בחר את שמך מהרשימה.'; return; } localStorage.setItem(K.me,v); $('idGate').style.display='none'; fillIdentity(); load(); });
+  $('gateDev').addEventListener('click',()=>{ const p=prompt('סיסמת מפתח:'); if(p==='30172'){ $('idGate').style.display='none'; openModal(); } });
+  maybeGate();
+  updateMeBar();
+  showSoundBar();
+  registerSW();
+  TPLS=tplCacheGet(); if(apiOn()) tplLoad();
+  updatePresBtn(); presencePing(); setInterval(presencePing, 60000);
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible') presencePing(); });
+  if(apiOn()){ load(); loadRoster(); loadNews(); } else renderEmptyConfig();
+  document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&apiOn()) load(); });
+</script>
+<!-- ===== כלי עזר (מודול עצמאי — זהה בשתי האפליקציות) ===== -->
+<style>
+  #tkModal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;display:none;align-items:flex-start;justify-content:center}
+  #tkModal.open{display:flex}
+  #tkModal *{box-sizing:border-box}
+  #tkModal .tk-sheet{background:#0c0a09;width:100%;max-width:580px;height:100%;display:flex;flex-direction:column;color:#fafaf9;font-family:'Heebo','Segoe UI',sans-serif}
+  #tkModal .tk-head{display:flex;align-items:center;justify-content:space-between;padding:15px 16px;border-bottom:1px solid #292524;background:#1c1917}
+  #tkModal .tk-title{font-family:'Rubik','Heebo',sans-serif;font-weight:800;font-size:19px}
+  #tkModal .tk-x{background:#292524;border:none;color:#fafaf9;width:34px;height:34px;border-radius:9px;font-size:16px;cursor:pointer}
+  #tkModal .tk-tabs{display:flex;flex-wrap:wrap;gap:5px;padding:10px;border-bottom:1px solid #292524;background:#161312}
+  #tkModal .tk-tab{flex:1 1 auto;min-width:60px;background:#1c1917;border:1px solid #292524;color:#a8a29e;border-radius:10px;padding:10px 3px;font-size:12.5px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;white-space:nowrap}
+  #tkModal .tk-tab.on{background:#e2231a;border-color:#e2231a;color:#fff}
+  #tkModal .tk-body{flex:1;overflow-y:auto;padding:16px}
+  #tkModal .tk-pane[hidden]{display:none}
+  #tkModal .tk-rec-lang{display:flex;gap:8px;margin-bottom:12px}
+  #tkModal .tk-rl-btn{flex:1;background:#1c1917;border:1px solid #3f3f46;color:#a8a29e;border-radius:10px;padding:11px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;font-size:14px}
+  #tkModal .tk-rl-btn.on{background:#2563eb;border-color:#3b82f6;color:#fff}
+  #tkModal .tk-rec-btn{width:100%;background:#e2231a;border:none;color:#fff;border-radius:13px;padding:16px;font-size:16.5px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;margin-bottom:10px}
+  #tkModal .tk-rec-btn.rec{animation:tkpulse 1.2s infinite}
+  @keyframes tkpulse{0%,100%{box-shadow:0 0 0 0 rgba(226,35,26,.55)}50%{box-shadow:0 0 0 13px rgba(226,35,26,0)}}
+  #tkModal .tk-rec-status{font-size:13px;color:#a8a29e;text-align:center;min-height:18px;margin-bottom:8px;font-weight:700}
+  #tkModal .tk-rec-text{width:100%;min-height:150px;background:#0c0a09;border:1px solid #3f3f46;border-radius:12px;padding:13px;color:#fafaf9;font-size:16px;font-family:'Heebo',sans-serif;resize:vertical;line-height:1.65}
+  #tkModal .tk-rec-text:focus{outline:none;border-color:#e2231a}
+  #tkModal .tk-rec-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:11px}
+  #tkModal .tk-rec-acts button{flex:1 1 calc(50% - 4px);background:#1c1917;border:1px solid #3f3f46;color:#fafaf9;border-radius:11px;padding:13px;font-weight:800;font-family:'Heebo',sans-serif;cursor:pointer;font-size:14px}
+  #tkModal #tkRecWa{border-color:#166534;color:#34d399}
+  #tkModal .tk-rec-upload{display:block;text-align:center;margin-top:12px;color:#60a5fa;font-weight:700;font-size:13.5px;cursor:pointer}
+  #tkModal .tk-rec-note{font-size:12px;color:#78716c;margin-top:10px;line-height:1.55;text-align:center}
+  #tkModal .tk-newlist{width:100%;background:#06281b;border:1px dashed #166534;color:#34d399;border-radius:13px;padding:13px;font-size:15px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;margin-bottom:14px}
+  #tkModal .tk-list{background:#1c1917;border:1px solid #292524;border-radius:14px;padding:13px;margin-bottom:13px}
+  #tkModal .tk-list-head{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+  #tkModal .tk-list-name{flex:1;background:#0c0a09;border:1px solid #3f3f46;border-radius:10px;padding:9px 11px;color:#fafaf9;font-size:15.5px;font-weight:700;font-family:'Rubik','Heebo',sans-serif}
+  #tkModal .tk-list-name:focus{outline:none;border-color:#e2231a}
+  #tkModal .tk-dellist{background:none;border:none;color:#f87171;font-size:17px;cursor:pointer;padding:4px}
+  #tkModal .tk-items{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+  #tkModal .tk-item{display:flex;align-items:center;gap:9px;background:#0c0a09;border:1px solid #292524;border-radius:9px;padding:8px 10px}
+  #tkModal .tk-item input[type=checkbox]{width:19px;height:19px;accent-color:#22c55e;flex:0 0 auto}
+  #tkModal .tk-itext{flex:1;font-size:14.5px;line-height:1.4;word-break:break-word;cursor:text}
+  #tkModal .tk-item.done .tk-itext{text-decoration:line-through;color:#78716c}
+  #tkModal .tk-iimg{flex:1}
+  #tkModal .tk-iimg img{max-width:100%;max-height:150px;border-radius:8px;border:1px solid #3f3f46;display:block}
+  #tkModal .tk-iaudio{flex:1;display:flex;align-items:center;gap:8px;min-width:0}
+  #tkModal .tk-iaudio audio{flex:1;min-width:0;height:36px}
+  #tkModal .tk-aud-ic{flex:0 0 auto;font-size:16px}
+  #tkModal .tk-idel{background:none;border:none;color:#f87171;font-weight:800;cursor:pointer;font-size:14px;flex:0 0 auto}
+  #tkModal .tk-empty{color:#78716c;font-size:13.5px;text-align:center;padding:8px}
+  #tkModal .tk-additem{display:flex;gap:6px;align-items:stretch}
+  #tkModal .tk-iteminput{flex:1;background:#0c0a09;border:1px solid #3f3f46;border-radius:10px;padding:10px 11px;color:#fafaf9;font-size:14.5px;font-family:'Heebo',sans-serif}
+  #tkModal .tk-iteminput:focus{outline:none;border-color:#e2231a}
+  #tkModal .tk-additem button{border:1px solid #3f3f46;background:#211e1c;color:#fafaf9;border-radius:10px;font-size:17px;cursor:pointer;padding:0 12px}
+  #tkModal .tk-add{background:#22c55e!important;border-color:#22c55e!important;color:#052e16!important;font-weight:800}
+  #tkModal .tk-mic.rec{background:#e2231a!important;border-color:#e2231a!important;color:#fff!important;animation:tkpulse 1s infinite}
+  @keyframes tkpulse{0%,100%{opacity:1}50%{opacity:.5}}
+  #tkModal .tk-conv{background:#1c1917;border:1px solid #292524;border-radius:14px;padding:16px}
+  #tkModal .tk-row{display:flex;gap:10px;align-items:center;margin-bottom:12px}
+  #tkModal .tk-amt{flex:1;background:#0c0a09;border:1px solid #3f3f46;border-radius:11px;padding:13px;color:#fafaf9;font-size:20px;font-weight:800;font-family:'Rubik',sans-serif;text-align:start}
+  #tkModal .tk-amt:focus{outline:none;border-color:#e2231a}
+  #tkModal .tk-sel{flex:1;background:#0c0a09;border:1px solid #3f3f46;border-radius:11px;padding:13px;color:#fafaf9;font-size:15px;font-family:'Heebo',sans-serif}
+  #tkModal .tk-swap{background:#211e1c;border:1px solid #3f3f46;color:#fafaf9;border-radius:11px;width:46px;font-size:18px;cursor:pointer}
+  #tkModal .tk-result{background:#06281b;border:1px solid #166534;border-radius:12px;padding:16px;text-align:center;margin-top:6px}
+  #tkModal .tk-result .tk-rv{font-family:'Rubik',sans-serif;font-weight:900;font-size:30px;color:#34d399;line-height:1.1;word-break:break-word}
+  #tkModal .tk-result .tk-rl{font-size:13px;color:#a8a29e;margin-top:6px}
+  #tkModal .tk-note{font-size:12px;color:#78716c;text-align:center;margin-top:10px}
+  /* ספר טלפונים */
+  #tkModal .tk-ph-kind{display:flex;gap:8px;margin-bottom:11px}
+  #tkModal .tk-kind{flex:1;background:#211e1c;border:1px solid #3f3f46;color:#a8a29e;border-radius:11px;padding:10px 0;font-size:14.5px;font-weight:800;cursor:pointer;font-family:'Rubik','Heebo',sans-serif}
+  #tkModal .tk-kind.on{background:#2563eb;border-color:#3b82f6;color:#fff}
+  #tkModal .tk-ph-top{display:flex;gap:8px;margin-bottom:13px}
+  #tkModal .tk-az{display:flex;flex-direction:column;gap:9px;margin-bottom:13px}
+  #tkModal .tk-az-row{display:flex;flex-wrap:wrap;gap:6px}
+  #tkModal .tk-az-lat{padding-top:11px;border-top:1px dashed #3f3f46}
+  #tkModal .tk-azl{flex:0 0 auto;min-width:33px;padding:10px 8px;background:#1c1917;border:1px solid #292524;color:#57534e;border-radius:9px;font-size:16px;font-weight:800;cursor:pointer;text-align:center;font-family:'Rubik','Heebo',sans-serif}
+  #tkModal .tk-azl.has{color:#e7e5e4;border-color:#44403c}
+  #tkModal .tk-azl.on{background:#2563eb;border-color:#3b82f6;color:#fff}
+  #tkModal .tk-azdiv{background:#0c0a09;color:#60a5fa;font-weight:900;font-size:15px;border-radius:8px;padding:5px 12px;margin:12px 2px 8px;border-right:3px solid #2563eb}
+  #tkModal .tk-ph-search{flex:1;background:#0c0a09;border:1px solid #3f3f46;border-radius:11px;padding:11px 13px;color:#fafaf9;font-size:14.5px;font-family:'Heebo',sans-serif}
+  #tkModal .tk-ph-search:focus{outline:none;border-color:#e2231a}
+  #tkModal .tk-ph-new{background:#06281b;border:1px solid #166534;color:#34d399;border-radius:11px;padding:0 16px;font-size:14px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;white-space:nowrap}
+  #tkModal .tk-ph-form{display:none}
+  #tkModal .tk-ph-form.open{display:flex;position:fixed;inset:0;z-index:330;background:#0c0a09;flex-direction:column;gap:12px;padding:20px 18px calc(22px + env(safe-area-inset-bottom));overflow-y:auto}
+  #tkModal .tk-ph-ftop{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:2px}
+  #tkModal #tkPhTitle{font-family:'Rubik','Heebo',sans-serif;font-weight:800;font-size:20px;color:#fafaf9}
+  #tkModal .tk-ph-x{background:#211e1c;border:1px solid #3f3f46;color:#fafaf9;width:42px;height:42px;border-radius:12px;font-size:17px;cursor:pointer;flex:0 0 auto}
+  #tkModal .tk-ph-form input{background:#1c1917;border:1px solid #3f3f46;border-radius:12px;padding:15px 14px;color:#fafaf9;font-size:16.5px;font-family:'Heebo',sans-serif;width:100%}
+  #tkModal .tk-ph-form input:focus{outline:none;border-color:#e2231a}
+  #tkModal .tk-ph-2{display:flex;gap:10px}
+  #tkModal .tk-ph-2 input{flex:1;min-width:0}
+  #tkModal .tk-ph-actions{display:flex;gap:10px;margin-top:auto;padding-top:8px}
+  #tkModal .tk-ph-save{flex:1;background:#22c55e;border:none;color:#052e16;border-radius:13px;padding:16px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;font-size:16.5px}
+  #tkModal .tk-ph-cancel{flex:1;background:#211e1c;border:1px solid #3f3f46;color:#d6d3d1;border-radius:13px;padding:16px;font-weight:800;cursor:pointer;font-size:16px;font-family:'Heebo',sans-serif}
+  #tkModal .tk-card{background:#1c1917;border:1px solid #292524;border-radius:14px;padding:14px;margin-bottom:11px}
+  #tkModal .tk-card-h{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  #tkModal .tk-card-name{flex:1;font-family:'Rubik','Heebo',sans-serif;font-weight:800;font-size:16.5px;color:#fafaf9}
+  #tkModal .tk-card-edit,#tkModal .tk-card-del{background:none;border:none;cursor:pointer;font-size:15px;padding:3px}
+  #tkModal .tk-card-del{color:#f87171}
+  #tkModal .tk-line{display:flex;align-items:center;gap:8px;font-size:14px;color:#d6d3d1;padding:4px 0}
+  #tkModal .tk-line .ic{flex:0 0 auto;width:18px;text-align:center}
+  #tkModal a.tk-tel{color:#34d399;font-weight:800;text-decoration:none}
+  #tkModal a.tk-addr{color:#60a5fa;font-weight:700;text-decoration:none}
+  #tkModal .tk-card.shared{border-color:#1e3a5f;background:#13212e}
+  #tkModal .tk-tag{display:inline-block;background:#0c2d48;color:#60a5fa;border:1px solid #1e3a5f;border-radius:7px;font-size:11px;font-weight:800;padding:2px 7px;margin-inline-start:6px;vertical-align:middle}
+  #tkModal .tk-card-share{background:none;border:none;cursor:pointer;font-size:16px;padding:3px;color:#34d399}
+  #tkModal .tk-sec{font-size:12.5px;color:#a8a29e;font-weight:800;margin:4px 2px 9px;border-bottom:1px solid #292524;padding-bottom:5px}
+  #tkModal .tk-draw-note{font-size:12px;color:#78716c}
+  #tkDraw{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:320;display:none;flex-direction:column;align-items:center;justify-content:center;padding:16px}
+  #tkDraw.open{display:flex}
+  #tkDraw canvas{background:#fff;border-radius:12px;touch-action:none;max-width:100%;box-shadow:0 6px 30px rgba(0,0,0,.5)}
+  #tkDraw .tk-draw-bar{display:flex;gap:10px;margin-top:14px}
+  #tkDraw .tk-draw-bar button{border:none;border-radius:11px;padding:12px 20px;font-size:15px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer}
+  #tkDraw .tk-dsave{background:#22c55e;color:#052e16}
+  #tkDraw .tk-dclear{background:#292524;color:#fafaf9}
+  #tkDraw .tk-dcancel{background:#7f1d1d;color:#fff}
+</style>
+
+<div id="tkModal">
+  <div class="tk-sheet">
+    <div class="tk-head"><span class="tk-title">🧰 כלי עזר</span><button class="tk-x" id="tkClose">✕</button></div>
+    <div class="tk-tabs">
+      <button class="tk-tab on" data-tk="lists">📝 רשימות</button>
+      <button class="tk-tab" data-tk="phone">📞 טלפונים</button>
+      <button class="tk-tab" data-tk="cur">💱 מטבעות</button>
+      <button class="tk-tab" data-tk="area">📐 שטחים</button>
+      <button class="tk-tab" data-tk="rec">🎙️ רשמקול</button>
+    </div>
+    <div class="tk-body">
+      <div class="tk-pane" id="tkLists"></div>
+      <div class="tk-pane" id="tkPhone" hidden>
+        <div class="tk-ph-kind" id="tkPhKind">
+          <button type="button" class="tk-kind on" data-k="supplier">🏭 ספקים</button>
+          <button type="button" class="tk-kind" data-k="customer">🧑‍💼 לקוחות</button>
+        </div>
+        <div class="tk-ph-top">
+          <input class="tk-ph-search" id="tkPhSearch" placeholder="חיפוש ספק / איש קשר…">
+          <button class="tk-ph-new" id="tkPhNew">➕ ספק חדש</button>
+        </div>
+        <div class="tk-az" id="tkAz"></div>
+        <div class="tk-ph-form" id="tkPhForm">
+          <div class="tk-ph-ftop"><span id="tkPhTitle">עריכה</span><button class="tk-ph-x" id="tkPhX" title="סגור">✕</button></div>
+          <input id="tkPhSupplier" placeholder="שם הספק">
+          <div class="tk-ph-2"><input id="tkPhC1" placeholder="איש קשר 1"><input id="tkPhC2" placeholder="איש קשר 2"></div>
+          <div class="tk-ph-2"><input id="tkPhP1" type="tel" inputmode="tel" placeholder="טלפון 1"><input id="tkPhP2" type="tel" inputmode="tel" placeholder="טלפון 2"></div>
+          <input id="tkPhAddr" placeholder="כתובת">
+          <div class="tk-ph-actions"><button class="tk-ph-cancel" id="tkPhCancel">ביטול</button><button class="tk-ph-save" id="tkPhSave">שמור</button></div>
+        </div>
+        <div id="tkPhList"></div>
+      </div>
+      <div class="tk-pane" id="tkCur" hidden>
+        <div class="tk-conv">
+          <div class="tk-row"><input class="tk-amt" id="tkCurAmt" type="number" inputmode="decimal" value="100"></div>
+          <div class="tk-row">
+            <select class="tk-sel" id="tkCurFrom"></select>
+            <button class="tk-swap" id="tkCurSwap" title="החלף">⇄</button>
+            <select class="tk-sel" id="tkCurTo"></select>
+          </div>
+          <div class="tk-result"><div class="tk-rv" id="tkCurRes">—</div><div class="tk-rl" id="tkCurRate"></div></div>
+          <div class="tk-note" id="tkCurNote"></div>
+        </div>
+      </div>
+      <div class="tk-pane" id="tkArea" hidden>
+        <div class="tk-conv">
+          <div class="tk-row"><input class="tk-amt" id="tkAreaAmt" type="number" inputmode="decimal" value="1"></div>
+          <div class="tk-row">
+            <select class="tk-sel" id="tkAreaFrom"></select>
+            <button class="tk-swap" id="tkAreaSwap" title="החלף">⇄</button>
+            <select class="tk-sel" id="tkAreaTo"></select>
+          </div>
+          <div class="tk-result"><div class="tk-rv" id="tkAreaRes">—</div><div class="tk-rl" id="tkAreaRate"></div></div>
+        </div>
+      </div>
+      <div class="tk-pane" id="tkRec" hidden>
+        <div class="tk-rec-lang">
+          <button class="tk-rl-btn on" data-lang="he-IL">🇮🇱 עברית</button>
+          <button class="tk-rl-btn" data-lang="en-US">🇬🇧 English</button>
+        </div>
+        <button class="tk-rec-btn" id="tkRecBtn">🎙️ התחל הקלטה</button>
+        <div class="tk-rec-status" id="tkRecStatus"></div>
+        <textarea class="tk-rec-text" id="tkRecText" placeholder="הטקסט המתומלל יופיע כאן בזמן הדיבור… אפשר גם לערוך ידנית"></textarea>
+        <audio id="tkRecAudio" controls hidden style="width:100%;margin-top:9px"></audio>
+        <div class="tk-rec-acts">
+          <button id="tkRecCopy">📋 העתק</button>
+          <button id="tkRecWa">📲 שלח בוואטסאפ</button>
+          <button id="tkRecSaveTxt">💾 שמור טקסט</button>
+          <button id="tkRecClear">🧹 נקה מסך</button>
+          <button id="tkRecDlAudio" hidden>⬇️ הורד הקלטה</button>
+          <button id="tkRecShareAudio" hidden>📲 שתף הקלטה</button>
+        </div>
+        <label class="tk-rec-upload">📎 העלה קובץ אודיו להאזנה/שיתוף<input type="file" id="tkRecUpload" accept="audio/*" hidden></label>
+        <div class="tk-rec-note" id="tkRecNote"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="tkDraw">
+  <canvas id="tkCanvas" width="320" height="380"></canvas>
+  <div class="tk-draw-bar">
+    <button class="tk-dsave" id="tkDSave">שמור</button>
+    <button class="tk-dclear" id="tkDClear">נקה</button>
+    <button class="tk-dcancel" id="tkDCancel">ביטול</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id);};
+  var modal=$('tkModal'); if(!modal) return;
+  function esc(s){ return (s||'').toString().replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+
+  /* ---------- גישה לשרת (לספר טלפונים משותף) ---------- */
+  function apiCfg(){ var a=window.__AFCON_API||{}; return {url:(a.url||'').trim(), token:(a.token||'').trim()}; }
+  function myName(){ try{ return (localStorage.getItem('afcon_me')||localStorage.getItem('afcon_reporter')||'').trim(); }catch(e){ return ''; } }
+  function srvGet(action, params){
+    return new Promise(function(resolve){
+      var c=apiCfg(); if(!c.url){ resolve(null); return; }
+      var cb='tkcb'+Date.now()+Math.floor(Math.random()*100000);
+      var qs='?action='+encodeURIComponent(action)+'&token='+encodeURIComponent(c.token)+'&callback='+cb;
+      var pr=params||{}; for(var k in pr){ qs+='&'+encodeURIComponent(k)+'='+encodeURIComponent(pr[k]); }
+      qs+='&_='+Date.now();
+      var s=document.createElement('script'); var done=false;
+      window[cb]=function(data){ done=true; try{ delete window[cb]; }catch(e){} try{ s.remove(); }catch(e){} resolve(data); };
+      s.onerror=function(){ if(!done){ try{ delete window[cb]; }catch(e){} try{ s.remove(); }catch(e){} resolve(null); } };
+      s.src=c.url+qs; document.body.appendChild(s);
+      setTimeout(function(){ if(!done){ try{ delete window[cb]; }catch(e){} try{ s.remove(); }catch(e){} resolve(null); } }, 15000);
+    });
+  }
+  function srvPost(payload){
+    var c=apiCfg(); if(!c.url) return Promise.resolve();
+    return fetch(c.url,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({token:c.token},payload))}).catch(function(){});
+  }
+
+  var opener=$('tkOpen'); if(opener) opener.addEventListener('click', function(){ modal.classList.add('open'); renderLists(); });
+  $('tkClose').addEventListener('click', function(){ modal.classList.remove('open'); try{ recStop(); }catch(e){} });
+  modal.addEventListener('click', function(e){ if(e.target===modal){ modal.classList.remove('open'); try{ recStop(); }catch(e){} } });
+  var tabs=modal.querySelectorAll('.tk-tab');
+  tabs.forEach(function(t){ t.addEventListener('click', function(){
+    tabs.forEach(function(x){ x.classList.toggle('on', x===t); });
+    var v=t.getAttribute('data-tk');
+    $('tkLists').hidden=(v!=='lists'); $('tkPhone').hidden=(v!=='phone'); $('tkCur').hidden=(v!=='cur'); $('tkArea').hidden=(v!=='area'); $('tkRec').hidden=(v!=='rec');
+    if(v!=='rec'){ try{ recStop(); }catch(e){} }
+    if(v==='phone'){ renderPhones(); loadShared(); } if(v==='cur') openCur(); if(v==='area') openArea(); if(v==='rec') initRec();
+  }); });
+
+  /* ---------- רשימות ---------- */
+  var LK='afcon_tools_lists';
+  function loadLists(){ try{ return JSON.parse(localStorage.getItem(LK)||'[]')||[]; }catch(e){ return []; } }
+  function saveLists(){ try{ localStorage.setItem(LK, JSON.stringify(LISTS)); }catch(e){} }
+  var LISTS=loadLists();
+  function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+  function renderLists(){
+    var box=$('tkLists');
+    var html='<button class="tk-newlist" id="tkNewList">➕ רשימה חדשה</button>';
+    if(!LISTS.length){ html+='<div class="tk-empty">אין רשימות עדיין. צור/י רשימה חדשה.</div>'; }
+    LISTS.forEach(function(L){
+      var items=(L.items||[]).map(function(it){
+        if(it.type==='draw'){ return '<div class="tk-item'+(it.done?' done':'')+'" data-iid="'+it.id+'"><input type="checkbox" '+(it.done?'checked':'')+'><div class="tk-iimg"><img src="'+it.img+'"></div><button class="tk-idel">✕</button></div>'; }
+        if(it.type==='audio'){ return '<div class="tk-item'+(it.done?' done':'')+'" data-iid="'+it.id+'"><input type="checkbox" '+(it.done?'checked':'')+'><div class="tk-iaudio"><span class="tk-aud-ic">🎙️</span><audio controls preload="metadata" src="'+it.audio+'"></audio></div><button class="tk-idel">✕</button></div>'; }
+        return '<div class="tk-item'+(it.done?' done':'')+'" data-iid="'+it.id+'"><input type="checkbox" '+(it.done?'checked':'')+'><span class="tk-itext">'+esc(it.text)+'</span><button class="tk-idel">✕</button></div>';
+      }).join('');
+      if(!items) items='<div class="tk-empty">רשימה ריקה</div>';
+      html+='<div class="tk-list" data-id="'+L.id+'">'
+        +'<div class="tk-list-head"><input class="tk-list-name" value="'+esc(L.name)+'"><button class="tk-dellist" title="מחק רשימה">🗑️</button></div>'
+        +'<div class="tk-items">'+items+'</div>'
+        +'<div class="tk-additem"><input class="tk-iteminput" placeholder="הוסף נושא…"><button class="tk-add" title="הוסף">➕</button><button class="tk-mic" title="הקלטת שמע">🎤</button><button class="tk-drawbtn" title="כתב יד / ציור">✏️</button></div>'
+        +'</div>';
+    });
+    box.innerHTML=html;
+  }
+  function listById(id){ for(var i=0;i<LISTS.length;i++){ if(LISTS[i].id===id) return LISTS[i]; } return null; }
+  $('tkLists').addEventListener('click', function(e){
+    var t=e.target;
+    if(t.id==='tkNewList'){ LISTS.unshift({id:uid(), name:'רשימה חדשה', items:[]}); saveLists(); renderLists(); return; }
+    var listEl=t.closest('.tk-list'); if(!listEl) return; var L=listById(listEl.getAttribute('data-id')); if(!L) return;
+    if(t.classList.contains('tk-dellist')){ if(confirm('למחוק את הרשימה "'+L.name+'"?')){ LISTS=LISTS.filter(function(x){return x!==L;}); saveLists(); renderLists(); } return; }
+    if(t.classList.contains('tk-add')){ var inp=listEl.querySelector('.tk-iteminput'); addText(L, inp.value); inp.value=''; renderLists(); return; }
+    if(t.classList.contains('tk-mic')){ startAudio(L, t); return; }
+    if(t.classList.contains('tk-drawbtn')){ openDraw(L); return; }
+    if(t.classList.contains('tk-idel')){ var iid=t.closest('.tk-item').getAttribute('data-iid'); L.items=(L.items||[]).filter(function(x){return x.id!==iid;}); saveLists(); renderLists(); return; }
+    if(t.classList.contains('tk-itext')){ var iid2=t.closest('.tk-item').getAttribute('data-iid'); var it=findItem(L,iid2); if(it){ var nv=prompt('עריכת פריט:', it.text); if(nv!==null){ it.text=nv.trim(); saveLists(); renderLists(); } } return; }
+  });
+  $('tkLists').addEventListener('change', function(e){
+    var t=e.target; var listEl=t.closest('.tk-list'); if(!listEl) return; var L=listById(listEl.getAttribute('data-id')); if(!L) return;
+    if(t.type==='checkbox'){ var iid=t.closest('.tk-item').getAttribute('data-iid'); var it=findItem(L,iid); if(it){ it.done=t.checked; saveLists(); renderLists(); } return; }
+    if(t.classList.contains('tk-list-name')){ L.name=t.value.trim()||'רשימה'; saveLists(); return; }
+  });
+  $('tkLists').addEventListener('keydown', function(e){
+    if(e.key==='Enter' && e.target.classList.contains('tk-iteminput')){ var listEl=e.target.closest('.tk-list'); var L=listById(listEl.getAttribute('data-id')); if(L){ addText(L, e.target.value); e.target.value=''; renderLists(); var ne=document.querySelector('.tk-list[data-id="'+L.id+'"] .tk-iteminput'); if(ne) ne.focus(); } }
+  });
+  function findItem(L,iid){ var a=L.items||[]; for(var i=0;i<a.length;i++){ if(a[i].id===iid) return a[i]; } return null; }
+  function addText(L, txt){ txt=(txt||'').trim(); if(!txt) return; L.items=L.items||[]; L.items.push({id:uid(), type:'text', text:txt, done:false}); saveLists(); }
+
+  /* ---------- הקלטת שמע אמיתית (מיקרופון → קובץ שמור בפריט, עם נגן ▶️) ---------- */
+  var mediaRec=null, recChunks=[], recBtnA=null, recListA=null;
+  function resetMicBtn(){ if(recBtnA){ recBtnA.classList.remove('rec'); recBtnA.textContent='🎤'; recBtnA.title='הקלטת שמע'; } }
+  function cleanupRec(){ resetMicBtn(); mediaRec=null; recChunks=[]; recBtnA=null; recListA=null; }
+  function startAudio(L, btn){
+    if(mediaRec){ try{ if(mediaRec.state!=='inactive') mediaRec.stop(); }catch(e){} return; } // כבר מקליט → עצור
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder==='undefined'){
+      alert('הקלטת שמע אינה נתמכת בדפדפן זה. נסה/י בכרום/ספארי מעודכן.'); return;
+    }
+    navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+      try{ mediaRec=new MediaRecorder(stream); }catch(e){ try{ mediaRec=new MediaRecorder(stream,{mimeType:'audio/webm'}); }catch(e2){ alert('ההקלטה נכשלה.'); try{ stream.getTracks().forEach(function(t){t.stop();}); }catch(x){} return; } }
+      recChunks=[]; recBtnA=btn; recListA=L;
+      mediaRec.ondataavailable=function(ev){ if(ev.data && ev.data.size>0) recChunks.push(ev.data); };
+      mediaRec.onstop=function(){
+        try{ stream.getTracks().forEach(function(t){ t.stop(); }); }catch(e){}
+        var blob=new Blob(recChunks, { type:(mediaRec && mediaRec.mimeType) ? mediaRec.mimeType : 'audio/webm' });
+        var L2=recListA;
+        var fr=new FileReader();
+        fr.onload=function(){
+          var data=fr.result;
+          if(data && data.length>2600000){ alert('ההקלטה ארוכה/כבדה מדי לשמירה במכשיר. נסה/י הקלטה קצרה יותר.'); cleanupRec(); return; }
+          if(L2){ L2.items=L2.items||[]; L2.items.push({ id:uid(), type:'audio', audio:data, done:false });
+            try{ localStorage.setItem(LK, JSON.stringify(LISTS)); }
+            catch(err){ L2.items.pop(); alert('אין מקום לשמור את ההקלטה במכשיר (האחסון מלא). מחק/י הקלטות ישנות ונסה/י שוב.'); cleanupRec(); renderLists(); return; }
+          }
+          cleanupRec(); renderLists();
+        };
+        fr.readAsDataURL(blob);
+      };
+      try{ mediaRec.start(); }catch(e){ alert('ההקלטה נכשלה.'); cleanupRec(); return; }
+      if(btn){ btn.classList.add('rec'); btn.textContent='⏹'; btn.title='עצור הקלטה'; }
+    }).catch(function(){ alert('לא ניתן לגשת למיקרופון. אשר/י הרשאת מיקרופון ונסה/י שוב.'); });
+  }
+
+  /* ---------- כתב יד / ציור ---------- */
+  var drawWrap=$('tkDraw'), cv=$('tkCanvas'), cx=cv.getContext('2d'), drawing=false, drawList=null;
+  cx.lineWidth=3; cx.lineCap='round'; cx.lineJoin='round'; cx.strokeStyle='#111';
+  function fitCanvas(){ var w=Math.min(340, window.innerWidth-32); cv.style.width=w+'px'; }
+  function pos(e){ var r=cv.getBoundingClientRect(); var sx=cv.width/r.width, sy=cv.height/r.height; var p=(e.touches&&e.touches[0])||e; return {x:(p.clientX-r.left)*sx, y:(p.clientY-r.top)*sy}; }
+  function dstart(e){ e.preventDefault(); drawing=true; var p=pos(e); cx.beginPath(); cx.moveTo(p.x,p.y); }
+  function dmove(e){ if(!drawing) return; e.preventDefault(); var p=pos(e); cx.lineTo(p.x,p.y); cx.stroke(); }
+  function dend(){ drawing=false; }
+  cv.addEventListener('mousedown',dstart); cv.addEventListener('mousemove',dmove); window.addEventListener('mouseup',dend);
+  cv.addEventListener('touchstart',dstart,{passive:false}); cv.addEventListener('touchmove',dmove,{passive:false}); cv.addEventListener('touchend',dend);
+  function openDraw(L){ drawList=L; cx.fillStyle='#fff'; cx.fillRect(0,0,cv.width,cv.height); fitCanvas(); drawWrap.classList.add('open'); }
+  $('tkDClear').addEventListener('click', function(){ cx.fillStyle='#fff'; cx.fillRect(0,0,cv.width,cv.height); });
+  $('tkDCancel').addEventListener('click', function(){ drawWrap.classList.remove('open'); drawList=null; });
+  $('tkDSave').addEventListener('click', function(){ if(drawList){ var img=cv.toDataURL('image/png'); drawList.items=drawList.items||[]; drawList.items.push({id:uid(), type:'draw', img:img, done:false}); saveLists(); renderLists(); } drawWrap.classList.remove('open'); drawList=null; });
+
+  /* ---------- ספר טלפונים (אישי + משותף) ---------- */
+  var PK='afcon_tools_phones';
+  function loadPhones(){ try{ return JSON.parse(localStorage.getItem(PK)||'[]')||[]; }catch(e){ return []; } }
+  function savePhones(){ try{ localStorage.setItem(PK, JSON.stringify(PHONES)); }catch(e){} }
+  var PHONES=loadPhones(); var SHAREDC=[]; var phEditId=null; var phEditShared=null; var sharedLoaded=false; var sharedState='idle';
+  var phKind='supplier'; // ספק / לקוח
+  var phLetter=''; // חוצץ אות נבחר (ריק = הכל)
+  var PH_OWNER='אבידן קוטאי', PH_PIN='30172', phAdmin=false; // מחיקה מהמשותף — רק לבעלים, אחרי קוד
+  function isPhOwner(){ return String(myName()||'').trim()===PH_OWNER; }
+  function kindWord(){ return phKind==='customer'?'לקוח':'ספק'; }
+  function kindWordThe(){ return phKind==='customer'?'הלקוח':'הספק'; }
+  function ckind(c){ return (c && String(c.kind||''))==='customer' ? 'customer' : 'supplier'; }
+  function setPhKindUI(){
+    var s=$('tkPhSearch'); if(s) s.placeholder='חיפוש '+kindWord()+' / איש קשר…';
+    var n=$('tkPhNew'); if(n) n.textContent='➕ '+kindWord()+' חדש';
+    var sup=$('tkPhSupplier'); if(sup) sup.placeholder='שם ה'+kindWord();
+    document.querySelectorAll('#tkPhKind .tk-kind').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-k')===phKind); });
+  }
+  function telLink(num){ var clean=String(num||'').replace(/[^0-9+]/g,''); return '<a class="tk-tel" href="tel:'+esc(clean)+'">📞 '+esc(num)+'</a>'; }
+  function addrLink(a){ return '<a class="tk-addr" href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(a)+'" target="_blank" rel="noopener">📍 '+esc(a)+'</a>'; }
+  function cardLines(c){
+    var lines='';
+    if(c.c1) lines+='<div class="tk-line"><span class="ic">👤</span>'+esc(c.c1)+'</div>';
+    if(c.c2) lines+='<div class="tk-line"><span class="ic">👤</span>'+esc(c.c2)+'</div>';
+    if(c.p1) lines+='<div class="tk-line"><span class="ic"></span>'+telLink(c.p1)+'</div>';
+    if(c.p2) lines+='<div class="tk-line"><span class="ic"></span>'+telLink(c.p2)+'</div>';
+    if(c.addr) lines+='<div class="tk-line"><span class="ic"></span>'+addrLink(c.addr)+'</div>';
+    return lines;
+  }
+  function matchQ(c,q){ return (String(c.supplier||'')+' '+(c.c1||'')+' '+(c.c2||'')+' '+(c.p1||'')+' '+(c.p2||'')).toLowerCase().indexOf(q)>=0; }
+  function loadShared(){
+    if(!apiCfg().url){ sharedState='nocfg'; sharedLoaded=true; renderPhones(); return; }
+    sharedState='loading'; renderPhones();
+    srvGet('contacts').then(function(r){
+      if(r && r.ok && Object.prototype.toString.call(r.contacts)==='[object Array]'){ SHAREDC=r.contacts; sharedState='ok'; }
+      else if(r && r.ok===false){ sharedState='noaction'; }   // השרת ענה אבל לא מכיר את הפעולה — לא נפרס מחדש
+      else { sharedState='noconn'; }                            // null / timeout / אין תשובה
+      sharedLoaded=true; renderPhones();
+    });
+  }
+  function renderPhones(){
+    setPhKindUI();
+    var q=($('tkPhSearch').value||'').trim().toLowerCase();
+    var localAll=PHONES.filter(function(c){ return ckind(c)===phKind; });
+    var sharedAll=SHAREDC.filter(function(c){ return ckind(c)===phKind; });
+    // אילו אותיות קיימות (לרצועת החוצצים)
+    var present={}; localAll.concat(sharedAll).forEach(function(c){ present[firstLetter(c.supplier)]=true; });
+    renderAzStrip(present);
+    var byName=function(a,b){ return String(a.supplier||'').localeCompare(String(b.supplier||''),'he'); };
+    var local=localAll.slice().sort(byName);
+    var shared=sharedAll.slice().sort(byName);
+    if(q){ local=local.filter(function(c){return matchQ(c,q);}); shared=shared.filter(function(c){return matchQ(c,q);}); }
+    if(phLetter){ local=local.filter(function(c){return firstLetter(c.supplier)===phLetter;}); shared=shared.filter(function(c){return firstLetter(c.supplier)===phLetter;}); }
+    var box=$('tkPhList'); var html='';
+    var Wp=(phKind==='customer'?'לקוחות':'ספקים');
+    var sharedCount=sharedAll.length;
+    var st='';
+    if(sharedState==='loading') st=' · טוען…';
+    else if(sharedState==='ok') st=' · '+sharedCount+' '+Wp;
+    else if(sharedState==='nocfg') st=' · ⚠️ אין חיבור למערכת מוגדר';
+    else if(sharedState==='noconn') st=' · ⚠️ אין תשובה מהשרת — בדוק/י חיבור לאינטרנט';
+    else if(sharedState==='noaction') st=' · ⚠️ השרת לא עודכן — צריך לפרוס מחדש את Code.gs';
+    html+='<div class="tk-sec">🔗 '+Wp+' משותפים'+st+' <button id="tkPhReload" style="background:none;border:none;color:#60a5fa;font-weight:800;cursor:pointer;font-size:12.5px">↻ רענן</button></div>';
+    if(shared.length){ html+=groupedHtml(shared, sharedCardHtml); }
+    else { html+='<div class="tk-empty">'+(q||phLetter?'אין תוצאות משותפות':('אין '+Wp+' משותפים עדיין'))+'</div>'; }
+    html+='<div class="tk-sec" style="margin-top:14px">📱 ה'+Wp+' שלי (במכשיר זה)</div>';
+    if(local.length){ html+=groupedHtml(local, localCardHtml); }
+    else { html+='<div class="tk-empty">'+(q||phLetter?'אין תוצאות אישיות':('הוסף/י '+kindWord()+' חדש בכפתור למעלה'))+'</div>'; }
+    box.innerHTML=html;
+  }
+  // ===== חוצצים אלפביתיים (א׳–ת׳, בלי אותיות סופיות) =====
+  var HEB_LETTERS=['א','ב','ג','ד','ה','ו','ז','ח','ט','י','כ','ל','מ','נ','ס','ע','פ','צ','ק','ר','ש','ת'];
+  var LAT_LETTERS='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  var FINAL_MAP={'ך':'כ','ם':'מ','ן':'נ','ף':'פ','ץ':'צ'};
+  var HEB_ORDER=HEB_LETTERS.concat(LAT_LETTERS).concat(['#']);
+  function firstLetter(name){ var s=String(name||'').trim(); if(!s) return '#'; var ch=s.charAt(0); if(FINAL_MAP[ch]) ch=FINAL_MAP[ch]; if(HEB_LETTERS.indexOf(ch)>=0) return ch; if(/[A-Za-z]/.test(ch)) return ch.toUpperCase(); return '#'; }
+  function renderAzStrip(present){
+    var el=$('tkAz'); if(!el) return;
+    function chip(L,label){ return '<button type="button" class="tk-azl'+(phLetter===L?' on':'')+(present[L]?' has':'')+'" data-l="'+L+'">'+(label||L)+'</button>'; }
+    var heb='<button type="button" class="tk-azl'+(phLetter===''?' on':'')+'" data-l="">הכל</button>';
+    HEB_LETTERS.forEach(function(L){ heb+=chip(L); });
+    var lat=''; LAT_LETTERS.forEach(function(L){ lat+=chip(L); });
+    if(present['#']) lat+=chip('#');
+    el.innerHTML='<div class="tk-az-row">'+heb+'</div><div class="tk-az-row tk-az-lat">'+lat+'</div>';
+  }
+  function groupedHtml(arr, builder){
+    var groups={}, order=[];
+    arr.forEach(function(c){ var L=firstLetter(c.supplier); if(!groups[L]){ groups[L]=[]; order.push(L); } groups[L].push(c); });
+    order.sort(function(a,b){ var ia=HEB_ORDER.indexOf(a), ib=HEB_ORDER.indexOf(b); if(ia<0)ia=99; if(ib<0)ib=99; return ia-ib; });
+    return order.map(function(L){ return '<div class="tk-azdiv">'+L+'</div>'+groups[L].map(builder).join(''); }).join('');
+  }
+  function sharedCardHtml(c){
+    var W=kindWord();
+    var by=c.sharedBy?('<span class="tk-tag">משותף ע״י '+esc(c.sharedBy)+'</span>'):'<span class="tk-tag">משותף</span>';
+    var delBtn=isPhOwner()?'<button class="tk-card-del" title="מחק (לכולם)">🗑️</button>':'';
+    return '<div class="tk-card shared" data-id="'+esc(c.id)+'"><div class="tk-card-h"><span class="tk-card-name">'+esc(c.supplier||W)+'</span>'+by+'<button class="tk-card-edit" title="ערוך (לכולם)">✏️</button>'+delBtn+'</div>'+cardLines(c)+'</div>';
+  }
+  function localCardHtml(c){
+    var W=kindWord();
+    return '<div class="tk-card" data-id="'+c.id+'"><div class="tk-card-h"><span class="tk-card-name">'+esc(c.supplier||W)+'</span>'
+      +'<button class="tk-card-share" title="שתף לכולם">📤</button>'
+      +'<button class="tk-card-edit" title="ערוך">✏️</button><button class="tk-card-del" title="מחק">🗑️</button></div>'+cardLines(c)+'</div>';
+  }
+  function openPhForm(c, isShared){
+    phEditId = (c && !isShared) ? c.id : null;
+    phEditShared = (c && isShared) ? c.id : null;
+    var W=kindWord();
+    var t=$('tkPhTitle'); if(t) t.textContent = c ? ('עריכת '+(c.supplier||W)) : (W+' חדש');
+    $('tkPhSupplier').placeholder='שם ה'+W;
+    $('tkPhSupplier').value=c?(c.supplier||''):''; $('tkPhC1').value=c?(c.c1||''):''; $('tkPhC2').value=c?(c.c2||''):'';
+    $('tkPhP1').value=c?(c.p1||''):''; $('tkPhP2').value=c?(c.p2||''):''; $('tkPhAddr').value=c?(c.addr||''):'';
+    $('tkPhForm').classList.add('open'); $('tkPhSupplier').focus();
+  }
+  function closePhForm(){ $('tkPhForm').classList.remove('open'); phEditId=null; phEditShared=null; }
+  $('tkPhX').addEventListener('click', closePhForm);
+  $('tkPhNew').addEventListener('click', function(){ openPhForm(null); });
+  $('tkPhKind').addEventListener('click', function(e){ var b=e.target.closest('.tk-kind'); if(!b) return; var k=b.getAttribute('data-k'); if(k===phKind) return; phKind=k; phLetter=''; closePhForm(); renderPhones(); });
+  $('tkAz').addEventListener('click', function(e){ var b=e.target.closest('.tk-azl'); if(!b) return; var L=b.getAttribute('data-l'); phLetter=(L===phLetter?'':L); renderPhones(); });
+  $('tkPhCancel').addEventListener('click', closePhForm);
+  $('tkPhSearch').addEventListener('input', renderPhones);
+  $('tkPhSave').addEventListener('click', function(){
+    var rec={ supplier:$('tkPhSupplier').value.trim(), c1:$('tkPhC1').value.trim(), c2:$('tkPhC2').value.trim(), p1:$('tkPhP1').value.trim(), p2:$('tkPhP2').value.trim(), addr:$('tkPhAddr').value.trim() };
+    if(!rec.supplier && !rec.p1 && !rec.c1){ alert('יש למלא לפחות שם '+kindWord()+' או טלפון.'); return; }
+    if(phEditShared){ // עריכת איש קשר משותף → עדכון בשרת לכולם
+      if(!apiCfg().url){ alert('אין חיבור למערכת — לא ניתן לעדכן.'); return; }
+      var sid=phEditShared;
+      var btn=$('tkPhSave'); btn.disabled=true; btn.textContent='שומר…';
+      srvGet('contactUpdate', { id:sid, supplier:rec.supplier, c1:rec.c1, c2:rec.c2, p1:rec.p1, p2:rec.p2, addr:rec.addr, kind:phKind }).then(function(r){
+        btn.disabled=false; btn.textContent='שמור';
+        if(r && r.ok){ closePhForm(); loadShared(); alert('עודכן ✓ כל החברים יראו את השינוי.'); }
+        else if(r && r.ok===false){ alert('⚠️ השרת לא מכיר את פעולת העדכון — צריך לפרוס מחדש את Code.gs (גרסה חדשה).'); }
+        else { alert('⚠️ אין תשובה מהשרת. בדוק/י חיבור ונסה/י שוב.'); }
+      });
+      return;
+    }
+    if(phEditId){ for(var i=0;i<PHONES.length;i++){ if(PHONES[i].id===phEditId){ rec.id=phEditId; rec.kind=ckind(PHONES[i]); PHONES[i]=rec; break; } } }
+    else { rec.id=uid(); rec.kind=phKind; PHONES.push(rec); }
+    savePhones(); closePhForm(); renderPhones();
+  });
+  function shareContact(c){
+    if(!apiCfg().url){ alert('אין חיבור למערכת — לא ניתן לשתף.'); return; }
+    var W=kindWord();
+    if(!confirm('לשתף את "'+(c.supplier||W)+'" עם כל החברים? כולם יקבלו את הטלפון.')) return;
+    var kid='K'+Date.now()+Math.floor(Math.random()*100000);
+    srvGet('contactAdd', { id:kid, supplier:c.supplier||'', c1:c.c1||'', c2:c.c2||'', p1:c.p1||'', p2:c.p2||'', addr:c.addr||'', sharedBy:myName(), kind:ckind(c) }).then(function(r){
+      if(r && r.ok){
+        PHONES=PHONES.filter(function(x){return x.id!==c.id;}); savePhones(); // מעבירים מהאישי למשותף רק אחרי הצלחה
+        loadShared(); // מביאים מהשרת את המצב האמיתי
+        alert('שותף בהצלחה ✓ כל החברים יקבלו את "'+(c.supplier||W)+'" כשייכנסו לספר הטלפונים.');
+      } else if(r && r.ok===false){
+        alert('⚠️ השרת לא מכיר את פעולת השיתוף — צריך לפרוס מחדש את קובץ Code.gs (גרסה חדשה).\nנשאר אצלך כ"אישי".');
+      } else {
+        alert('⚠️ אין תשובה מהשרת. ודא/י חיבור לאינטרנט ונסה/י שוב.\nנשאר אצלך כ"אישי".');
+      }
+    });
+  }
+  $('tkPhList').addEventListener('click', function(e){
+    if(e.target.id==='tkPhReload'){ loadShared(); return; }
+    var card=e.target.closest('.tk-card'); if(!card) return; var id=card.getAttribute('data-id');
+    if(card.classList.contains('shared')){
+      var sc=null; for(var j=0;j<SHAREDC.length;j++){ if(String(SHAREDC[j].id)===String(id)){ sc=SHAREDC[j]; break; } }
+      if(!sc) return;
+      if(e.target.classList.contains('tk-card-edit')){ openPhForm(sc, true); return; }
+      if(e.target.classList.contains('tk-card-del')){
+        if(!isPhOwner()){ return; }
+        if(!phAdmin){ var pin=prompt('הקש/י קוד מנהל כדי למחוק מהספר המשותף:'); if(String(pin||'').trim()!==PH_PIN){ if(pin!==null) alert('קוד שגוי.'); return; } phAdmin=true; }
+        if(!confirm('למחוק את "'+(sc.supplier||kindWord())+'" מהספר המשותף? המחיקה תחול על כל החברים.')) return;
+        srvGet('contactDelete', { id:id }).then(function(r){
+          if(r && r.ok){ loadShared(); }
+          else if(r && r.ok===false){ alert('⚠️ השרת לא מכיר את פעולת המחיקה — צריך לפרוס מחדש את Code.gs (גרסה חדשה).'); }
+          else { alert('⚠️ אין תשובה מהשרת. בדוק/י חיבור ונסה/י שוב.'); }
+        });
+      }
+      return;
+    }
+    var c=null; for(var i=0;i<PHONES.length;i++){ if(PHONES[i].id===id){ c=PHONES[i]; break; } }
+    if(!c) return; // ספק אישי
+    if(e.target.classList.contains('tk-card-share')){ shareContact(c); }
+    else if(e.target.classList.contains('tk-card-edit')){ openPhForm(c, false); }
+    else if(e.target.classList.contains('tk-card-del')){ if(confirm('למחוק את "'+(c.supplier||kindWord())+'" מהמכשיר?')){ PHONES=PHONES.filter(function(x){return x.id!==id;}); savePhones(); renderPhones(); } }
+  });
+
+  /* ---------- ממיר מטבעות ---------- */
+  var CUR=[['ILS','₪ שקל'],['USD','$ דולר אמריקאי'],['EUR','€ אירו'],['GBP','£ ליש״ט'],['JPY','¥ ין יפני'],['CNY','יואן סיני'],['CHF','פרנק שוויצרי'],['CAD','דולר קנדי'],['AUD','דולר אוסטרלי'],['AED','דירהם (איחוד האמירויות)'],['INR','רופי הודי'],['RUB','רובל רוסי'],['TRY','לירה טורקית'],['BRL','ריאל ברזילאי'],['ZAR','ראנד דרום-אפריקני']];
+  var FALLBACK={USD:1,ILS:3.7,EUR:0.92,GBP:0.79,JPY:157,CNY:7.25,CHF:0.88,CAD:1.44,AUD:1.52,AED:3.67,INR:85,RUB:100,TRY:35,BRL:6.1,ZAR:18.8};
+  var RATES=null, RATES_TS=0, curInit=false;
+  function loadCachedRates(){ try{ var c=JSON.parse(localStorage.getItem('afcon_tools_rates')||'null'); if(c&&c.r){ RATES=c.r; RATES_TS=c.t||0; } }catch(e){} }
+  function fetchRates(){ return fetch('https://open.er-api.com/v6/latest/USD').then(function(r){return r.json();}).then(function(j){ if(j&&j.rates){ RATES=j.rates; RATES_TS=Date.now(); try{ localStorage.setItem('afcon_tools_rates', JSON.stringify({r:RATES,t:RATES_TS})); }catch(e){} return true; } return false; }).catch(function(){ return false; }); }
+  function fillSel(sel, def){ sel.innerHTML=CUR.map(function(c){ return '<option value="'+c[0]+'"'+(c[0]===def?' selected':'')+'>'+esc(c[1])+'</option>'; }).join(''); }
+  function openCur(){
+    if(!curInit){ curInit=true; fillSel($('tkCurFrom'),'USD'); fillSel($('tkCurTo'),'ILS'); loadCachedRates();
+      ['tkCurAmt','tkCurFrom','tkCurTo'].forEach(function(id){ $(id).addEventListener('input', calcCur); $(id).addEventListener('change', calcCur); });
+      $('tkCurSwap').addEventListener('click', function(){ var a=$('tkCurFrom').value; $('tkCurFrom').value=$('tkCurTo').value; $('tkCurTo').value=a; calcCur(); });
+    }
+    var stale=(!RATES)||((Date.now()-RATES_TS)>12*3600000);
+    if(stale){ $('tkCurNote').textContent='מעדכן שערים…'; fetchRates().then(function(){ calcCur(); }); }
+    calcCur();
+  }
+  function calcCur(){
+    var rates=RATES||FALLBACK; var live=!!RATES;
+    var f=$('tkCurFrom').value, t=$('tkCurTo').value; var amt=parseFloat($('tkCurAmt').value); if(isNaN(amt)) amt=0;
+    var rf=rates[f]||FALLBACK[f]||1, rt=rates[t]||FALLBACK[t]||1;
+    var val=amt/rf*rt;
+    $('tkCurRes').textContent=val.toLocaleString('he-IL',{maximumFractionDigits:2})+' '+t;
+    var one=(1/rf*rt);
+    $('tkCurRate').textContent='1 '+f+' = '+one.toLocaleString('he-IL',{maximumFractionDigits:4})+' '+t;
+    var when=RATES_TS?new Date(RATES_TS).toLocaleString('he-IL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+    $('tkCurNote').textContent = live ? ('שערים חיים · עודכן '+when) : 'שערים משוערים (ללא חיבור לאינטרנט)';
+  }
+
+  /* ---------- ממיר שטחים ---------- */
+  var AREA=[['m2','מ״ר (מטר רבוע)',1],['dunam','דונם',1000],['km2','קמ״ר',1000000],['hectare','הקטר',10000],['acre','אקר',4046.8564224],['ft2','רגל רבועה',0.09290304],['yd2','יארד רבוע',0.83612736],['mi2','מייל רבוע',2589988.110336]];
+  var areaInit=false;
+  function fillArea(sel, def){ sel.innerHTML=AREA.map(function(a){ return '<option value="'+a[0]+'"'+(a[0]===def?' selected':'')+'>'+esc(a[1])+'</option>'; }).join(''); }
+  function areaFactor(code){ for(var i=0;i<AREA.length;i++){ if(AREA[i][0]===code) return AREA[i][2]; } return 1; }
+  function areaName(code){ for(var i=0;i<AREA.length;i++){ if(AREA[i][0]===code) return AREA[i][1]; } return code; }
+  function openArea(){
+    if(!areaInit){ areaInit=true; fillArea($('tkAreaFrom'),'dunam'); fillArea($('tkAreaTo'),'m2');
+      ['tkAreaAmt','tkAreaFrom','tkAreaTo'].forEach(function(id){ $(id).addEventListener('input', calcArea); $(id).addEventListener('change', calcArea); });
+      $('tkAreaSwap').addEventListener('click', function(){ var a=$('tkAreaFrom').value; $('tkAreaFrom').value=$('tkAreaTo').value; $('tkAreaTo').value=a; calcArea(); });
+    }
+    calcArea();
+  }
+  function calcArea(){
+    var f=$('tkAreaFrom').value, t=$('tkAreaTo').value; var amt=parseFloat($('tkAreaAmt').value); if(isNaN(amt)) amt=0;
+    var val=amt*areaFactor(f)/areaFactor(t);
+    $('tkAreaRes').textContent=val.toLocaleString('he-IL',{maximumFractionDigits:4});
+    $('tkAreaRate').textContent=amt.toLocaleString('he-IL')+' '+areaName(f)+' = '+val.toLocaleString('he-IL',{maximumFractionDigits:4})+' '+areaName(t);
+  }
+  /* ---------- 🎙️ רשמקול + תמלול ---------- */
+  var recInited=false, recLang='he-IL', recOn=false, srecog=null, mrec=null, recChunks=[], recBlob=null, recBase='';
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+  function recExt(t){ t=t||''; if(t.indexOf('mp4')>=0||t.indexOf('m4a')>=0) return 'm4a'; if(t.indexOf('ogg')>=0) return 'ogg'; if(t.indexOf('wav')>=0) return 'wav'; return 'webm'; }
+  function recDl(name, blob){ try{ var u=URL.createObjectURL(blob); var a=document.createElement('a'); a.href=u; a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){ URL.revokeObjectURL(u); },1500); }catch(e){} }
+  function recStatus(s){ var el=$('tkRecStatus'); if(el) el.textContent=s||''; }
+  function recNote(s){ var el=$('tkRecNote'); if(el) el.textContent=s||''; }
+  function initRec(){
+    if(recInited) return; recInited=true;
+    $('tkRec').querySelectorAll('.tk-rl-btn').forEach(function(b){ b.addEventListener('click', function(){
+      $('tkRec').querySelectorAll('.tk-rl-btn').forEach(function(x){ x.classList.toggle('on', x===b); });
+      recLang=b.getAttribute('data-lang'); if(recOn && srecog){ try{ srecog.stop(); }catch(e){} } // יופעל מחדש בשפה החדשה
+    }); });
+    $('tkRecBtn').addEventListener('click', function(){ if(recOn) recStop(); else recStart(); });
+    $('tkRecCopy').addEventListener('click', function(){ var t=$('tkRecText').value||''; if(!t){ recNote('אין טקסט להעתקה'); return; } if(navigator.clipboard){ navigator.clipboard.writeText(t).then(function(){ recNote('הועתק ✓'); },function(){ recNote('ההעתקה נכשלה'); }); } else { $('tkRecText').select(); try{ document.execCommand('copy'); recNote('הועתק ✓'); }catch(e){} } });
+    $('tkRecWa').addEventListener('click', function(){ var t=($('tkRecText').value||'').trim(); if(!t){ recNote('אין טקסט לשליחה'); return; } window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank'); });
+    $('tkRecSaveTxt').addEventListener('click', function(){ var t=$('tkRecText').value||''; if(!t){ recNote('אין טקסט לשמירה'); return; } recDl('תמלול-'+Date.now()+'.txt', new Blob([t],{type:'text/plain;charset=utf-8'})); recNote('הקובץ נשמר ✓'); });
+    $('tkRecClear').addEventListener('click', function(){ try{ recStop(); }catch(e){} recBase=''; recBlob=null; recChunks=[]; $('tkRecText').value=''; var au=$('tkRecAudio'); au.removeAttribute('src'); au.hidden=true; $('tkRecDlAudio').hidden=true; $('tkRecShareAudio').hidden=true; var up=$('tkRecUpload'); if(up) up.value=''; recStatus(''); recNote('המסך נוקה ✓'); });
+    $('tkRecDlAudio').addEventListener('click', function(){ if(!recBlob){ recNote('אין הקלטה'); return; } recDl('הקלטה-'+Date.now()+'.'+recExt(recBlob.type), recBlob); });
+    $('tkRecShareAudio').addEventListener('click', function(){ if(!recBlob){ recNote('אין הקלטה'); return; } var f=new File([recBlob],'הקלטה.'+recExt(recBlob.type),{type:recBlob.type||'audio/webm'}); if(navigator.canShare && navigator.canShare({files:[f]})){ navigator.share({files:[f],title:'הקלטה'}).catch(function(){}); } else { recDl(f.name, recBlob); recNote('שיתוף ישיר לא נתמך — ההקלטה הורדה'); } });
+    $('tkRecUpload').addEventListener('change', function(e){ var f=e.target.files&&e.target.files[0]; if(!f) return; recBlob=f; var au=$('tkRecAudio'); au.src=URL.createObjectURL(f); au.hidden=false; $('tkRecDlAudio').hidden=false; $('tkRecShareAudio').hidden=false; recNote('קובץ נטען — אפשר להאזין ולשתף. (תמלול אוטומטי לקובץ מוקלט אינו זמין — רק להקלטה חיה)'); });
+    if(!SR) recNote('💡 תמלול חי נתמך ב‑Chrome/אנדרואיד. באייפון לרוב אפשר להקליט ולשתף אודיו, אך לא לתמלל חי.');
+  }
+  function recStart(){
+    recBase=$('tkRecText').value ? ($('tkRecText').value.replace(/\s+$/,'')+' ') : '';
+    recChunks=[]; recBlob=null; recOn=true;
+    $('tkRecBtn').textContent='⏹️ עצור הקלטה'; $('tkRecBtn').classList.add('rec'); recNote(''); recStatus('מבקש גישה למיקרופון…');
+    // הקלטת אודיו (לקובץ)
+    if(navigator.mediaDevices && window.MediaRecorder){
+      navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+        recStream=stream;
+        try{ mrec=new MediaRecorder(stream); }catch(e){ mrec=null; }
+        if(mrec){ mrec.ondataavailable=function(ev){ if(ev.data&&ev.data.size) recChunks.push(ev.data); };
+          mrec.onstop=function(){ if(recChunks.length){ recBlob=new Blob(recChunks,{type:(mrec.mimeType||'audio/webm')}); var au=$('tkRecAudio'); au.src=URL.createObjectURL(recBlob); au.hidden=false; $('tkRecDlAudio').hidden=false; $('tkRecShareAudio').hidden=false; } };
+          try{ mrec.start(); }catch(e){} }
+        recStatus(SR?'🎙️ מקליט ומתמלל…':'🎙️ מקליט… (תמלול חי לא נתמך בדפדפן זה)');
+      }).catch(function(){ recStatus(SR?'🎙️ מתמלל… (ללא שמירת אודיו — אין גישה למיקרופון)':'אין גישה למיקרופון'); });
+    } else { recStatus(SR?'🎙️ מתמלל…':'הקלטה אינה נתמכת בדפדפן זה'); }
+    // תמלול חי
+    if(SR){ startRecog(); }
+  }
+  var recStream=null;
+  function startRecog(){
+    try{ srecog=new SR(); }catch(e){ srecog=null; return; }
+    srecog.lang=recLang; srecog.continuous=true; srecog.interimResults=true;
+    srecog.onresult=function(ev){ var interim=''; for(var i=ev.resultIndex;i<ev.results.length;i++){ var r=ev.results[i]; if(r.isFinal){ recBase+=r[0].transcript.replace(/\s+$/,'')+' '; } else { interim+=r[0].transcript; } } $('tkRecText').value=recBase+interim; $('tkRecText').scrollTop=$('tkRecText').scrollHeight; };
+    srecog.onerror=function(ev){ if(ev && ev.error==='not-allowed'){ recStatus('אין הרשאת מיקרופון לתמלול'); } };
+    srecog.onend=function(){ if(recOn){ try{ srecog.lang=recLang; srecog.start(); }catch(e){} } };
+    try{ srecog.start(); }catch(e){}
+  }
+  function recStop(){
+    if(!recOn && !srecog && !mrec) return;
+    recOn=false;
+    if(srecog){ try{ srecog.onend=null; srecog.stop(); }catch(e){} srecog=null; }
+    if(mrec && mrec.state!=='inactive'){ try{ mrec.stop(); }catch(e){} }
+    if(recStream){ try{ recStream.getTracks().forEach(function(t){ t.stop(); }); }catch(e){} recStream=null; }
+    var btn=$('tkRecBtn'); if(btn){ btn.textContent='🎙️ התחל הקלטה'; btn.classList.remove('rec'); }
+    recStatus('');
+  }
+})();
+</script>
+<!-- ===== סוף כלי עזר ===== -->
+
+</body>
+</html>
