@@ -1948,6 +1948,10 @@
       <button class="tk-tab" data-tk="cur">💱 מטבעות</button>
       <button class="tk-tab" data-tk="area">📐 שטחים</button>
       <button class="tk-tab" data-tk="rec">🎙️ רשמקול</button>
+      <button class="tk-tab" data-tk="price">🛍️ מחירים</button>
+      <button class="tk-tab" data-tk="pack">📦 אריזה</button>
+      <button class="tk-tab" data-tk="todo">⏰ תזכורות</button>
+      <button class="tk-tab" data-tk="qr">🏷️ QR</button>
     </div>
     <div class="tk-body">
       <div class="tk-pane" id="tkLists"></div>
@@ -2013,6 +2017,52 @@
         </div>
         <label class="tk-rec-upload">📎 העלה קובץ אודיו להאזנה/שיתוף<input type="file" id="tkRecUpload" accept="audio/*" hidden></label>
         <div class="tk-rec-note" id="tkRecNote"></div>
+      </div>
+      <div class="tk-pane" id="tkPrice" hidden>
+        <div class="tk-conv" style="gap:12px">
+          <div class="tk-note" style="text-align:start">השוואת הצעות מחיר. לכל ספק: מחיר כולל + כמות — מחושב מחיר ליחידה, והזול ביותר מסומן.</div>
+          <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:#cdd2da;font-weight:700"><input type="checkbox" id="tkPriceVat" style="width:18px;height:18px"> הצג מחיר ליחידה כולל מע״מ 17%</label>
+          <div id="tkPriceRows" style="display:flex;flex-direction:column;gap:8px"></div>
+          <button class="tk-add" id="tkPriceAdd" type="button" style="background:#242830;border:1.5px solid #343a45;color:#f2f4f8;border-radius:11px;padding:11px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif">➕ הוסף ספק</button>
+          <div id="tkPriceOut" style="display:flex;flex-direction:column;gap:7px"></div>
+        </div>
+      </div>
+      <div class="tk-pane" id="tkPack" hidden>
+        <div class="tk-conv" style="gap:11px">
+          <div class="tk-note" style="text-align:start">מחשבון אריזה ומשטחים — כמה נכנס, וכמה צריך.</div>
+          <label style="display:flex;flex-direction:column;gap:5px;font-size:13px;color:#98a0ac">יחידות בקרטון<input class="tk-amt" id="tkPkUPB" type="number" inputmode="numeric" value="12"></label>
+          <label style="display:flex;flex-direction:column;gap:5px;font-size:13px;color:#98a0ac">קרטונים במשטח<input class="tk-amt" id="tkPkBPP" type="number" inputmode="numeric" value="40"></label>
+          <label style="display:flex;flex-direction:column;gap:5px;font-size:13px;color:#98a0ac">סה״כ יחידות נדרשות (לא חובה)<input class="tk-amt" id="tkPkTotal" type="number" inputmode="numeric" value="1000"></label>
+          <div class="tk-result" id="tkPkOut" style="text-align:start;min-height:30px"></div>
+        </div>
+      </div>
+      <div class="tk-pane" id="tkTodo" hidden>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="tk-note" style="text-align:start">משימות ותזכורות אישיות. תזכורת מופיעה כשהשעה מגיעה והאפליקציה פתוחה.</div>
+          <div style="display:flex;gap:7px">
+            <input id="tkTodoText" placeholder="משימה חדשה…" style="flex:1;min-width:0;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px 12px;color:#f2f4f8;font-size:15px;font-family:'Heebo',sans-serif">
+            <input id="tkTodoTime" type="time" style="background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px 12px;color:#f2f4f8;font-size:15px;font-family:'Heebo',sans-serif;flex:0 0 auto;width:115px">
+            <button id="tkTodoAdd" type="button" style="background:#22c55e;color:#052e16;border:none;border-radius:11px;padding:12px;font-weight:800;cursor:pointer;font-family:'Rubik','Heebo',sans-serif;font-size:14.5px;flex:0 0 auto;padding:11px 15px">➕</button>
+          </div>
+          <div id="tkTodoList" style="display:flex;flex-direction:column;gap:7px"></div>
+        </div>
+      </div>
+      <div class="tk-pane" id="tkQr" hidden>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="tk-note" style="text-align:start">מחולל מדבקות QR — למיקומי מדף או מק״טים. סורקים אחר כך עם סריקת הברקוד שבאפליקציה.</div>
+          <input id="tkQrTitle" placeholder="כותרת המדבקה (לא חובה) — לדוגמה: מדף A-12" style="background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px 12px;color:#f2f4f8;font-size:15px;font-family:'Heebo',sans-serif">
+          <input id="tkQrText" placeholder="הטקסט / מק״ט לקידוד" style="background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px 12px;color:#f2f4f8;font-size:15px;font-family:'Heebo',sans-serif">
+          <button id="tkQrGen" type="button" style="background:#f59e0b;color:#0a0b0e;border:none;border-radius:11px;padding:12px;font-weight:800;cursor:pointer;font-family:'Rubik','Heebo',sans-serif;font-size:14.5px">🏷️ צור מדבקה</button>
+          <div id="tkQrCard" style="display:none;background:#fff;border-radius:12px;padding:16px;flex-direction:column;align-items:center;gap:9px">
+            <div id="tkQrTitleOut" style="color:#111;font-weight:800;font-family:'Rubik',sans-serif;font-size:18px;text-align:center"></div>
+            <div id="tkQrImg"></div>
+            <div id="tkQrTextOut" style="color:#333;font-weight:700;font-size:14px;letter-spacing:.5px;word-break:break-all;text-align:center"></div>
+          </div>
+          <div id="tkQrActions" style="display:none;gap:8px">
+            <button id="tkQrPrint" type="button" style="flex:1;background:#242830;border:1.5px solid #343a45;color:#f2f4f8;border-radius:11px;padding:12px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif">🖨️ הדפס</button>
+            <button id="tkQrShare" type="button" style="flex:1;background:#25d366;color:#052e16;border:none;border-radius:11px;padding:12px;font-weight:800;cursor:pointer;font-family:'Rubik','Heebo',sans-serif;font-size:14.5px">📲 שתף</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
