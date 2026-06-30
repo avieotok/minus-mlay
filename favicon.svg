@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0E9D8C"/>
+      <stop offset="1" stop-color="#076156"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="url(#g)"/>
+  <!-- faint spreadsheet grid -->
+  <g stroke="#ffffff" stroke-opacity="0.22" stroke-width="2">
+    <line x1="14" y1="26" x2="50" y2="26"/>
+    <line x1="14" y1="38" x2="50" y2="38"/>
+    <line x1="26" y1="14" x2="26" y2="50"/>
+    <line x1="38" y1="14" x2="38" y2="50"/>
+  </g>
+  <!-- broom / clean sweep -->
+  <g fill="none" stroke="#ffffff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M44 14 L30 28"/>
+    <path d="M22 36 L28 30 L40 42 L34 48 Z"/>
+    <path d="M22 36 L16 50 M28 40 L24 50 M34 44 L31 50"/>
+  </g>
+</svg>
