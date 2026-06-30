@@ -548,6 +548,7 @@
     var im=$('tkDcImg'); if(im) im.src=dcImgURL;
     var w=$('tkDcImgWrap'); if(w) w.style.display='block';
     var b=$('tkDcBtns'); if(b) b.style.display='flex';
+    var ai=$('tkDcAi'); if(ai) ai.style.display='block';
     dcSel=null; var sb=$('tkDcSel'); if(sb) sb.style.display='none';
     var pr=$('tkDcProg'); if(pr){ pr.style.display='block'; pr.textContent='גרור ריבוע סביב המספר המוקף, ואז "קרא אזור".'; pr.style.color='#98a0ac'; }
   });
@@ -588,6 +589,34 @@
     }).catch(function(){ dcReadBtn.disabled=false; if(prog){ prog.style.color='#f87171'; prog.textContent='⚠️ הקריאה נכשלה — אפשר להקליד ידנית.'; } });
   });
 
+  var dcAiBtn=$('tkDcAi');
+  if(dcAiBtn) dcAiBtn.addEventListener('click', function(){
+    var img=$('tkDcImg'), prog=$('tkDcProg');
+    if(!dcImgURL||!img){ return; }
+    var cfg=apiCfg();
+    if(!cfg.url){ if(prog){ prog.style.display='block'; prog.style.color='#f87171'; prog.textContent='לא מוגדר חיבור לשרת.'; } return; }
+    var w=img.naturalWidth||img.width, h=img.naturalHeight||img.height;
+    var sc=Math.min(1, 1600/Math.max(w,h,1));
+    var cw=Math.max(1,Math.round(w*sc)), ch=Math.max(1,Math.round(h*sc));
+    var cnv=document.createElement('canvas'); cnv.width=cw; cnv.height=ch;
+    try{ cnv.getContext('2d').drawImage(img,0,0,cw,ch); }catch(e){ return; }
+    var b64=''; try{ b64=cnv.toDataURL('image/jpeg',0.85).split(',')[1]; }catch(e){ if(prog){prog.style.color='#f87171';prog.textContent='שגיאת עיבוד תמונה.';} return; }
+    if(prog){ prog.style.display='block'; prog.style.color='#a78bfa'; prog.textContent='🤖 שולח ל-AI לקריאה… (כמה שניות)'; }
+    dcAiBtn.disabled=true;
+    fetch(cfg.url,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({token:cfg.token, action:'ocr_serials', image:b64, mime:'image/jpeg'})})
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        dcAiBtn.disabled=false;
+        if(j && j.ok && j.serials && j.serials.length){
+          var added=0; j.serials.forEach(function(n){ n=String(n).toUpperCase(); if(n && dcChosen.indexOf(n)<0){ dcChosen.push(n); added++; } });
+          dcRenderChosen();
+          if(prog){ prog.style.color='#34d399'; prog.textContent='✓ AI זיהה '+j.serials.length+' מספרים ('+added+' נוספו) — בדוק ותקן אם צריך'; }
+        } else if(j && j.error==='no_key'){ if(prog){ prog.style.color='#f87171'; prog.textContent='⚠️ המפתח לא הוגדר בשרת (Apps Script).'; } }
+        else if(j && j.error && String(j.error).indexOf('api_')===0){ if(prog){ prog.style.color='#f87171'; prog.textContent='⚠️ שגיאת שרת AI ('+j.error+'). בדוק מפתח/קרדיט.'; } }
+        else { if(prog){ prog.style.color='#fbbf24'; prog.textContent='⚠️ ה-AI לא זיהה מספרים — נסה צילום ברור יותר.'; } }
+      }).catch(function(){ dcAiBtn.disabled=false; if(prog){ prog.style.color='#f87171'; prog.textContent='⚠️ שגיאת חיבור לשרת — נסה שוב.'; } });
+  });
+
   var dcZoomBtn=$('tkDcZoomBtn');
   if(dcZoomBtn) dcZoomBtn.addEventListener('click', function(){ if(!dcImgURL) return; var z=$('tkDcZoomImg'); if(z) z.src=dcImgURL; var ov=$('tkDcZoom'); if(ov) ov.style.display='flex'; });
   var dcZx=$('tkDcZoomX'); if(dcZx) dcZx.addEventListener('click', function(){ var ov=$('tkDcZoom'); if(ov) ov.style.display='none'; });
@@ -621,6 +650,7 @@
     var im=$('tkDcImg'); if(im){ im.removeAttribute('src'); }
     var w=$('tkDcImgWrap'); if(w) w.style.display='none';
     var b=$('tkDcBtns'); if(b) b.style.display='none';
+    var ai=$('tkDcAi'); if(ai) ai.style.display='none';
     var sb=$('tkDcSel'); if(sb) sb.style.display='none';
     var man=$('tkDcManual'); if(man) man.value='';
     var pr=$('tkDcProg'); if(pr){ pr.textContent=''; pr.style.display='none'; }
