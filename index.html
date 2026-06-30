@@ -1949,6 +1949,7 @@
       <button class="tk-tab" data-tk="area">📐 שטחים</button>
       <button class="tk-tab" data-tk="rec">🎙️ רשמקול</button>
       <button class="tk-tab" data-tk="todo">⏰ תזכורות</button>
+      <button class="tk-tab" data-tk="decode">🔢 מס׳ סידוריים</button>
     </div>
     <div class="tk-body">
       <div class="tk-pane" id="tkLists"></div>
@@ -2027,6 +2028,28 @@
           <button id="tkTodoClear" type="button" style="background:none;border:1px solid #7f1d1d;color:#f87171;border-radius:11px;padding:11px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif">🗑️ מחק הכל</button>
         </div>
       </div>
+      <div class="tk-pane" id="tkDecode" hidden>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="tk-note" style="text-align:start">העלה צילום של התעודה. הכלי ינסה לקרוא את המספרים (OCR); סמן את המוקפים, תקן טעויות-קריאה, והוסף ידנית במידת הצורך — ואז ייצא לאקסל.</div>
+          <label style="background:#242830;border:1.5px solid #343a45;color:#f2f4f8;border-radius:11px;padding:13px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;text-align:center">📷 העלה / צלם תעודה<input type="file" id="tkDcFile" accept="image/*" hidden></label>
+          <div id="tkDcImgWrap" style="display:none">
+            <img id="tkDcImg" style="width:100%;border-radius:10px;border:1px solid #343a45;cursor:zoom-in">
+            <div style="font-size:11.5px;color:#697079;margin-top:3px">👆 לחץ על התמונה להגדלה</div>
+          </div>
+          <button id="tkDcOcr" type="button" style="display:none;background:#f59e0b;color:#0a0b0e;border:none;border-radius:11px;padding:13px;font-weight:800;cursor:pointer;font-family:'Rubik','Heebo',sans-serif">🔎 קרא מספרים אוטומטית</button>
+          <div id="tkDcProg" style="display:none;font-size:13.5px;color:#fbbf24;font-weight:700"></div>
+          <div id="tkDcCand"></div>
+          <div style="display:flex;gap:7px">
+            <input id="tkDcManual" placeholder="הוסף מספר ידנית…" style="flex:1;min-width:0;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px;color:#f2f4f8;font-family:'Heebo',sans-serif;font-size:15px">
+            <button id="tkDcAdd" type="button" style="background:#22c55e;color:#052e16;border:none;border-radius:11px;padding:11px 15px;font-weight:800;cursor:pointer">➕</button>
+          </div>
+          <div id="tkDcChosen"></div>
+          <div style="display:flex;gap:7px">
+            <button id="tkDcExport" type="button" style="flex:1;background:#1d6f42;color:#eafff1;border:none;border-radius:11px;padding:13px;font-weight:800;cursor:pointer;font-family:'Rubik','Heebo',sans-serif">📊 ייצא לאקסל</button>
+            <button id="tkDcClear" type="button" style="background:none;border:1px solid #7f1d1d;color:#f87171;border-radius:11px;padding:13px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif">🧹 נקה</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -2041,6 +2064,10 @@
   <canvas id="tkCanvas"></canvas>
 </div>
 
+<div id="tkDcZoom" style="position:fixed;inset:0;background:#000;z-index:330;display:none;flex-direction:column">
+  <div style="padding:10px;display:flex;justify-content:flex-end;background:#15171c"><button id="tkDcZoomX" type="button" style="background:#7f1d1d;color:#fff;border:none;border-radius:10px;padding:10px 18px;font-weight:800;cursor:pointer;font-family:'Heebo',sans-serif">✕ סגור</button></div>
+  <div style="flex:1;overflow:auto;-webkit-overflow-scrolling:touch;display:flex;align-items:flex-start;justify-content:center"><img id="tkDcZoomImg" style="min-width:100%;height:auto;touch-action:pinch-zoom"></div>
+</div>
 <script src="tools.js"></script>
 <!-- ===== סוף כלי עזר ===== -->
 
