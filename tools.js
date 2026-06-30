@@ -481,22 +481,20 @@
     var tClr=$('tkTodoClear'); if(tClr) tClr.addEventListener('click', function(){ if(!TODOS.length){ return; } if(confirm('למחוק את כל המשימות והתזכורות?')){ TODOS=[]; todoSave(); todoRender(); } });
   }
 
-  /* ---------- 🔢 פענוח מס׳ סידוריים ---------- */
-  var dcImgURL=null, dcCands=[], dcChosen=[];
-  function dcLoadScript(src){ return new Promise(function(res,rej){ if(document.querySelector('script[data-dc="'+src+'"]')){ res(); return; } var s=document.createElement('script'); s.src=src; s.setAttribute('data-dc',src); s.onload=function(){ res(); }; s.onerror=function(){ rej(); }; document.head.appendChild(s); }); }
-  function dcExtract(text){
-    var toks=(text||'').replace(/[^0-9A-Za-z]+/g,' ').split(/\s+/), seen={}, out=[];
-    toks.forEach(function(t){ t=t.trim().toUpperCase(); if(!t) return; var d=(t.match(/[0-9]/g)||[]).length; if(t.length>=5 && d>=5 && /^[0-9]/.test(t) && !seen[t]){ seen[t]=1; out.push(t); } });
-    return out;
+  /* ---------- 🔢 פענוח מס׳ סידוריים (קריאת אזור מסומן) ---------- */
+  var dcImgURL=null, dcChosen=[], dcSel=null, dcDrag=null, dcWorker=null;
+  function dcLoadScript(src){ return new Promise(function(res,rej){ if(document.querySelector('script[data-dc="'+src+'"]')){ res(); return; } var sc=document.createElement('script'); sc.src=src; sc.setAttribute('data-dc',src); sc.onload=function(){ res(); }; sc.onerror=function(){ rej(); }; document.head.appendChild(sc); }); }
+  function dcGetWorker(){
+    if(dcWorker) return Promise.resolve(dcWorker);
+    return dcLoadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js').then(function(){
+      if(typeof Tesseract==='undefined') throw new Error('no-tess');
+      return Tesseract.createWorker('eng');
+    }).then(function(w){ return w.setParameters({ tessedit_char_whitelist:'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-/' }).then(function(){ dcWorker=w; return w; }); });
   }
-  function dcRenderCands(){
-    var box=$('tkDcCand'); if(!box) return;
-    if(!dcCands.length){ box.innerHTML=''; return; }
-    box.innerHTML='<div class="tk-note" style="text-align:start">זוהו '+dcCands.length+' מספרים — לחץ כדי לסמן את המוקפים:</div>'
-      +'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">'+dcCands.map(function(c){
-        var on=dcChosen.indexOf(c)>=0;
-        return '<button type="button" class="tk-dccand" data-v="'+esc(c)+'" style="background:'+(on?'#0f1f14':'#15171c')+';border:1px solid '+(on?'#22c55e':'#343a45')+';color:'+(on?'#34d399':'#cdd2da')+';border-radius:20px;padding:7px 13px;font-size:13.5px;cursor:pointer;font-family:Heebo">'+(on?'✓ ':'')+esc(c)+'</button>';
-      }).join('')+'</div>';
+  function dcBestNumber(text){
+    var toks=(text||'').toUpperCase().replace(/[^0-9A-Z\-\/]+/g,' ').split(/\s+/), best='';
+    toks.forEach(function(t){ t=t.trim(); if(!t) return; var hasDigit=/[0-9]/.test(t); var alnum=(t.match(/[0-9A-Z]/g)||[]).length, balnum=(best.match(/[0-9A-Z]/g)||[]).length; if(hasDigit && t.length>=4 && alnum>balnum) best=t; });
+    return best;
   }
   function dcRenderChosen(){
     var box=$('tkDcChosen'); if(!box) return;
@@ -506,8 +504,7 @@
         return '<div style="display:flex;justify-content:space-between;align-items:center;background:#0f1f14;border:1px solid #22c55e;border-radius:9px;padding:8px 11px"><span style="color:#eafff1;font-weight:700;font-size:14.5px">'+(i+1)+'. '+esc(c)+'</span><button data-dcx="'+esc(c)+'" type="button" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:15px">✕</button></div>';
       }).join('')+'</div>';
   }
-  function dcToggle(v){ var i=dcChosen.indexOf(v); if(i>=0) dcChosen.splice(i,1); else dcChosen.push(v); dcRenderCands(); dcRenderChosen(); }
-  function openDecode(){ dcRenderCands(); dcRenderChosen(); }
+  function openDecode(){ dcRenderChosen(); }
 
   var dcFile=$('tkDcFile');
   if(dcFile) dcFile.addEventListener('change', function(e){
@@ -516,38 +513,52 @@
     dcImgURL=URL.createObjectURL(f);
     var im=$('tkDcImg'); if(im) im.src=dcImgURL;
     var w=$('tkDcImgWrap'); if(w) w.style.display='block';
-    var ob=$('tkDcOcr'); if(ob) ob.style.display='block';
-    dcCands=[]; dcRenderCands();
+    var b=$('tkDcBtns'); if(b) b.style.display='flex';
+    dcSel=null; var sb=$('tkDcSel'); if(sb) sb.style.display='none';
+    var pr=$('tkDcProg'); if(pr){ pr.style.display='block'; pr.textContent='גרור ריבוע סביב המספר המוקף, ואז "קרא אזור".'; pr.style.color='#98a0ac'; }
   });
-  var dcImgEl=$('tkDcImg');
-  if(dcImgEl) dcImgEl.addEventListener('click', function(){ if(!dcImgURL) return; var z=$('tkDcZoomImg'); if(z) z.src=dcImgURL; var ov=$('tkDcZoom'); if(ov) ov.style.display='flex'; });
+
+  function dcPt(e){ var r=$('tkDcImg').getBoundingClientRect(); var p=(e.touches&&e.touches[0])||e; return {x:p.clientX-r.left, y:p.clientY-r.top}; }
+  function dcStart(e){ if(!dcImgURL) return; e.preventDefault(); var p=dcPt(e); dcDrag={x:p.x,y:p.y}; dcSel=null; }
+  function dcMove(e){ if(!dcDrag) return; e.preventDefault(); var p=dcPt(e); var x=Math.min(dcDrag.x,p.x),y=Math.min(dcDrag.y,p.y),w=Math.abs(p.x-dcDrag.x),h=Math.abs(p.y-dcDrag.y); dcSel={x:x,y:y,w:w,h:h}; var b=$('tkDcSel'); if(b){ b.style.display='block'; b.style.left=x+'px'; b.style.top=y+'px'; b.style.width=w+'px'; b.style.height=h+'px'; } }
+  function dcEnd(){ dcDrag=null; }
+  var dcWrap=$('tkDcImgWrap');
+  if(dcWrap){
+    dcWrap.addEventListener('mousedown',dcStart); dcWrap.addEventListener('mousemove',dcMove); window.addEventListener('mouseup',dcEnd);
+    dcWrap.addEventListener('touchstart',dcStart,{passive:false}); dcWrap.addEventListener('touchmove',dcMove,{passive:false}); dcWrap.addEventListener('touchend',dcEnd);
+  }
+
+  var dcReadBtn=$('tkDcRead');
+  if(dcReadBtn) dcReadBtn.addEventListener('click', function(){
+    var img=$('tkDcImg'); var prog=$('tkDcProg');
+    if(!dcImgURL||!img){ return; }
+    if(!dcSel||dcSel.w<8||dcSel.h<8){ if(prog){ prog.style.display='block'; prog.style.color='#fbbf24'; prog.textContent='גרור קודם ריבוע סביב המספר המוקף.'; } return; }
+    var rect=img.getBoundingClientRect();
+    var scaleX=img.naturalWidth/rect.width, scaleY=img.naturalHeight/rect.height;
+    var sx=Math.max(0,dcSel.x*scaleX), sy=Math.max(0,dcSel.y*scaleY), sw=dcSel.w*scaleX, sh=dcSel.h*scaleY;
+    var up=Math.min(5, Math.max(2, 1000/Math.max(sw,1)));
+    var cnv=document.createElement('canvas'); cnv.width=Math.round(sw*up); cnv.height=Math.round(sh*up);
+    var ctx=cnv.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,cnv.width,cnv.height);
+    try{ ctx.drawImage(img, sx,sy,sw,sh, 0,0,cnv.width,cnv.height); }catch(err){ if(prog){ prog.style.color='#f87171'; prog.textContent='שגיאת חיתוך — נסה שוב.'; } return; }
+    if(prog){ prog.style.display='block'; prog.style.color='#fbbf24'; prog.textContent='טוען מנוע קריאה…'; }
+    dcReadBtn.disabled=true;
+    dcGetWorker().then(function(w){ if(prog) prog.textContent='קורא…'; return w.recognize(cnv); }).then(function(r){
+      dcReadBtn.disabled=false;
+      var num=dcBestNumber((r&&r.data&&r.data.text)||'');
+      if(num){ var inp=$('tkDcManual'); if(inp) inp.value=num; if(prog){ prog.style.color='#34d399'; prog.textContent='נקרא: '+num+' — בדוק ולחץ ➕'; } }
+      else { if(prog){ prog.style.color='#fbbf24'; prog.textContent='⚠️ לא זוהה מספר באזור — סמן מדויק יותר או הקלד ידנית.'; } }
+    }).catch(function(){ dcReadBtn.disabled=false; if(prog){ prog.style.color='#f87171'; prog.textContent='⚠️ הקריאה נכשלה — אפשר להקליד ידנית.'; } });
+  });
+
+  var dcZoomBtn=$('tkDcZoomBtn');
+  if(dcZoomBtn) dcZoomBtn.addEventListener('click', function(){ if(!dcImgURL) return; var z=$('tkDcZoomImg'); if(z) z.src=dcImgURL; var ov=$('tkDcZoom'); if(ov) ov.style.display='flex'; });
   var dcZx=$('tkDcZoomX'); if(dcZx) dcZx.addEventListener('click', function(){ var ov=$('tkDcZoom'); if(ov) ov.style.display='none'; });
 
-  var dcOcrBtn=$('tkDcOcr');
-  if(dcOcrBtn) dcOcrBtn.addEventListener('click', function(){
-    if(!dcImgURL) return;
-    var prog=$('tkDcProg'); if(prog){ prog.style.display='block'; prog.textContent='טוען מנוע קריאה…'; }
-    dcOcrBtn.disabled=true;
-    dcLoadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js').then(function(){
-      if(typeof Tesseract==='undefined'){ throw new Error('no-tesseract'); }
-      if(prog) prog.textContent='קורא… 0%';
-      return Tesseract.recognize(dcImgURL, 'eng', { logger:function(m){ if(m && m.status==='recognizing text' && prog){ prog.textContent='קורא… '+Math.round((m.progress||0)*100)+'%'; } } });
-    }).then(function(r){
-      dcOcrBtn.disabled=false;
-      var text=(r&&r.data&&r.data.text)||'';
-      dcCands=dcExtract(text);
-      if(prog) prog.textContent= dcCands.length ? ('✓ זוהו '+dcCands.length+' מספרים') : '⚠️ לא זוהו מספרים — אפשר להזין ידנית.';
-      dcRenderCands();
-    }).catch(function(){ dcOcrBtn.disabled=false; if(prog) prog.textContent='⚠️ הקריאה האוטומטית נכשלה — אפשר להזין ידנית למטה.'; });
-  });
-
-  var dcCandBox=$('tkDcCand');
-  if(dcCandBox) dcCandBox.addEventListener('click', function(e){ var b=e.target.closest&&e.target.closest('.tk-dccand'); if(b){ dcToggle(b.getAttribute('data-v')); } });
-  function dcAddManual(){ var inp=$('tkDcManual'); if(!inp) return; var v=(inp.value||'').trim().toUpperCase(); if(!v) return; if(dcChosen.indexOf(v)<0){ dcChosen.push(v); dcRenderChosen(); dcRenderCands(); } inp.value=''; }
+  function dcAddManual(){ var inp=$('tkDcManual'); if(!inp) return; var v=(inp.value||'').trim().toUpperCase(); if(!v) return; if(dcChosen.indexOf(v)<0){ dcChosen.push(v); dcRenderChosen(); } inp.value=''; var pr=$('tkDcProg'); if(pr) pr.textContent=''; }
   var dcAddBtn=$('tkDcAdd'); if(dcAddBtn) dcAddBtn.addEventListener('click', dcAddManual);
   var dcMan=$('tkDcManual'); if(dcMan) dcMan.addEventListener('keydown', function(e){ if(e.key==='Enter') dcAddManual(); });
   var dcChosenBox=$('tkDcChosen');
-  if(dcChosenBox) dcChosenBox.addEventListener('click', function(e){ var x=e.target.getAttribute&&e.target.getAttribute('data-dcx'); if(x){ var i=dcChosen.indexOf(x); if(i>=0){ dcChosen.splice(i,1); dcRenderChosen(); dcRenderCands(); } } });
+  if(dcChosenBox) dcChosenBox.addEventListener('click', function(e){ var x=e.target.getAttribute&&e.target.getAttribute('data-dcx'); if(x){ var i=dcChosen.indexOf(x); if(i>=0){ dcChosen.splice(i,1); dcRenderChosen(); } } });
 
   var dcExpBtn=$('tkDcExport');
   if(dcExpBtn) dcExpBtn.addEventListener('click', function(){
@@ -565,19 +576,21 @@
     var blob=new Blob([csv],{type:'text/csv;charset=utf-8'}); var u=URL.createObjectURL(blob); var a=document.createElement('a'); a.href=u; a.download='serials.csv'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){ URL.revokeObjectURL(u); },1500);
   });
   var dcClrBtn=$('tkDcClear');
-  if(dcClrBtn) dcClrBtn.addEventListener('click', function(){ if(dcChosen.length && !confirm('לנקות את המספרים שנבחרו?')) return; dcChosen=[]; dcRenderChosen(); dcRenderCands(); });
-  setInterval(function(){
-    if(!TODOS.length) return;
-    var n=new Date(); var hh=('0'+n.getHours()).slice(-2)+':'+('0'+n.getMinutes()).slice(-2);
-    var changed=false;
-    TODOS.forEach(function(t){
-      if(t.time && !t.done && !t.fired && t.time<=hh){
-        t.fired=true; changed=true;
-        try{ if(navigator.vibrate) navigator.vibrate([120,60,120]); }catch(e){}
-        try{ if(window.Notification && Notification.permission==='granted'){ new Notification('⏰ תזכורת', {body:t.text}); } else { alert('⏰ תזכורת: '+t.text); } }catch(e){ try{ alert('⏰ תזכורת: '+t.text); }catch(_){} }
-      }
-    });
-    if(changed) todoSave();
-  }, 30000);
+  if(dcClrBtn) dcClrBtn.addEventListener('click', function(){ if(dcChosen.length && !confirm('לנקות את המספרים שנבחרו?')) return; dcChosen=[]; dcRenderChosen(); var pr=$('tkDcProg'); if(pr) pr.textContent=''; });
+  function dcReset(){
+    if(dcImgURL){ try{ URL.revokeObjectURL(dcImgURL); }catch(_){} dcImgURL=null; }
+    dcChosen=[]; dcSel=null; dcDrag=null;
+    var im=$('tkDcImg'); if(im){ im.removeAttribute('src'); }
+    var w=$('tkDcImgWrap'); if(w) w.style.display='none';
+    var b=$('tkDcBtns'); if(b) b.style.display='none';
+    var sb=$('tkDcSel'); if(sb) sb.style.display='none';
+    var man=$('tkDcManual'); if(man) man.value='';
+    var pr=$('tkDcProg'); if(pr){ pr.textContent=''; pr.style.display='none'; }
+    var fi=$('tkDcFile'); if(fi) fi.value='';
+    var ov=$('tkDcZoom'); if(ov) ov.style.display='none';
+    dcRenderChosen();
+  }
+  var dcResetBtn=$('tkDcReset');
+  if(dcResetBtn) dcResetBtn.addEventListener('click', function(){ if((dcImgURL||dcChosen.length) && !confirm('לאפס ולהתחיל מסמך חדש? כל מה שלא יוצא לאקסל יימחק.')) return; dcReset(); });
 
 })();
