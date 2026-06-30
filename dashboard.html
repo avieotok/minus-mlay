@@ -1862,12 +1862,13 @@
   #tkModal .tk-card-share{background:none;border:none;cursor:pointer;font-size:16px;padding:3px;color:#34d399}
   #tkModal .tk-sec{font-size:12.5px;color:#a8a29e;font-weight:800;margin:4px 2px 9px;border-bottom:1px solid #292524;padding-bottom:5px}
   #tkModal .tk-draw-note{font-size:12px;color:#78716c}
-  #tkDraw{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:320;display:none;flex-direction:column;align-items:center;justify-content:center;padding:16px}
+  #tkDraw{position:fixed;inset:0;background:#0a0b0e;z-index:320;display:none;flex-direction:column;padding:0}
   #tkDraw.open{display:flex}
-  #tkDraw canvas{background:#fff;border-radius:12px;touch-action:none;max-width:100%;box-shadow:0 6px 30px rgba(0,0,0,.5)}
-  #tkDraw .tk-draw-bar{display:flex;gap:10px;margin-top:14px}
-  #tkDraw .tk-draw-bar button{border:none;border-radius:11px;padding:12px 20px;font-size:15px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer}
+  #tkDraw .tk-draw-bar{display:flex;gap:8px;padding:10px 12px;background:#15171c;border-bottom:1px solid #242830;align-items:center;flex:0 0 auto}
+  #tkDraw .tk-draw-bar button{flex:1;border:none;border-radius:11px;padding:13px 6px;font-size:14px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;white-space:nowrap}
+  #tkDraw canvas{background:#fff;touch-action:none;display:block}
   #tkDraw .tk-dsave{background:#22c55e;color:#052e16}
+  #tkDraw .tk-dwa{background:#25d366;color:#052e16}
   #tkDraw .tk-dclear{background:#292524;color:#fafaf9}
   #tkDraw .tk-dcancel{background:#7f1d1d;color:#fff}
 </style>
@@ -1952,12 +1953,13 @@
 </div>
 
 <div id="tkDraw">
-  <canvas id="tkCanvas" width="320" height="380"></canvas>
   <div class="tk-draw-bar">
-    <button class="tk-dsave" id="tkDSave">שמור</button>
-    <button class="tk-dclear" id="tkDClear">נקה</button>
-    <button class="tk-dcancel" id="tkDCancel">ביטול</button>
+    <button class="tk-dcancel" id="tkDCancel">✕ סגור</button>
+    <button class="tk-dclear" id="tkDClear">🧹 נקה</button>
+    <button class="tk-dsave" id="tkDSave">💾 שמור</button>
+    <button class="tk-dwa" id="tkDWa">📲 וואטסאפ</button>
   </div>
+  <canvas id="tkCanvas"></canvas>
 </div>
 
 <script src="tools.js"></script>

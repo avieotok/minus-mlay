@@ -126,17 +126,40 @@
   /* ---------- כתב יד / ציור ---------- */
   var drawWrap=$('tkDraw'), cv=$('tkCanvas'), cx=cv.getContext('2d'), drawing=false, drawList=null;
   cx.lineWidth=3; cx.lineCap='round'; cx.lineJoin='round'; cx.strokeStyle='#111';
-  function fitCanvas(){ var w=Math.min(340, window.innerWidth-32); cv.style.width=w+'px'; }
+  function fitCanvas(){
+    var bar=drawWrap.querySelector('.tk-draw-bar');
+    var barH=bar?bar.offsetHeight:56;
+    var w=Math.max(200, window.innerWidth);
+    var h=Math.max(200, window.innerHeight-barH);
+    cv.width=w; cv.height=h; cv.style.width=w+'px'; cv.style.height=h+'px';
+    cx.lineWidth=3; cx.lineCap='round'; cx.lineJoin='round'; cx.strokeStyle='#111';
+    cx.fillStyle='#fff'; cx.fillRect(0,0,cv.width,cv.height);
+  }
   function pos(e){ var r=cv.getBoundingClientRect(); var sx=cv.width/r.width, sy=cv.height/r.height; var p=(e.touches&&e.touches[0])||e; return {x:(p.clientX-r.left)*sx, y:(p.clientY-r.top)*sy}; }
   function dstart(e){ e.preventDefault(); drawing=true; var p=pos(e); cx.beginPath(); cx.moveTo(p.x,p.y); }
   function dmove(e){ if(!drawing) return; e.preventDefault(); var p=pos(e); cx.lineTo(p.x,p.y); cx.stroke(); }
   function dend(){ drawing=false; }
   cv.addEventListener('mousedown',dstart); cv.addEventListener('mousemove',dmove); window.addEventListener('mouseup',dend);
   cv.addEventListener('touchstart',dstart,{passive:false}); cv.addEventListener('touchmove',dmove,{passive:false}); cv.addEventListener('touchend',dend);
-  function openDraw(L){ drawList=L; cx.fillStyle='#fff'; cx.fillRect(0,0,cv.width,cv.height); fitCanvas(); drawWrap.classList.add('open'); }
+  function openDraw(L){ drawList=L; drawWrap.classList.add('open'); fitCanvas(); }
   $('tkDClear').addEventListener('click', function(){ cx.fillStyle='#fff'; cx.fillRect(0,0,cv.width,cv.height); });
   $('tkDCancel').addEventListener('click', function(){ drawWrap.classList.remove('open'); drawList=null; });
   $('tkDSave').addEventListener('click', function(){ if(drawList){ var img=cv.toDataURL('image/png'); drawList.items=drawList.items||[]; drawList.items.push({id:uid(), type:'draw', img:img, done:false}); saveLists(); renderLists(); } drawWrap.classList.remove('open'); drawList=null; });
+  var tkWaBtn=$('tkDWa');
+  if(tkWaBtn) tkWaBtn.addEventListener('click', function(){
+    try{
+      cv.toBlob(function(blob){
+        if(!blob) return;
+        var file=null; try{ file=new File([blob],'list-note.png',{type:'image/png'}); }catch(e){}
+        if(file && navigator.canShare && navigator.canShare({files:[file]})){
+          navigator.share({files:[file], title:'רשימה — שרשרת האספקה'}).catch(function(){});
+        } else {
+          var u=URL.createObjectURL(blob); var a=document.createElement('a'); a.href=u; a.download='list-note.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){ URL.revokeObjectURL(u); },1500);
+          alert('שיתוף ישיר לא נתמך במכשיר זה — התמונה הורדה, אפשר לצרף אותה ידנית בוואטסאפ.');
+        }
+      },'image/png');
+    }catch(e){}
+  });
 
   /* ---------- ספר טלפונים (אישי + משותף) ---------- */
   var PK='afcon_tools_phones';
