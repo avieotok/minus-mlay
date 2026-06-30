@@ -1022,14 +1022,19 @@
 
   // item catalog from Excel/CSV (sku -> description)
   const BUILTIN_CATALOG = (typeof window!=='undefined' && window.DEFAULT_CATALOG) ? window.DEFAULT_CATALOG : {};
-  function loadCatalog(){ let stored={}; try{ stored=JSON.parse(localStorage.getItem('afcon_catalog')||'{}'); }catch(e){ stored={}; } return Object.assign({}, BUILTIN_CATALOG, stored); }
+  // מפה מהמק״ט ללא אפסים מובילים -> המק״ט המוטמע עם האפסים, לשחזור הצורה הקנונית
+  const BUILTIN_STRIP = (function(){ var m={}; for(var k in BUILTIN_CATALOG){ var s=String(k).replace(/^0+/,''); if(!(s in m)) m[s]=k; } return m; })();
+  // אם מק״ט הגיע בלי אפסים מובילים אך קיים בקטלוג המוטמע עם אפסים — מחזיר את הצורה עם האפסים (אחרת משאיר כפי שהוא; לעולם לא מוריד אפסים)
+  function canonKey(k){ k=String(k==null?'':k).trim(); if(BUILTIN_CATALOG[k]) return k; var s=k.replace(/^0+/,''); return BUILTIN_STRIP[s]||k; }
+  function healKeys(obj){ var out={}; for(var k in (obj||{})){ out[canonKey(k)]=obj[k]; } return out; }
+  function loadCatalog(){ let stored={}; try{ stored=JSON.parse(localStorage.getItem('afcon_catalog')||'{}'); }catch(e){ stored={}; } return Object.assign({}, BUILTIN_CATALOG, healKeys(stored)); }
   let CATALOG=loadCatalog();
   // משיכת הקטלוג המרכזי מהגיליון (המפתח דוחף אותו לכולם)
   async function syncCatalog(){
     if(!apiOn()) return;
     try{ const r=await apiGet('catalog');
       if(r && r.ok && r.items && Object.keys(r.items).length){
-        const merged=Object.assign({}, BUILTIN_CATALOG, r.items);
+        const merged=Object.assign({}, BUILTIN_CATALOG, healKeys(r.items));
         CATALOG=merged; localStorage.setItem('afcon_catalog', JSON.stringify(r.items)); setCatCount(); refreshDesc();
       }
     }catch(e){}
@@ -1100,7 +1105,7 @@
         const h=((rows[0]&&rows[0][0]||'')+' '+(rows[0]&&rows[0][1]||'')).toString().toLowerCase();
         if(/sku|מק|קוד|תיאור|desc|שם|name|item|barcode|ברקוד/.test(h)) start=1;
         for(let i=start;i<rows.length;i++){ const sku=normSku(rows[i]&&rows[i][0]); const desc=normSku(rows[i]&&rows[i][1]); if(sku&&desc) map[sku]=desc; }
-        CATALOG=Object.assign({}, BUILTIN_CATALOG, map); localStorage.setItem('afcon_catalog', JSON.stringify(map)); setCatCount(); refreshDesc();
+        CATALOG=Object.assign({}, BUILTIN_CATALOG, healKeys(map)); localStorage.setItem('afcon_catalog', JSON.stringify(healKeys(map))); setCatCount(); refreshDesc();
         setStatus('נטענו '+Object.keys(map).length+' פריטים מהקובץ.');
       }catch(err){ setStatus('שגיאה בקריאת הקובץ. ודא: עמודה A = מק״ט, עמודה B = תיאור.'); }
       e.target.value='';
