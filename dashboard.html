@@ -1775,14 +1775,14 @@
   #tkModal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;display:none;align-items:flex-start;justify-content:center}
   #tkModal.open{display:flex}
   #tkModal *{box-sizing:border-box}
-  #tkModal .tk-sheet{background:#0c0a09;width:100%;max-width:580px;height:100%;display:flex;flex-direction:column;color:#fafaf9;font-family:'Heebo','Segoe UI',sans-serif}
+  #tkModal .tk-sheet{background:#0c0a09;width:100%;max-width:580px;height:100%;height:100dvh;display:flex;flex-direction:column;color:#fafaf9;font-family:'Heebo','Segoe UI',sans-serif}
   #tkModal .tk-head{display:flex;align-items:center;justify-content:space-between;padding:15px 16px;border-bottom:1px solid #292524;background:#1c1917}
   #tkModal .tk-title{font-family:'Rubik','Heebo',sans-serif;font-weight:800;font-size:19px}
   #tkModal .tk-x{background:#292524;border:none;color:#fafaf9;width:34px;height:34px;border-radius:9px;font-size:16px;cursor:pointer}
   #tkModal .tk-tabs{display:flex;flex-wrap:wrap;gap:5px;padding:10px;border-bottom:1px solid #292524;background:#161312}
   #tkModal .tk-tab{flex:1 1 auto;min-width:60px;background:#1c1917;border:1px solid #292524;color:#a8a29e;border-radius:10px;padding:10px 3px;font-size:12.5px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;white-space:nowrap}
   #tkModal .tk-tab.on{background:#e2231a;border-color:#e2231a;color:#fff}
-  #tkModal .tk-body{flex:1;overflow-y:auto;padding:16px}
+  #tkModal .tk-body{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px}
   #tkModal .tk-pane[hidden]{display:none}
   #tkModal .tk-rec-lang{display:flex;gap:8px;margin-bottom:12px}
   #tkModal .tk-rl-btn{flex:1;background:#1c1917;border:1px solid #3f3f46;color:#a8a29e;border-radius:10px;padding:11px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;font-size:14px}

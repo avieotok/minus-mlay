@@ -489,11 +489,25 @@
     return dcLoadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js').then(function(){
       if(typeof Tesseract==='undefined') throw new Error('no-tess');
       return Tesseract.createWorker('eng');
-    }).then(function(w){ return w.setParameters({ tessedit_char_whitelist:'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-/' }).then(function(){ dcWorker=w; return w; }); });
+    }).then(function(w){ return w.setParameters({ tessedit_char_whitelist:'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-/', tessedit_pageseg_mode:'6' }).then(function(){ dcWorker=w; return w; }); });
+  }
+  function dcEnhance(cnv){
+    try{
+      var ctx=cnv.getContext('2d'); var id=ctx.getImageData(0,0,cnv.width,cnv.height); var d=id.data, n=d.length;
+      var min=255,max=0;
+      for(var i=0;i<n;i+=4){ var g=(d[i]*0.299+d[i+1]*0.587+d[i+2]*0.114)|0; d[i]=d[i+1]=d[i+2]=g; if(g<min)min=g; if(g>max)max=g; }
+      var range=Math.max(1,max-min);
+      for(var j=0;j<n;j+=4){ var v=(d[j]-min)*255/range; v=v<0?0:(v>255?255:v); d[j]=d[j+1]=d[j+2]=v; }
+      ctx.putImageData(id,0,0);
+    }catch(e){}
   }
   function dcBestNumber(text){
-    var toks=(text||'').toUpperCase().replace(/[^0-9A-Z\-\/]+/g,' ').split(/\s+/), best='';
-    toks.forEach(function(t){ t=t.trim(); if(!t) return; var hasDigit=/[0-9]/.test(t); var alnum=(t.match(/[0-9A-Z]/g)||[]).length, balnum=(best.match(/[0-9A-Z]/g)||[]).length; if(hasDigit && t.length>=4 && alnum>balnum) best=t; });
+    var lines=(text||'').toUpperCase().split(/[\r\n]+/), best='';
+    lines.forEach(function(ln){
+      var s=ln.replace(/[^0-9A-Z\-\/ ]/g,'').replace(/\s+/g,''); // איחוד רווחים בתוך השורה (אזור = מספר אחד)
+      var d=(s.match(/[0-9]/g)||[]).length, bd=(best.match(/[0-9]/g)||[]).length;
+      if(/[0-9]/.test(s) && s.replace(/[^0-9A-Z]/g,'').length>=4 && d>bd) best=s;
+    });
     return best;
   }
   function dcRenderChosen(){
@@ -540,6 +554,7 @@
     var cnv=document.createElement('canvas'); cnv.width=Math.round(sw*up); cnv.height=Math.round(sh*up);
     var ctx=cnv.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,cnv.width,cnv.height);
     try{ ctx.drawImage(img, sx,sy,sw,sh, 0,0,cnv.width,cnv.height); }catch(err){ if(prog){ prog.style.color='#f87171'; prog.textContent='שגיאת חיתוך — נסה שוב.'; } return; }
+    dcEnhance(cnv);
     if(prog){ prog.style.display='block'; prog.style.color='#fbbf24'; prog.textContent='טוען מנוע קריאה…'; }
     dcReadBtn.disabled=true;
     dcGetWorker().then(function(w){ if(prog) prog.textContent='קורא…'; return w.recognize(cnv); }).then(function(r){
