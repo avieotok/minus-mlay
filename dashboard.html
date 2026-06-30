@@ -1205,6 +1205,12 @@
   async function reopenAlert(id){
     const a=ALERTS.find(x=>String(x.id)===String(id));
     if(a){ a.status='בטיפול'; a.updated=new Date().toISOString(); }
+    // אחרי החזרה לטיפול — לצאת ממסך ההיסטוריה ולהציג "בטיפול", ולנקות סינון סוג,
+    // כדי שהפריט שהוחזר יופיע מיד (אחרת הוא נשאר מוסתר כי התצוגה עדיין על היסטוריה)
+    if(fStatus==='history' || fStatus==='טופל'){
+      markStatus('בטיפול');
+      fType='all'; document.querySelectorAll('#typeChips .chip').forEach(x=>x.classList.toggle('on', x.dataset.t==='all'));
+    }
     render();
     try{ await apiPost('status',{id:id, status:'בטיפול'}); toast('הוחזר לטיפול ✓'); setTimeout(load,400); }
     catch(e){ toast('הפעולה נכשלה — נסה שוב'); }
@@ -1465,7 +1471,7 @@
   function markStatus(s){ fStatus=s; document.querySelectorAll('#statusChips .chip').forEach(x=>x.classList.toggle('on', x.dataset.s===s)); var hb=$('histBtn'); if(hb) hb.classList.toggle('on', s==='history'); }
   $('statusChips').addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b) return;
     markStatus(b.dataset.s); render(); });
-  $('histBtn').addEventListener('click',()=>{ markStatus('history'); render(); });
+  $('histBtn').addEventListener('click',()=>{ markStatus(fStatus==='history' ? 'all' : 'history'); render(); });
   $('urgChips').addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b) return;
     fUrg=b.dataset.u; document.querySelectorAll('#urgChips .chip').forEach(x=>x.classList.toggle('on',x===b)); render(); });
   $('typeChips').addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b) return;
