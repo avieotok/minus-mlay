@@ -516,11 +516,19 @@
   function dcBestNumber(text){
     var lines=(text||'').toUpperCase().split(/[\r\n]+/), best='';
     lines.forEach(function(ln){
-      var s=ln.replace(/[^0-9A-Z\-\/ ]/g,'').replace(/\s+/g,'').replace(/^[\-\/]+|[\-\/]+$/g,''); // איחוד רווחים + ניקוי מפרידים בקצוות
+      var s=ln.replace(/[^0-9A-Z\-\/ ]/g,'').replace(/\s+/g,'').replace(/^[\-\/]+|[\-\/]+$/g,'');
       var d=(s.match(/[0-9]/g)||[]).length, bd=(best.match(/[0-9]/g)||[]).length;
       if(/[0-9]/.test(s) && s.replace(/[^0-9A-Z]/g,'').length>=4 && d>bd) best=s;
     });
     return best;
+  }
+  function dcAllNumbers(text){
+    var lines=(text||'').toUpperCase().split(/[\r\n]+/), out=[], seen={};
+    lines.forEach(function(ln){
+      var s=ln.replace(/[^0-9A-Z\-\/ ]/g,'').replace(/\s+/g,'').replace(/^[\-\/]+|[\-\/]+$/g,''); // איחוד רווחים + ניקוי מפרידים בקצוות
+      if(/[0-9]/.test(s) && s.replace(/[^0-9A-Z]/g,'').length>=4 && !seen[s]){ seen[s]=1; out.push(s); }
+    });
+    return out;
   }
   function dcRenderChosen(){
     var box=$('tkDcChosen'); if(!box) return;
@@ -571,9 +579,12 @@
     dcReadBtn.disabled=true;
     dcGetWorker().then(function(w){ if(prog) prog.textContent='קורא…'; return w.recognize(cnv); }).then(function(r){
       dcReadBtn.disabled=false;
-      var num=dcBestNumber((r&&r.data&&r.data.text)||'');
-      if(num){ var inp=$('tkDcManual'); if(inp) inp.value=num; if(prog){ prog.style.color='#34d399'; prog.textContent='נקרא: '+num+' — בדוק ולחץ ➕'; } }
-      else { if(prog){ prog.style.color='#fbbf24'; prog.textContent='⚠️ לא זוהה מספר באזור — סמן מדויק יותר או הקלד ידנית.'; } }
+      var nums=dcAllNumbers((r&&r.data&&r.data.text)||'');
+      if(!nums.length){ if(prog){ prog.style.color='#fbbf24'; prog.textContent='⚠️ לא זוהה מספר באזור — סמן מדויק יותר או הקלד ידנית.'; } return; }
+      if(nums.length===1){ var inp=$('tkDcManual'); if(inp) inp.value=nums[0]; if(prog){ prog.style.color='#34d399'; prog.textContent='נקרא: '+nums[0]+' — בדוק ולחץ ➕'; } return; }
+      var added=0; nums.forEach(function(n){ if(dcChosen.indexOf(n)<0){ dcChosen.push(n); added++; } });
+      dcRenderChosen();
+      if(prog){ prog.style.color='#34d399'; prog.textContent='✓ נוספו '+added+' מספרים: '+nums.join(', ')+' — בדוק ומחק לא נכונים'; }
     }).catch(function(){ dcReadBtn.disabled=false; if(prog){ prog.style.color='#f87171'; prog.textContent='⚠️ הקריאה נכשלה — אפשר להקליד ידנית.'; } });
   });
 
