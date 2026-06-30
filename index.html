@@ -1402,10 +1402,20 @@
         location.replace(location.pathname+'?v='+v);
       } } }catch(e){}
   }
-  // רישום Service Worker — לתמיכת Offline, התראות, וטעינה מהירה (היה חסר באפליקציית המחסנאים)
+  // רישום Service Worker עם עדכון אוטומטי — כשמתגלה גרסה חדשה היא מוחלת והדף מתרענן לבד
   if('serviceWorker' in navigator){
+    var __swRefreshing=false;
+    navigator.serviceWorker.addEventListener('controllerchange', function(){
+      if(__swRefreshing) return; __swRefreshing=true; location.reload();
+    });
     window.addEventListener('load', function(){
-      navigator.serviceWorker.register('sw.js').catch(function(){});
+      navigator.serviceWorker.register('sw.js').then(function(reg){
+        function promote(w){ if(w && w.state==='installed' && navigator.serviceWorker.controller){ try{ w.postMessage('skipWaiting'); }catch(e){} } }
+        if(reg.waiting) promote(reg.waiting);
+        reg.addEventListener('updatefound', function(){ var nw=reg.installing; if(nw) nw.addEventListener('statechange', function(){ promote(nw); }); });
+        try{ reg.update(); }catch(e){}
+        setInterval(function(){ try{ reg.update(); }catch(e){} }, 60000);
+      }).catch(function(){});
     });
   }
   // עוטף קריאת polling כך שלא תפנה ל-Backend כשהלשונית מוסתרת (חיסכון במכסת Apps Script)

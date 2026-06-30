@@ -12,7 +12,7 @@
    ⚠️ בעת עדכון גרסה — שנו את המספר ב-CACHE_VERSION כדי לרענן את המטמון.
 */
 
-const CACHE_VERSION = 'afcon-v4';
+const CACHE_VERSION = 'afcon-v5';
 const CACHE_NAME = CACHE_VERSION;
 
 /* נכסי הליבה של האפליקציה — נטענים מראש כדי שתעבוד גם בלי קליטה */
@@ -48,7 +48,7 @@ self.addEventListener('install', function (e) {
       .then(function (cache) {
         /* addAll נכשל אם נכס אחד נופל — לכן מוסיפים בנפרד וסלחניים */
         return Promise.all(CORE_ASSETS.map(function (u) {
-          return cache.add(u).catch(function () {});
+          return cache.add(new Request(u, {cache:'reload'})).catch(function () {});
         }));
       })
       .then(function () { return self.skipWaiting(); })
