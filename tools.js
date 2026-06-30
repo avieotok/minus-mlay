@@ -493,18 +493,30 @@
   }
   function dcEnhance(cnv){
     try{
-      var ctx=cnv.getContext('2d'); var id=ctx.getImageData(0,0,cnv.width,cnv.height); var d=id.data, n=d.length;
-      var min=255,max=0;
-      for(var i=0;i<n;i+=4){ var g=(d[i]*0.299+d[i+1]*0.587+d[i+2]*0.114)|0; d[i]=d[i+1]=d[i+2]=g; if(g<min)min=g; if(g>max)max=g; }
-      var range=Math.max(1,max-min);
-      for(var j=0;j<n;j+=4){ var v=(d[j]-min)*255/range; v=v<0?0:(v>255?255:v); d[j]=d[j+1]=d[j+2]=v; }
+      var ctx=cnv.getContext('2d'), W=cnv.width, H=cnv.height;
+      var id=ctx.getImageData(0,0,W,H), d=id.data, N=W*H;
+      var gray=new Float64Array(N);
+      for(var i=0,p=0;i<d.length;i+=4,p++){ gray[p]=d[i]*0.299+d[i+1]*0.587+d[i+2]*0.114; }
+      var IW=W+1, integ=new Float64Array(IW*(H+1));
+      for(var y=0;y<H;y++){ var rs=0; for(var x=0;x<W;x++){ rs+=gray[y*W+x]; integ[(y+1)*IW+(x+1)]=integ[y*IW+(x+1)]+rs; } }
+      var minDim=Math.min(W,H), bs=Math.max(15, Math.round(minDim/12)), r=bs>>1, C=14;
+      for(var yy=0;yy<H;yy++){
+        var y1=yy-r<0?0:yy-r, y2=yy+r>H-1?H-1:yy+r;
+        for(var xx=0;xx<W;xx++){
+          var x1=xx-r<0?0:xx-r, x2=xx+r>W-1?W-1:xx+r;
+          var area=(x2-x1+1)*(y2-y1+1);
+          var sum=integ[(y2+1)*IW+(x2+1)]-integ[y1*IW+(x2+1)]-integ[(y2+1)*IW+x1]+integ[y1*IW+x1];
+          var val=(gray[yy*W+xx] > sum/area - C) ? 255 : 0;
+          var idx=(yy*W+xx)*4; d[idx]=d[idx+1]=d[idx+2]=val;
+        }
+      }
       ctx.putImageData(id,0,0);
     }catch(e){}
   }
   function dcBestNumber(text){
     var lines=(text||'').toUpperCase().split(/[\r\n]+/), best='';
     lines.forEach(function(ln){
-      var s=ln.replace(/[^0-9A-Z\-\/ ]/g,'').replace(/\s+/g,''); // איחוד רווחים בתוך השורה (אזור = מספר אחד)
+      var s=ln.replace(/[^0-9A-Z\-\/ ]/g,'').replace(/\s+/g,'').replace(/^[\-\/]+|[\-\/]+$/g,''); // איחוד רווחים + ניקוי מפרידים בקצוות
       var d=(s.match(/[0-9]/g)||[]).length, bd=(best.match(/[0-9]/g)||[]).length;
       if(/[0-9]/.test(s) && s.replace(/[^0-9A-Z]/g,'').length>=4 && d>bd) best=s;
     });
