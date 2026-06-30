@@ -37,11 +37,11 @@
     tabs.forEach(function(x){ x.classList.toggle('on', x===t); });
     var v=t.getAttribute('data-tk');
     $('tkLists').hidden=(v!=='lists'); $('tkPhone').hidden=(v!=='phone'); $('tkCur').hidden=(v!=='cur'); $('tkArea').hidden=(v!=='area'); $('tkRec').hidden=(v!=='rec');
-    var _np={price:'tkPrice',pack:'tkPack',todo:'tkTodo',qr:'tkQr'};
+    var _np={todo:'tkTodo'};
     for(var _k in _np){ var _el=$(_np[_k]); if(_el) _el.hidden=(v!==_k); }
     if(v!=='rec'){ try{ recStop(); }catch(e){} }
     if(v==='phone'){ renderPhones(); loadShared(); } if(v==='cur') openCur(); if(v==='area') openArea(); if(v==='rec') initRec();
-    if(v==='price') openPrice(); if(v==='pack') openPack(); if(v==='todo') openTodo(); if(v==='qr') openQr();
+    if(v==='todo') openTodo();
   }); });
 
   /* ---------- רשימות ---------- */
@@ -453,62 +453,6 @@
     recStatus('');
   }
 
-  /* ---------- 🛍️ מחשבון מחירים לקניין ---------- */
-  var priceRows=[{name:'',price:'',qty:''},{name:'',price:'',qty:''}];
-  function priceRender(){
-    var box=$('tkPriceRows'); if(!box) return;
-    box.innerHTML=priceRows.map(function(r,i){
-      var inp='min-width:0;background:#15171c;border:1px solid #343a45;border-radius:9px;padding:9px;color:#f2f4f8;font-family:Heebo;font-size:14px';
-      return '<div style="display:flex;gap:6px;align-items:center">'
-        +'<input data-pi="'+i+'" data-pf="name" value="'+esc(r.name)+'" placeholder="ספק" style="flex:1.2;'+inp+'">'
-        +'<input data-pi="'+i+'" data-pf="price" value="'+esc(r.price)+'" inputmode="decimal" placeholder="מחיר ₪" style="flex:1;text-align:center;'+inp+'">'
-        +'<input data-pi="'+i+'" data-pf="qty" value="'+esc(r.qty)+'" inputmode="decimal" placeholder="כמות" style="flex:.85;text-align:center;'+inp+'">'
-        +(priceRows.length>1?'<button data-pdel="'+i+'" type="button" style="background:none;border:none;color:#f87171;font-size:16px;cursor:pointer;padding:2px 4px">✕</button>':'')
-        +'</div>';
-    }).join('');
-  }
-  function priceCalc(){
-    var out=$('tkPriceOut'); if(!out) return;
-    var vat=$('tkPriceVat')&&$('tkPriceVat').checked;
-    var res=[];
-    priceRows.forEach(function(r){ var p=parseFloat(r.price), q=parseFloat(r.qty); if(isFinite(p)&&isFinite(q)&&q>0){ var per=p/q; if(vat) per*=1.17; res.push({name:(r.name||'ספק').trim(), per:per}); } });
-    if(!res.length){ out.innerHTML='<div class="tk-note">מלא מחיר וכמות לפחות לספק אחד.</div>'; return; }
-    res.sort(function(a,b){ return a.per-b.per; });
-    var best=res[0].per;
-    out.innerHTML=res.map(function(r){ var win=(r.per<=best+1e-9);
-      return '<div style="display:flex;justify-content:space-between;align-items:center;background:'+(win?'#0f1f14':'#15171c')+';border:1px solid '+(win?'#22c55e':'#343a45')+';border-radius:10px;padding:10px 12px">'
-        +'<span style="font-weight:700;color:#f2f4f8">'+(win?'🏆 ':'')+esc(r.name)+'</span>'
-        +'<span style="font-weight:800;color:'+(win?'#34d399':'#cdd2da')+'">'+r.per.toFixed(2)+' ₪ / יח׳</span></div>';
-    }).join('')+'<div class="tk-note" style="text-align:start">מחיר ליחידה '+(vat?'כולל':'ללא')+' מע״מ.</div>';
-  }
-  function openPrice(){ priceRender(); priceCalc(); }
-  var pricePane=$('tkPrice');
-  if(pricePane){
-    pricePane.addEventListener('input', function(e){ var t=e.target; if(t.dataset&&t.dataset.pi!=null&&t.dataset.pf){ priceRows[+t.dataset.pi][t.dataset.pf]=t.value; priceCalc(); } });
-    pricePane.addEventListener('change', function(e){ if(e.target.id==='tkPriceVat') priceCalc(); });
-    pricePane.addEventListener('click', function(e){ var t=e.target; if(t.dataset&&t.dataset.pdel!=null){ priceRows.splice(+t.dataset.pdel,1); priceRender(); priceCalc(); } });
-    var pAdd=$('tkPriceAdd'); if(pAdd) pAdd.addEventListener('click', function(){ priceRows.push({name:'',price:'',qty:''}); priceRender(); });
-  }
-
-  /* ---------- 📦 מחשבון אריזה ומשטחים ---------- */
-  function packCalc(){
-    var out=$('tkPkOut'); if(!out) return;
-    var upb=parseFloat($('tkPkUPB').value), bpp=parseFloat($('tkPkBPP').value), tot=parseFloat($('tkPkTotal').value);
-    if(!(isFinite(upb)&&upb>0)||!(isFinite(bpp)&&bpp>0)){ out.innerHTML='<div class="tk-note">מלא יחידות בקרטון וקרטונים במשטח.</div>'; return; }
-    var upp=upb*bpp;
-    var html='<div style="font-size:15px;color:#f2f4f8;line-height:1.95">יחידות במשטח מלא: <b style="color:#fbbf24">'+upp.toLocaleString('he-IL')+'</b>';
-    if(isFinite(tot)&&tot>0){
-      var pallets=Math.floor(tot/upp), remU=tot-pallets*upp, remBoxes=Math.ceil(remU/upb), totalBoxes=Math.ceil(tot/upb);
-      html+='<br>עבור '+tot.toLocaleString('he-IL')+' יחידות:'
-        +'<br>• משטחים מלאים: <b style="color:#34d399">'+pallets+'</b>'
-        +'<br>• קרטונים נוספים: <b style="color:#60a5fa">'+remBoxes+'</b>'
-        +'<br>• סה״כ קרטונים: <b>'+totalBoxes.toLocaleString('he-IL')+'</b>';
-    }
-    out.innerHTML=html+'</div>';
-  }
-  function openPack(){ packCalc(); }
-  var packPane=$('tkPack'); if(packPane) packPane.addEventListener('input', packCalc);
-
   /* ---------- ⏰ תזכורות ומשימות ---------- */
   var TODO_K='afcon_tools_todo';
   function todoLoad(){ try{ return JSON.parse(localStorage.getItem(TODO_K)||'[]')||[]; }catch(e){ return []; } }
@@ -534,6 +478,7 @@
     var tTxt=$('tkTodoText'); if(tTxt) tTxt.addEventListener('keydown', function(e){ if(e.key==='Enter') todoAdd(); });
     todoPane.addEventListener('change', function(e){ var id=e.target.dataset&&e.target.dataset.tdid; if(id){ var t=TODOS.filter(function(x){return x.id===id;})[0]; if(t){ t.done=e.target.checked; todoSave(); todoRender(); } } });
     todoPane.addEventListener('click', function(e){ var id=e.target.dataset&&e.target.dataset.tddel; if(id){ TODOS=TODOS.filter(function(x){return x.id!==id;}); todoSave(); todoRender(); } });
+    var tClr=$('tkTodoClear'); if(tClr) tClr.addEventListener('click', function(){ if(!TODOS.length){ return; } if(confirm('למחוק את כל המשימות והתזכורות?')){ TODOS=[]; todoSave(); todoRender(); } });
   }
   setInterval(function(){
     if(!TODOS.length) return;
@@ -549,36 +494,4 @@
     if(changed) todoSave();
   }, 30000);
 
-  /* ---------- 🏷️ מחולל מדבקות QR ---------- */
-  function qrGen(){
-    var holder=$('tkQrImg'); if(!holder) return;
-    var text=($('tkQrText').value||'').trim(); if(!text){ alert('הזן טקסט או מק״ט לקידוד.'); return; }
-    if(typeof QRCode==='undefined'){ alert('מנוע ה-QR עדיין נטען — נסה שוב בעוד רגע.'); return; }
-    holder.innerHTML='';
-    try{ new QRCode(holder, {text:text, width:210, height:210, correctLevel:QRCode.CorrectLevel.M}); }catch(e){ return; }
-    var title=($('tkQrTitle').value||'').trim();
-    var tEl=$('tkQrTitleOut'); tEl.textContent=title; tEl.style.display=title?'block':'none';
-    $('tkQrTextOut').textContent=text;
-    $('tkQrCard').style.display='flex'; $('tkQrActions').style.display='flex';
-  }
-  function openQr(){}
-  var qrGenBtn=$('tkQrGen'); if(qrGenBtn) qrGenBtn.addEventListener('click', qrGen);
-  var qrPrintBtn=$('tkQrPrint');
-  if(qrPrintBtn) qrPrintBtn.addEventListener('click', function(){
-    var card=$('tkQrCard'); if(!card || card.style.display==='none') return;
-    var w=window.open('','_blank'); if(!w){ alert('הדפסה נחסמה — אפשר חלונות קופצים.'); return; }
-    w.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>מדבקה</title></head><body style="margin:0;display:flex;align-items:center;justify-content:center;height:100vh"><div style="text-align:center;font-family:sans-serif">'+card.innerHTML+'</div><scr'+'ipt>setTimeout(function(){window.print();},350)</scr'+'ipt></body></html>');
-    w.document.close();
-  });
-  var qrShareBtn=$('tkQrShare');
-  if(qrShareBtn) qrShareBtn.addEventListener('click', function(){
-    var holder=$('tkQrImg'); if(!holder) return;
-    var canvas=holder.querySelector('canvas');
-    function doShare(blob){ var file=null; try{ file=new File([blob],'qr-label.png',{type:'image/png'}); }catch(e){}
-      if(file && navigator.canShare && navigator.canShare({files:[file]})){ navigator.share({files:[file], title:($('tkQrText').value||'QR')}).catch(function(){}); }
-      else { var u=URL.createObjectURL(blob); var a=document.createElement('a'); a.href=u; a.download='qr-label.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){ URL.revokeObjectURL(u); },1500); }
-    }
-    if(canvas && canvas.toBlob){ canvas.toBlob(function(b){ if(b) doShare(b); },'image/png'); }
-    else { var img=holder.querySelector('img'); if(img&&img.src){ var a=document.createElement('a'); a.href=img.src; a.download='qr-label.png'; document.body.appendChild(a); a.click(); a.remove(); } }
-  });
 })();
