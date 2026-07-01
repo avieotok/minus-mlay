@@ -453,32 +453,84 @@
     recStatus('');
   }
 
-  /* ---------- ⏰ תזכורות ומשימות ---------- */
+  /* ---------- ⏰ תזכורות ---------- */
   var TODO_K='afcon_tools_todo';
   function todoLoad(){ try{ return JSON.parse(localStorage.getItem(TODO_K)||'[]')||[]; }catch(e){ return []; } }
   function todoSave(){ try{ localStorage.setItem(TODO_K, JSON.stringify(TODOS)); }catch(e){} }
   var TODOS=todoLoad();
+  function tdPad(n){ return ('0'+n).slice(-2); }
+  function tdToInput(d){ return d.getFullYear()+'-'+tdPad(d.getMonth()+1)+'-'+tdPad(d.getDate())+'T'+tdPad(d.getHours())+':'+tdPad(d.getMinutes()); }
+  var TD_DOW=['יום א׳','יום ב׳','יום ג׳','יום ד׳','יום ה׳','יום ו׳','שבת'];
+  function tdFriendly(when){
+    if(!when) return '';
+    var d=new Date(when); if(isNaN(d.getTime())) return esc(String(when));
+    var now=new Date();
+    var t0=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+    var d0=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+    var diff=Math.round((d0.getTime()-t0.getTime())/86400000);
+    var hm=tdPad(d.getHours())+':'+tdPad(d.getMinutes());
+    if(diff===0) return 'היום '+hm;
+    if(diff===1) return 'מחר '+hm;
+    if(diff===-1) return 'אתמול '+hm;
+    return TD_DOW[d.getDay()]+' '+d.getDate()+'.'+(d.getMonth()+1)+' · '+hm;
+  }
   function todoRender(){
     var box=$('tkTodoList'); if(!box) return;
-    if(!TODOS.length){ box.innerHTML='<div class="tk-note">אין משימות עדיין.</div>'; return; }
-    TODOS.sort(function(a,b){ return (a.time||'~').localeCompare(b.time||'~'); });
+    if(!TODOS.length){ box.innerHTML='<div class="tk-note">אין תזכורות עדיין.</div>'; return; }
+    var now=Date.now();
+    TODOS.sort(function(a,b){ var wa=a.when||a.time||'~', wb=b.when||b.time||'~'; return String(wa).localeCompare(String(wb)); });
     box.innerHTML=TODOS.map(function(t){
-      return '<div style="display:flex;align-items:center;gap:9px;background:#15171c;border:1px solid '+(t.done?'#242830':'#343a45')+';border-radius:10px;padding:10px 12px">'
+      var when=t.when||''; var label=when?tdFriendly(when):(t.time?String(t.time):'');
+      var due=!!when && !t.done && new Date(when).getTime()<=now;
+      var col=due?'#f87171':'#fbbf24';
+      return '<div style="display:flex;align-items:center;gap:9px;background:#15171c;border:1px solid '+(t.done?'#242830':(due?'#7f1d1d':'#343a45'))+';border-radius:10px;padding:10px 12px">'
         +'<input type="checkbox" data-tdid="'+t.id+'" '+(t.done?'checked':'')+' style="width:18px;height:18px;flex:0 0 auto">'
-        +'<span style="flex:1;color:'+(t.done?'#697079':'#f2f4f8')+';'+(t.done?'text-decoration:line-through;':'')+'font-size:14.5px">'+esc(t.text)+'</span>'
-        +(t.time?'<span style="color:#fbbf24;font-weight:700;font-size:13.5px;flex:0 0 auto">⏰ '+esc(t.time)+'</span>':'')
+        +'<div style="flex:1;min-width:0">'
+          +'<div style="color:'+(t.done?'#697079':'#f2f4f8')+';'+(t.done?'text-decoration:line-through;':'')+'font-size:14.5px;word-break:break-word">'+esc(t.text)+'</div>'
+          +(label?'<div style="color:'+(t.done?'#565c66':col)+';font-weight:700;font-size:12.5px;margin-top:3px">'+(t.done?'':(due?'⚠️ ':'⏰ '))+esc(label)+(due?' · הגיע הזמן':'')+'</div>':'')
+        +'</div>'
         +'<button data-tddel="'+t.id+'" type="button" style="background:none;border:none;color:#f87171;font-size:15px;cursor:pointer;flex:0 0 auto">🗑️</button></div>';
     }).join('');
   }
   function openTodo(){ todoRender(); }
+  function todoNotify(t){
+    try{ if(navigator.vibrate) navigator.vibrate([200,100,200]); }catch(e){}
+    try{ if('Notification' in window && Notification.permission==='granted'){ var n=new Notification('⏰ תזכורת', { body:(t.text||'תזכורת'), tag:'afcon-todo-'+t.id }); n.onclick=function(){ try{ window.focus(); }catch(e){} n.close(); }; } }catch(e){}
+    try{ var AC=window.AudioContext||window.webkitAudioContext; if(AC){ var c=new AC(); var o=c.createOscillator(); var g=c.createGain(); o.connect(g); g.connect(c.destination); o.frequency.value=880; g.gain.value=0.07; o.start(); setTimeout(function(){ try{o.stop();c.close();}catch(_){}} ,500); } }catch(e){}
+  }
+  function todoTick(){
+    var now=Date.now(), changed=false;
+    for(var i=0;i<TODOS.length;i++){ var t=TODOS[i];
+      if(t.done||t.fired||!t.when) continue;
+      var w=new Date(t.when).getTime();
+      if(!isNaN(w) && w<=now){ t.fired=true; changed=true; todoNotify(t); }
+    }
+    if(changed){ todoSave(); todoRender(); }
+  }
   var todoPane=$('tkTodo');
   if(todoPane){
-    function todoAdd(){ var txt=($('tkTodoText').value||'').trim(); if(!txt) return; TODOS.push({id:uid(), text:txt, time:($('tkTodoTime').value||''), done:false, fired:false}); todoSave(); $('tkTodoText').value=''; $('tkTodoTime').value=''; todoRender(); }
+    function todoAdd(){
+      var txt=($('tkTodoText').value||'').trim(); if(!txt) return;
+      var when=($('tkTodoWhen')?($('tkTodoWhen').value||''):'');
+      if(when){ try{ if('Notification' in window && Notification.permission==='default') Notification.requestPermission(); }catch(e){} }
+      TODOS.push({id:uid(), text:txt, when:when, done:false, fired:false});
+      todoSave(); $('tkTodoText').value=''; if($('tkTodoWhen')) $('tkTodoWhen').value=''; todoRender();
+    }
     var tAdd=$('tkTodoAdd'); if(tAdd) tAdd.addEventListener('click', todoAdd);
     var tTxt=$('tkTodoText'); if(tTxt) tTxt.addEventListener('keydown', function(e){ if(e.key==='Enter') todoAdd(); });
-    todoPane.addEventListener('change', function(e){ var id=e.target.dataset&&e.target.dataset.tdid; if(id){ var t=TODOS.filter(function(x){return x.id===id;})[0]; if(t){ t.done=e.target.checked; todoSave(); todoRender(); } } });
+    todoPane.addEventListener('click', function(e){
+      var q=e.target&&e.target.dataset&&e.target.dataset.tdquick; if(!q) return;
+      var d=new Date();
+      if(q==='1h'){ d.setHours(d.getHours()+1); }
+      else if(q==='3h'){ d.setHours(d.getHours()+3); }
+      else if(q==='eve'){ d.setHours(18,0,0,0); if(d.getTime()<Date.now()) d.setDate(d.getDate()+1); }
+      else if(q==='tom9'){ d.setDate(d.getDate()+1); d.setHours(9,0,0,0); }
+      if($('tkTodoWhen')) $('tkTodoWhen').value=tdToInput(d);
+    });
+    todoPane.addEventListener('change', function(e){ var id=e.target.dataset&&e.target.dataset.tdid; if(id){ var t=TODOS.filter(function(x){return x.id===id;})[0]; if(t){ t.done=e.target.checked; if(t.done) t.fired=true; todoSave(); todoRender(); } } });
     todoPane.addEventListener('click', function(e){ var id=e.target.dataset&&e.target.dataset.tddel; if(id){ TODOS=TODOS.filter(function(x){return x.id!==id;}); todoSave(); todoRender(); } });
-    var tClr=$('tkTodoClear'); if(tClr) tClr.addEventListener('click', function(){ if(!TODOS.length){ return; } if(confirm('למחוק את כל המשימות והתזכורות?')){ TODOS=[]; todoSave(); todoRender(); } });
+    var tClr=$('tkTodoClear'); if(tClr) tClr.addEventListener('click', function(){ if(!TODOS.length){ return; } if(confirm('למחוק את כל התזכורות?')){ TODOS=[]; todoSave(); todoRender(); } });
+    todoTick(); setInterval(todoTick, 30000);
   }
 
   /* ---------- 🔢 פענוח מס׳ סידוריים (קריאת אזור מסומן) ---------- */

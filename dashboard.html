@@ -1964,12 +1964,16 @@
       </div>
       <div class="tk-pane" id="tkTodo" hidden>
         <div style="display:flex;flex-direction:column;gap:10px">
-          <div class="tk-note" style="text-align:start">משימות ותזכורות אישיות. תזכורת מופיעה כשהשעה מגיעה והאפליקציה פתוחה.</div>
-          <div style="display:flex;gap:7px">
-            <input id="tkTodoText" placeholder="משימה חדשה…" style="flex:1;min-width:0;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px 12px;color:#f2f4f8;font-size:15px;font-family:'Heebo',sans-serif">
-            <input id="tkTodoTime" type="time" style="background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px 12px;color:#f2f4f8;font-size:15px;font-family:'Heebo',sans-serif;flex:0 0 auto;width:115px">
-            <button id="tkTodoAdd" type="button" style="background:#22c55e;color:#052e16;border:none;border-radius:11px;padding:12px;font-weight:800;cursor:pointer;font-family:'Rubik','Heebo',sans-serif;font-size:14.5px;flex:0 0 auto;padding:11px 15px">➕</button>
+          <div class="tk-note" style="text-align:start">תזכורות אישיות. ההתראה תופיע כשמגיע הזמן והאפליקציה פתוחה.</div>
+          <input id="tkTodoText" placeholder="מה להזכיר לך?…" style="width:100%;box-sizing:border-box;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:12px;color:#f2f4f8;font-size:15px;font-family:'Heebo',sans-serif">
+          <input id="tkTodoWhen" type="datetime-local" style="width:100%;box-sizing:border-box;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:12px;color:#f2f4f8;font-size:15px;font-family:'Heebo',sans-serif">
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button type="button" data-tdquick="1h" style="background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px 6px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;flex:1;min-width:64px">בעוד שעה</button>
+            <button type="button" data-tdquick="3h" style="background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px 6px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;flex:1;min-width:64px">בעוד 3 שע׳</button>
+            <button type="button" data-tdquick="eve" style="background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px 6px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;flex:1;min-width:64px">היום 18:00</button>
+            <button type="button" data-tdquick="tom9" style="background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px 6px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;flex:1;min-width:64px">מחר 09:00</button>
           </div>
+          <button id="tkTodoAdd" type="button" style="background:#22c55e;color:#052e16;border:none;border-radius:11px;padding:13px;font-weight:800;cursor:pointer;font-family:'Rubik','Heebo',sans-serif;font-size:15px">➕ הוסף תזכורת</button>
           <div id="tkTodoList" style="display:flex;flex-direction:column;gap:7px"></div>
           <button id="tkTodoClear" type="button" style="background:none;border:1px solid #7f1d1d;color:#f87171;border-radius:11px;padding:11px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif">🗑️ מחק הכל</button>
         </div>
