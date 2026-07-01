@@ -2,7 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>שרשרת האספקה — קניינים</title>
 <meta name="theme-color" content="#3aa0db">
@@ -1876,7 +1876,7 @@
   #tkModal .tk-draw-note{font-size:12px;color:#78716c}
   #tkDraw{position:fixed;inset:0;background:#0a0b0e;z-index:320;display:none;flex-direction:column;padding:0}
   #tkDraw.open{display:flex}
-  #tkDraw .tk-draw-bar{display:flex;gap:8px;padding:10px 12px;background:#15171c;border-bottom:1px solid #242830;align-items:center;flex:0 0 auto}
+  #tkDraw .tk-draw-bar{display:flex;gap:8px;padding:calc(10px + env(safe-area-inset-top,0px)) 12px 10px;background:#15171c;border-bottom:1px solid #242830;align-items:center;flex:0 0 auto;flex-wrap:wrap}
   #tkDraw .tk-draw-bar button{flex:1;border:none;border-radius:11px;padding:13px 6px;font-size:14px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;white-space:nowrap}
   #tkDraw canvas{background:#fff;touch-action:none;display:block}
   #tkDraw .tk-dsave{background:#22c55e;color:#052e16}
