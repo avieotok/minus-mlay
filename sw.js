@@ -12,7 +12,7 @@
    ⚠️ בעת עדכון גרסה — שנו את המספר ב-CACHE_VERSION כדי לרענן את המטמון.
 */
 
-const CACHE_VERSION = 'afcon-v18';
+const CACHE_VERSION = 'afcon-v19';
 const CACHE_NAME = CACHE_VERSION;
 
 /* נכסי הליבה של האפליקציה — נטענים מראש כדי שתעבוד גם בלי קליטה */

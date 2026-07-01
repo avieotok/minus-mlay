@@ -553,6 +553,15 @@
       </div>
 
       <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:8px">📊 שימוש ב-AI · מס׳ סידוריים</div>
+        <p style="font-size:12.5px;color:var(--faint);line-height:1.6;margin-bottom:10px">כמה פעמים השתמשו בכפתור הכחול „🤖 קרא את כל המספרים", לפי משתמש, והערכת עלות מצטברת. שים לב: <b>היתרה המדויקת</b> שנשארה במפתח נבדקת רק בלוח הבקרה של Anthropic — כאן זו הערכה בלבד.</p>
+        <button class="ghost" id="aiUsageBtn" style="border-color:var(--line2)">📊 טען נתוני שימוש</button>
+        <div class="note" id="aiUsageNote"></div>
+        <div id="aiUsageBox" style="margin-top:10px"></div>
+        <a href="https://console.anthropic.com/settings/billing" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;font-size:12.5px;color:#60a5fa;text-decoration:none">🔗 בדוק יתרה אמיתית בלוח הבקרה של Anthropic</a>
+      </div>
+
+      <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
         <div style="font-weight:700;font-size:14px;margin-bottom:8px;color:#f87171">🧹 איפוס כל ההתראות</div>
         <p style="font-size:12.5px;color:var(--faint);line-height:1.6;margin-bottom:10px">מוחק את <b>כל</b> ההתראות מהמערכת לצמיתות (ממתינות, בטיפול וטופלו). השמות והקטלוג יישארו. פעולה זו אינה הפיכה.</p>
         <button class="ghost" id="clearAll" style="border-color:#7f1d1d;color:#f87171">🧹 אפס את כל ההתראות</button>
@@ -1696,6 +1705,26 @@
     $('clearNote').textContent='מאפס…';
     try{ const r=await apiPost('clearAll'); if(r&&r.ok){ selDel.clear(); await load(); $('clearNote').textContent='✓ נמחקו '+(r.cleared||0)+' התראות · המספור אופס'; } else $('clearNote').textContent='האיפוס נכשל.'; }
     catch(e){ $('clearNote').textContent='האיפוס נכשל — בדוק חיבור.'; }
+  });
+  const aiBtn=$('aiUsageBtn'); if(aiBtn) aiBtn.addEventListener('click', async ()=>{
+    $('aiUsageNote').textContent='טוען…'; $('aiUsageBox').innerHTML='';
+    try{
+      const r=await apiGet('aiUsage');
+      if(r&&r.ok){
+        $('aiUsageNote').textContent='';
+        const total=r.total||0; const cost=(r.estCost!=null?Number(r.estCost):0);
+        let html='<div style="background:#15171c;border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:8px">'
+          +'<div style="font-size:22px;font-weight:800;color:#a78bfa">'+total+' <span style="font-size:14px;color:var(--faint);font-weight:600">שימושים</span></div>'
+          +'<div style="font-size:13px;color:var(--faint);margin-top:4px">עלות משוערת: ~$'+cost.toFixed(2)+'</div></div>';
+        const users=(r.users||[]).slice().sort((a,b)=>(b.count||0)-(a.count||0));
+        if(users.length){
+          html+='<div style="display:flex;flex-direction:column;gap:6px">'+users.map(u=>
+            '<div style="display:flex;justify-content:space-between;align-items:center;background:#15171c;border:1px solid var(--line);border-radius:9px;padding:9px 11px"><span style="color:#f2f4f8;font-size:13.5px">'+esc(u.user||'ללא שם')+'</span><span style="color:#fbbf24;font-weight:700;font-size:13.5px;flex:0 0 auto">'+(u.count||0)+' פעמים</span></div>'
+          ).join('')+'</div>';
+        } else { html+='<div class="note">עדיין אין שימושים.</div>'; }
+        $('aiUsageBox').innerHTML=html;
+      } else { $('aiUsageNote').textContent='טעינה נכשלה.'; }
+    }catch(e){ $('aiUsageNote').textContent='טעינה נכשלה — בדוק חיבור.'; }
   });
   const cp=$('clearPhones'); if(cp) cp.addEventListener('click', async ()=>{
     if(!confirm('למחוק את כל ספר הטלפונים המשותף? כל הספקים ששותפו יוסרו אצל כולם. (ספקים אישיים במכשירים לא יושפעו.)')) return;

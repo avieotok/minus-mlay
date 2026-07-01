@@ -675,7 +675,8 @@
     var b64=''; try{ b64=cnv.toDataURL('image/jpeg',0.85).split(',')[1]; }catch(e){ if(prog){prog.style.color='#f87171';prog.textContent='שגיאת עיבוד תמונה.';} return; }
     if(prog){ prog.style.display='block'; prog.style.color='#a78bfa'; prog.textContent='🤖 שולח ל-AI לקריאה… (כמה שניות)'; }
     dcAiBtn.disabled=true;
-    fetch(cfg.url,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({token:cfg.token, action:'ocr_serials', image:b64, mime:'image/jpeg'})})
+    var dcUser=''; try{ dcUser=(localStorage.getItem('afcon_me')||localStorage.getItem('afcon_reporter')||'').trim(); }catch(e){}
+    fetch(cfg.url,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({token:cfg.token, action:'ocr_serials', image:b64, mime:'image/jpeg', user:dcUser})})
       .then(function(r){ return r.json(); })
       .then(function(j){
         dcAiBtn.disabled=false;
