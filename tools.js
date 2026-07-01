@@ -487,23 +487,40 @@
         +'<input type="checkbox" data-tdid="'+t.id+'" '+(t.done?'checked':'')+' style="width:18px;height:18px;flex:0 0 auto">'
         +'<div style="flex:1;min-width:0">'
           +'<div style="color:'+(t.done?'#697079':'#f2f4f8')+';'+(t.done?'text-decoration:line-through;':'')+'font-size:14.5px;word-break:break-word">'+esc(t.text)+'</div>'
-          +(label?'<div style="color:'+(t.done?'#565c66':col)+';font-weight:700;font-size:12.5px;margin-top:3px">'+(t.done?'':(due?'⚠️ ':'⏰ '))+esc(label)+(due?' · הגיע הזמן':'')+'</div>':'')
+          +(label?'<div style="color:'+(t.done?'#565c66':col)+';font-weight:700;font-size:12.5px;margin-top:3px">'+(t.done?'':(due?'⚠️ ':'⏰ '))+esc(label)+(due?' · הגיע הזמן':'')+((Number(t.lead)>0&&!t.done)?' · 🔔 '+tdLeadTxt(t.lead)+' לפני':'')+'</div>':'')
         +'</div>'
         +'<button data-tddel="'+t.id+'" type="button" style="background:none;border:none;color:#f87171;font-size:15px;cursor:pointer;flex:0 0 auto">🗑️</button></div>';
     }).join('');
   }
   function openTodo(){ todoRender(); }
+  function tdLeadTxt(m){ m=Number(m)||0; if(m>=60) return 'שעה'; if(m===30) return 'חצי שעה'; if(m===15) return 'רבע שעה'; return m+' דק׳'; }
+  function todoPlaySound(key){
+    try{
+      if(key==='none') return;
+      var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
+      var c=new AC(), t0=c.currentTime;
+      function tone(f,start,dur,vol){ var o=c.createOscillator(),g=c.createGain(); o.type='sine'; o.frequency.value=f; g.gain.setValueAtTime(vol||0.08,t0+start); g.gain.exponentialRampToValueAtTime(0.0001,t0+start+dur); o.connect(g); g.connect(c.destination); o.start(t0+start); o.stop(t0+start+dur); }
+      if(key==='chime'){ tone(660,0,0.22,0.09); tone(880,0.22,0.22,0.09); tone(1180,0.44,0.4,0.09); }
+      else if(key==='chirp'){ tone(760,0,0.1,0.1); tone(1200,0.13,0.1,0.1); tone(760,0.3,0.1,0.1); tone(1200,0.43,0.1,0.1); }
+      else if(key==='siren'){ tone(700,0,0.26,0.08); tone(1020,0.26,0.26,0.08); tone(700,0.52,0.26,0.08); tone(1020,0.78,0.26,0.08); }
+      else { tone(880,0,0.5,0.09); tone(1320,0.13,0.5,0.055); } /* bell */
+      setTimeout(function(){ try{c.close();}catch(e){} }, 1800);
+    }catch(e){}
+  }
   function todoNotify(t){
     try{ if(navigator.vibrate) navigator.vibrate([200,100,200]); }catch(e){}
-    try{ if('Notification' in window && Notification.permission==='granted'){ var n=new Notification('⏰ תזכורת', { body:(t.text||'תזכורת'), tag:'afcon-todo-'+t.id }); n.onclick=function(){ try{ window.focus(); }catch(e){} n.close(); }; } }catch(e){}
-    try{ var AC=window.AudioContext||window.webkitAudioContext; if(AC){ var c=new AC(); var o=c.createOscillator(); var g=c.createGain(); o.connect(g); g.connect(c.destination); o.frequency.value=880; g.gain.value=0.07; o.start(); setTimeout(function(){ try{o.stop();c.close();}catch(_){}} ,500); } }catch(e){}
+    var lead=Number(t.lead)||0;
+    var body=(lead>0?('בעוד '+tdLeadTxt(lead)+': '):'')+(t.text||'תזכורת');
+    try{ if('Notification' in window && Notification.permission==='granted'){ var n=new Notification('⏰ תזכורת', { body:body, tag:'afcon-todo-'+t.id }); n.onclick=function(){ try{ window.focus(); }catch(e){} n.close(); }; } }catch(e){}
+    todoPlaySound(t.sound||'bell');
   }
   function todoTick(){
     var now=Date.now(), changed=false;
     for(var i=0;i<TODOS.length;i++){ var t=TODOS[i];
       if(t.done||t.fired||!t.when) continue;
       var w=new Date(t.when).getTime();
-      if(!isNaN(w) && w<=now){ t.fired=true; changed=true; todoNotify(t); }
+      var lead=(Number(t.lead)||0)*60000;
+      if(!isNaN(w) && (w-lead)<=now){ t.fired=true; changed=true; todoNotify(t); }
     }
     if(changed){ todoSave(); todoRender(); }
   }
@@ -512,11 +529,14 @@
     function todoAdd(){
       var txt=($('tkTodoText').value||'').trim(); if(!txt) return;
       var when=($('tkTodoWhen')?($('tkTodoWhen').value||''):'');
+      var sound=($('tkTodoSound')?($('tkTodoSound').value||'bell'):'bell');
+      var lead=($('tkTodoLead')?(parseInt($('tkTodoLead').value,10)||0):0);
       if(when){ try{ if('Notification' in window && Notification.permission==='default') Notification.requestPermission(); }catch(e){} }
-      TODOS.push({id:uid(), text:txt, when:when, done:false, fired:false});
+      TODOS.push({id:uid(), text:txt, when:when, lead:lead, sound:sound, done:false, fired:false});
       todoSave(); $('tkTodoText').value=''; if($('tkTodoWhen')) $('tkTodoWhen').value=''; todoRender();
     }
     var tAdd=$('tkTodoAdd'); if(tAdd) tAdd.addEventListener('click', todoAdd);
+    var tPlay=$('tkTodoPlay'); if(tPlay) tPlay.addEventListener('click', function(){ todoPlaySound($('tkTodoSound')?$('tkTodoSound').value:'bell'); });
     var tTxt=$('tkTodoText'); if(tTxt) tTxt.addEventListener('keydown', function(e){ if(e.key==='Enter') todoAdd(); });
     todoPane.addEventListener('click', function(e){
       var q=e.target&&e.target.dataset&&e.target.dataset.tdquick; if(!q) return;

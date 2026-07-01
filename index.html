@@ -2027,6 +2027,27 @@
             <button type="button" data-tdquick="eve" style="background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px 6px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;flex:1;min-width:64px">היום 18:00</button>
             <button type="button" data-tdquick="tom9" style="background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px 6px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;flex:1;min-width:64px">מחר 09:00</button>
           </div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <span style="color:#9aa2ad;font-size:13px;flex:0 0 auto;width:58px">🔔 צלצול</span>
+            <select id="tkTodoSound" style="flex:1;min-width:0;background:#15171c;border:1px solid #343a45;border-radius:9px;padding:10px;color:#f2f4f8;font-size:14px;font-family:'Heebo',sans-serif">
+              <option value="bell">פעמון</option>
+              <option value="chime">צלצול עולה</option>
+              <option value="chirp">ציוץ</option>
+              <option value="siren">סירנה</option>
+              <option value="none">שקט (רק רטט)</option>
+            </select>
+            <button type="button" id="tkTodoPlay" style="flex:0 0 auto;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:10px 13px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif">🔊 נגן</button>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <span style="color:#9aa2ad;font-size:13px;flex:0 0 auto;width:58px">⏱️ הזכר</span>
+            <select id="tkTodoLead" style="flex:1;min-width:0;background:#15171c;border:1px solid #343a45;border-radius:9px;padding:10px;color:#f2f4f8;font-size:14px;font-family:'Heebo',sans-serif">
+              <option value="0">בזמן</option>
+              <option value="10">10 דקות לפני</option>
+              <option value="15">רבע שעה לפני</option>
+              <option value="30">חצי שעה לפני</option>
+              <option value="60">שעה לפני</option>
+            </select>
+          </div>
           <button id="tkTodoAdd" type="button" style="background:#22c55e;color:#052e16;border:none;border-radius:11px;padding:13px;font-weight:800;cursor:pointer;font-family:'Rubik','Heebo',sans-serif;font-size:15px">➕ הוסף תזכורת</button>
           <div id="tkTodoList" style="display:flex;flex-direction:column;gap:7px"></div>
           <button id="tkTodoClear" type="button" style="background:none;border:1px solid #7f1d1d;color:#f87171;border-radius:11px;padding:11px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif">🗑️ מחק הכל</button>
