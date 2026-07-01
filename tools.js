@@ -611,9 +611,12 @@
           var added=0; j.serials.forEach(function(n){ n=String(n).toUpperCase(); if(n && dcChosen.indexOf(n)<0){ dcChosen.push(n); added++; } });
           dcRenderChosen();
           if(prog){ prog.style.color='#34d399'; prog.textContent='✓ AI זיהה '+j.serials.length+' מספרים ('+added+' נוספו) — בדוק ותקן אם צריך'; }
-        } else if(j && j.error==='no_key'){ if(prog){ prog.style.color='#f87171'; prog.textContent='⚠️ המפתח לא הוגדר בשרת (Apps Script).'; } }
-        else if(j && j.error && String(j.error).indexOf('api_')===0){ if(prog){ prog.style.color='#f87171'; prog.textContent='⚠️ שגיאת שרת AI ('+j.error+'). בדוק מפתח/קרדיט.'; } }
-        else { if(prog){ prog.style.color='#fbbf24'; prog.textContent='⚠️ ה-AI לא זיהה מספרים — נסה צילום ברור יותר.'; } }
+        } else if(j && j.error==='no_key'){ if(prog){ prog.style.color='#f87171'; prog.textContent='⚠️ המפתח לא הוגדר בשרת — ודא שהדבקת מפתח ופרסת גרסה חדשה.'; } }
+        else if(j && j.error && String(j.error).indexOf('api_')===0){ if(prog){ prog.style.color='#f87171'; prog.textContent='⚠️ שגיאת שרת AI ('+j.error+'): '+String(j.detail||'').slice(0,120); } }
+        else if(j && j.error==='unknown action'){ if(prog){ prog.style.color='#f87171'; prog.textContent='⚠️ השרת לא מכיר את הפעולה — צריך לפרוס מחדש גרסה חדשה ב-Apps Script.'; } }
+        else if(j && j.error){ if(prog){ prog.style.color='#f87171'; prog.textContent='⚠️ '+String(j.error)+': '+String(j.detail||'').slice(0,120); } }
+        else if(j && j.ok){ if(prog){ prog.style.color='#fbbf24'; prog.textContent='⚠️ ה-AI לא החזיר מספרים'+(j.raw?(' (קיבלנו: "'+String(j.raw).slice(0,60)+'")'):'')+' — נסה צילום ברור יותר.'; } }
+        else { if(prog){ prog.style.color='#fbbf24'; prog.textContent='⚠️ תשובה לא מזוהה מהשרת — נסה שוב.'; } }
       }).catch(function(){ dcAiBtn.disabled=false; if(prog){ prog.style.color='#f87171'; prog.textContent='⚠️ שגיאת חיבור לשרת — נסה שוב.'; } });
   });
 
