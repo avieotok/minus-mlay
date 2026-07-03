@@ -837,10 +837,13 @@
         : '<div style="font-weight:800;color:#f2f4f8">👷 '+esc((L.firstName||'')+' '+(L.lastName||''))+(L.empNum?(' · עובד '+esc(L.empNum)):'')+'</div>';
       var due=L.dueDate?('<div style="font-size:12.5px;font-weight:700;color:'+(overdue?'#f87171':'#fbbf24')+'">'+(overdue?'⚠️ באיחור · ':'')+'להחזרה עד '+lnFmtDate(L.dueDate)+'</div>'):'';
       var ret=hist?('<div style="font-size:12.5px;color:#34d399">✓ הוחזר '+lnFmtDate(L.returnedAt)+(L.returnedBy?(' · '+esc(L.returnedBy)):'')+'</div>'):'';
+      var sigH=(L.signature&&L.signature.indexOf('data:image')===0)
+        ? '<div style="margin-top:6px;display:flex;align-items:center;gap:7px"><span style="font-size:11.5px;color:#697079;flex:0 0 auto">✍️ חתימה:</span><img src="'+esc(L.signature)+'" alt="חתימה" data-lnsig="1" style="height:42px;max-width:70%;background:#fff;border-radius:6px;border:1px solid #343a45;cursor:pointer"></div>'
+        : '';
       var btns=hist?'' : '<div style="display:flex;gap:6px;margin-top:8px">'
         +'<button type="button" data-lnret="'+L.id+'" style="flex:1;background:#22c55e;color:#052e16;border:none;border-radius:9px;padding:9px;font-weight:800;cursor:pointer;font-size:13px;font-family:\'Heebo\',sans-serif">✓ הוחזר</button>'
         +'<button type="button" data-lnwa="'+L.id+'" style="flex:1;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px;font-weight:700;cursor:pointer;font-size:13px;font-family:\'Heebo\',sans-serif">📲 תזכורת</button></div>';
-      return '<div style="background:#15171c;border:1px solid '+(overdue?'#7f1d1d':'#343a45')+';border-radius:11px;padding:11px;margin-bottom:8px">'+head+itHtml+due+ret+'<div style="font-size:11.5px;color:#697079;margin-top:4px">נרשם '+lnFmtDate(L.created)+(L.lender?(' ע״י '+esc(L.lender)):'')+'</div>'+btns+'</div>';
+      return '<div style="background:#15171c;border:1px solid '+(overdue?'#7f1d1d':'#343a45')+';border-radius:11px;padding:11px;margin-bottom:8px">'+head+itHtml+due+ret+sigH+'<div style="font-size:11.5px;color:#697079;margin-top:4px">נרשם '+lnFmtDate(L.created)+(L.lender?(' ע״י '+esc(L.lender)):'')+'</div>'+btns+'</div>';
     }
     function lnRender(){
       var open=lnLoans.filter(function(L){ return !L.returned; });
@@ -849,6 +852,7 @@
       $('tkLnHist').innerHTML=hist.length?hist.map(function(L){ return lnCard(L,true); }).join(''):'<div class="tk-note">אין היסטוריה עדיין.</div>';
     }
     lnPane.addEventListener('click', function(e){
+      if(e.target.dataset&&e.target.dataset.lnsig){ var im=e.target; im.style.height=(im.style.height==='42px'||!im.style.height)?'150px':'42px'; im.style.maxWidth=(im.style.height==='150px')?'100%':'70%'; return; }
       var rid=e.target.dataset&&e.target.dataset.lnret;
       var wid=e.target.dataset&&e.target.dataset.lnwa;
       if(rid){ if(!confirm('לסמן שהציוד הוחזר?')) return; var by=''; try{ by=(localStorage.getItem('afcon_me')||localStorage.getItem('afcon_reporter')||'').trim(); }catch(_){ }
