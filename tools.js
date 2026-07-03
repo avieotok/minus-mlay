@@ -37,7 +37,7 @@
     tabs.forEach(function(x){ x.classList.toggle('on', x===t); });
     var v=t.getAttribute('data-tk');
     $('tkLists').hidden=(v!=='lists'); $('tkPhone').hidden=(v!=='phone'); $('tkCur').hidden=(v!=='cur'); $('tkArea').hidden=(v!=='area'); $('tkRec').hidden=(v!=='rec');
-    var _np={todo:'tkTodo',decode:'tkDecode'};
+    var _np={todo:'tkTodo',decode:'tkDecode',loan:'tkLoan'};
     for(var _k in _np){ var _el=$(_np[_k]); if(_el) _el.hidden=(v!==_k); }
     if(v!=='rec'){ try{ recStop(); }catch(e){} }
     if(v==='phone'){ renderPhones(); loadShared(); } if(v==='cur') openCur(); if(v==='area') openArea(); if(v==='rec') initRec();
