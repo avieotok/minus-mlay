@@ -785,10 +785,14 @@
   const APP_NAME='dashboard';
   const PRES_OWNER='אבידן קוטאי', PRES_PIN='30172'; let presUnlocked=false;
   function presCanView(){ return isBoss()||me()===MGR||me()===PRES_OWNER; }
-  function presencePing(){ try{ if(!apiOn()) return; var nm=me(); if(!nm) return; apiGet('presence',{me:nm, app:APP_NAME}); }catch(e){} }
+  var PVIEW='לוח בקרה', _prevPView='לוח בקרה';
+  function pvSet(v){ PVIEW=v||PVIEW; try{ presencePing(); }catch(e){} }
+  window.__AFCON_PRESENCE=function(v){ if(v){ _prevPView=PVIEW; pvSet(v); } else { pvSet(_prevPView||'לוח בקרה'); } };
+  function presencePing(){ try{ if(!apiOn()) return; var nm=me(); if(!nm) return; apiGet('presence',{me:nm, app:APP_NAME, view:PVIEW}); }catch(e){} }
   function updatePresBtn(){ var b=$('presBtn'); if(b) b.style.display=presCanView()?'':'none'; var f=$('fullReportBtn'); if(f) f.style.display=presCanView()?'':'none'; }
   function presAgo(iso, now){ var t=Date.parse(iso); if(!t) return ''; var m=Math.round((now-t)/60000); if(m<1) return 'עכשׁיו'; if(m<60) return 'לפני '+m+' דק׳'; var hh=Math.round(m/60); if(hh<24) return 'לפני '+hh+' ש׳'; return 'לפני '+Math.round(hh/24)+' ימים'; }
   function presHHMM(iso){ var d=new Date(iso); if(isNaN(d.getTime())) return ''; return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }
+  function presWhen(iso){ var d=new Date(iso); if(isNaN(d.getTime())) return ''; return d.getDate()+'.'+(d.getMonth()+1)+' · '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }
   function presApp(a){ return a==='warehouse'?'🏭 מחסן':(a==='dashboard'?'🛒 לוח':a); }
   async function openPresence(){
     var mgr=(isBoss()||me()===MGR);
@@ -800,16 +804,17 @@
     try{
       if(!BUYERS.length && !REPORTERS.length){ try{ await loadRoster(); }catch(e){} }
       const r=await apiGet('presenceList'); const rows=(r&&r.presence)||[]; const now=Date.now();
-      const latest={}; rows.forEach(x=>{ const t=Date.parse(x.lastSeen)||0; const cur=latest[x.name]; if(!cur||t>cur.t) latest[x.name]={t:t, iso:x.lastSeen, app:x.app}; });
+      const latest={}; rows.forEach(x=>{ const t=Date.parse(x.lastSeen)||0; const cur=latest[x.name]; if(!cur||t>cur.t) latest[x.name]={t:t, iso:x.lastSeen, app:x.app, view:x.view||''}; });
       const isOnline=n=>{ const L=latest[n]; return !!(L && (now-L.t)<=180000); };
       function userRow(name){
         const L=latest[name], onl=isOnline(name);
+        const where = L ? (presApp(L.app)+(L.view?(' · '+esc(L.view)):'')) : '';
         const right = onl
-          ? '<span style="color:#34d399;font-weight:800;font-size:13.5px">🟢 מחובר עכשׁיו · '+presApp(L.app)+'</span>'
-          : (L ? '<span style="color:var(--muted);font-size:13px">נראה '+presAgo(L.iso,now)+' · '+presApp(L.app)+'</span>'
+          ? '<span style="color:#34d399;font-weight:800;font-size:13px">🟢 מחובר עכשׁיו · '+where+'</span>'
+          : (L ? '<span style="color:var(--muted);font-size:12.5px">נראה '+presAgo(L.iso,now)+' · '+where+'<br><span style="color:var(--faint)">'+presWhen(L.iso)+'</span></span>'
                : '<span style="color:var(--faint);font-size:13px">לא נכנס עדיין</span>');
         const box = onl ? 'background:#06281b;border:1px solid #166534' : 'background:var(--ink);border:1px solid var(--line)';
-        return '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;'+box+';border-radius:10px;padding:10px 12px;margin-bottom:6px"><span style="font-weight:700">'+(onl?'🟢 ':'⚪ ')+esc(name)+'</span>'+right+'</div>';
+        return '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;'+box+';border-radius:10px;padding:10px 12px;margin-bottom:6px"><span style="font-weight:700;flex:0 0 auto">'+(onl?'🟢 ':'⚪ ')+esc(name)+'</span><span style="text-align:end">'+right+'</span></div>';
       }
       function section(title, arr){
         const list=(arr||[]).slice().sort((a,b)=>{ const oa=isOnline(a)?1:0, ob=isOnline(b)?1:0; if(oa!==ob) return ob-oa; return ((latest[b]?latest[b].t:0)-(latest[a]?latest[a].t:0)); });
@@ -1320,6 +1325,7 @@
     if(v==='news'){ markNewsSeen(); loadNews(); renderNews(); }
     if(v==='kpi'){ renderKpiDash(); }
     updateNewsBadge();
+    pvSet(v==='news'?'ידיעון':(v==='kpi'?'מדדים':'לוח בקרה'));
   }
   function showNews(on){ setView(on?'news':'board'); }
 

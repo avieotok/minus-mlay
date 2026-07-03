@@ -29,9 +29,9 @@
     return fetch(c.url,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({token:c.token},payload))}).catch(function(){});
   }
 
-  var opener=$('tkOpen'); if(opener) opener.addEventListener('click', function(){ modal.classList.add('open'); renderLists(); });
-  $('tkClose').addEventListener('click', function(){ modal.classList.remove('open'); try{ recStop(); }catch(e){} });
-  modal.addEventListener('click', function(e){ if(e.target===modal){ modal.classList.remove('open'); try{ recStop(); }catch(e){} } });
+  var opener=$('tkOpen'); if(opener) opener.addEventListener('click', function(){ modal.classList.add('open'); renderLists(); try{ if(window.__AFCON_PRESENCE) window.__AFCON_PRESENCE('כלי עזר'); }catch(e){} });
+  $('tkClose').addEventListener('click', function(){ modal.classList.remove('open'); try{ recStop(); }catch(e){} try{ if(window.__AFCON_PRESENCE) window.__AFCON_PRESENCE(''); }catch(e){} });
+  modal.addEventListener('click', function(e){ if(e.target===modal){ modal.classList.remove('open'); try{ recStop(); }catch(e){} try{ if(window.__AFCON_PRESENCE) window.__AFCON_PRESENCE(''); }catch(e){} } });
   var tabs=modal.querySelectorAll('.tk-tab');
   tabs.forEach(function(t){ t.addEventListener('click', function(){
     tabs.forEach(function(x){ x.classList.toggle('on', x===t); });

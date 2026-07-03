@@ -1374,7 +1374,10 @@
   function paintApiState(){ $('apiState').textContent = apiOn()?'מחובר ✓':'לא מחובר'; }
   $('apiUrlInp').value=apiUrl(); $('apiTokenInp').value=apiToken(); paintApiState();
   // ===== נוכחות: פעימת לב מהמחסנאי =====
-  function presencePingWH(){ try{ if(!apiOn()) return; var nm=myName(); if(!nm) return; apiGet('presence',{me:nm, app:'warehouse'}); }catch(e){} }
+  var PVIEW='דיווח חוסר', _prevPView='דיווח חוסר';
+  function pvSet(v){ PVIEW=v||PVIEW; try{ presencePingWH(); }catch(e){} }
+  window.__AFCON_PRESENCE=function(v){ if(v){ _prevPView=PVIEW; pvSet(v); } else { pvSet(_prevPView||'דיווח חוסר'); } };
+  function presencePingWH(){ try{ if(!apiOn()) return; var nm=myName(); if(!nm) return; apiGet('presence',{me:nm, app:'warehouse', view:PVIEW}); }catch(e){} }
   presencePingWH(); setInterval(presencePingWH, 60000);
   document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible') presencePingWH(); });
   // ===== קיבוע אזור הבקרה (כותרת + טאבים) =====
