@@ -416,6 +416,33 @@
     $('tkRecUpload').addEventListener('change', function(e){ var f=e.target.files&&e.target.files[0]; if(!f) return; recBlob=f; var au=$('tkRecAudio'); au.src=URL.createObjectURL(f); au.hidden=false; $('tkRecDlAudio').hidden=false; $('tkRecShareAudio').hidden=false; recNote('קובץ נטען — אפשר להאזין ולשתף. (תמלול אוטומטי לקובץ מוקלט אינו זמין — רק להקלטה חיה)'); });
     if(!SR) recNote('💡 תמלול חי נתמך ב‑Chrome/אנדרואיד. באייפון לרוב אפשר להקליט ולשתף אודיו, אך לא לתמלל חי.');
   }
+  var recStream=null, recAudioCtx=null, recAnalyser=null, recSource=null, recRaf=null;
+  function recSizeWave(){ var cv=$('tkRecWave'); if(!cv) return; var dpr=window.devicePixelRatio||1; cv.width=(cv.clientWidth||300)*dpr; cv.height=56*dpr; }
+  function recDrawWave(){
+    var cv=$('tkRecWave'); if(!cv||!recAnalyser){ return; }
+    var cx=cv.getContext('2d'); var buf=new Uint8Array(recAnalyser.frequencyBinCount);
+    recAnalyser.getByteTimeDomainData(buf);
+    var w=cv.width, h=cv.height; cx.clearRect(0,0,w,h);
+    cx.lineWidth=2.5*(window.devicePixelRatio||1); cx.strokeStyle=recOn?'#ff6b5b':'#3a4554';
+    cx.beginPath(); var slice=w/buf.length, x=0;
+    for(var i=0;i<buf.length;i++){ var v=buf[i]/128.0, y=(v*h)/2; if(i===0) cx.moveTo(x,y); else cx.lineTo(x,y); x+=slice; }
+    cx.stroke(); recRaf=requestAnimationFrame(recDrawWave);
+  }
+  function recStartWave(stream){
+    try{
+      var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
+      recAudioCtx=new AC(); recSource=recAudioCtx.createMediaStreamSource(stream);
+      recAnalyser=recAudioCtx.createAnalyser(); recAnalyser.fftSize=1024; recSource.connect(recAnalyser);
+      var cv=$('tkRecWave'); if(cv){ cv.style.display='block'; recSizeWave(); }
+      recDrawWave();
+    }catch(e){}
+  }
+  function recStopWave(){
+    if(recRaf){ cancelAnimationFrame(recRaf); recRaf=null; }
+    if(recAudioCtx){ try{ recAudioCtx.close(); }catch(e){} recAudioCtx=null; }
+    recAnalyser=null; recSource=null;
+    var cv=$('tkRecWave'); if(cv){ try{ cv.getContext('2d').clearRect(0,0,cv.width,cv.height); }catch(e){} cv.style.display='none'; }
+  }
   function recStart(){
     recBase=$('tkRecText').value ? ($('tkRecText').value.replace(/\s+$/,'')+' ') : '';
     recChunks=[]; recBlob=null; recOn=true;
@@ -424,6 +451,7 @@
     if(navigator.mediaDevices && window.MediaRecorder){
       navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
         recStream=stream;
+        recStartWave(stream);
         try{ mrec=new MediaRecorder(stream); }catch(e){ mrec=null; }
         if(mrec){ mrec.ondataavailable=function(ev){ if(ev.data&&ev.data.size) recChunks.push(ev.data); };
           mrec.onstop=function(){ if(recChunks.length){ recBlob=new Blob(recChunks,{type:(mrec.mimeType||'audio/webm')}); var au=$('tkRecAudio'); au.src=URL.createObjectURL(recBlob); au.hidden=false; $('tkRecDlAudio').hidden=false; $('tkRecShareAudio').hidden=false; } };
@@ -434,7 +462,6 @@
     // תמלול חי
     if(SR){ startRecog(); }
   }
-  var recStream=null;
   function startRecog(){
     try{ srecog=new SR(); }catch(e){ srecog=null; return; }
     srecog.lang=recLang; srecog.continuous=true; srecog.interimResults=true;
@@ -446,6 +473,7 @@
   function recStop(){
     if(!recOn && !srecog && !mrec) return;
     recOn=false;
+    recStopWave();
     if(srecog){ try{ srecog.onend=null; srecog.stop(); }catch(e){} srecog=null; }
     if(mrec && mrec.state!=='inactive'){ try{ mrec.stop(); }catch(e){} }
     if(recStream){ try{ recStream.getTracks().forEach(function(t){ t.stop(); }); }catch(e){} recStream=null; }
