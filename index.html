@@ -1378,7 +1378,7 @@
   function pvSet(v){ PVIEW=v||PVIEW; try{ presencePingWH(); }catch(e){} }
   window.__AFCON_PRESENCE=function(v){ if(v){ _prevPView=PVIEW; pvSet(v); } else { pvSet(_prevPView||'דיווח חוסר'); } };
   function presencePingWH(){ try{ if(!apiOn()) return; var nm=myName(); if(!nm) return; apiGet('presence',{me:nm, app:'warehouse', view:PVIEW}); }catch(e){} }
-  presencePingWH(); setInterval(presencePingWH, 60000);
+  presencePingWH(); setInterval(function(){ if(document.visibilityState==='visible') presencePingWH(); }, 60000);
   document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible') presencePingWH(); });
   // ===== קיבוע אזור הבקרה (כותרת + טאבים) =====
   function syncSticky(){ var t=document.querySelector('.header'); if(t) document.documentElement.style.setProperty('--hH', t.offsetHeight+'px'); }
@@ -2017,7 +2017,7 @@
           <button id="tkRecDlAudio" hidden>⬇️ הורד הקלטה</button>
           <button id="tkRecShareAudio" hidden>📲 שתף הקלטה</button>
         </div>
-        <label class="tk-rec-upload">📎 העלה קובץ אודיו להאזנה/שיתוף<input type="file" id="tkRecUpload" accept="audio/*" hidden></label>
+        <label class="tk-rec-upload">📎 העלה קובץ אודיו להאזנה/שיתוף<input type="file" id="tkRecUpload" accept=".m4a,.mp3,.wav,.aac,.aiff,.caf,.ogg,.opus,.flac,.amr,.webm,.mp4" hidden></label>
         <div class="tk-rec-note" id="tkRecNote"></div>
       </div>
       <div class="tk-pane" id="tkTodo" hidden>

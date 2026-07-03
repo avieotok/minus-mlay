@@ -1800,7 +1800,7 @@
   showSoundBar();
   registerSW();
   TPLS=tplCacheGet(); if(apiOn()) tplLoad();
-  updatePresBtn(); presencePing(); setInterval(presencePing, 60000);
+  updatePresBtn(); presencePing(); setInterval(function(){ if(document.visibilityState==='visible') presencePing(); }, 60000);
   document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible') presencePing(); });
   if(apiOn()){ load(); loadRoster(); loadNews(); } else renderEmptyConfig();
   document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&apiOn()) load(); });
@@ -1995,7 +1995,7 @@
           <button id="tkRecDlAudio" hidden>⬇️ הורד הקלטה</button>
           <button id="tkRecShareAudio" hidden>📲 שתף הקלטה</button>
         </div>
-        <label class="tk-rec-upload">📎 העלה קובץ אודיו להאזנה/שיתוף<input type="file" id="tkRecUpload" accept="audio/*" hidden></label>
+        <label class="tk-rec-upload">📎 העלה קובץ אודיו להאזנה/שיתוף<input type="file" id="tkRecUpload" accept=".m4a,.mp3,.wav,.aac,.aiff,.caf,.ogg,.opus,.flac,.amr,.webm,.mp4" hidden></label>
         <div class="tk-rec-note" id="tkRecNote"></div>
       </div>
       <div class="tk-pane" id="tkTodo" hidden>
