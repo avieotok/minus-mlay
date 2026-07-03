@@ -41,7 +41,7 @@
     for(var _k in _np){ var _el=$(_np[_k]); if(_el) _el.hidden=(v!==_k); }
     if(v!=='rec'){ try{ recStop(); }catch(e){} }
     if(v==='phone'){ renderPhones(); loadShared(); } if(v==='cur') openCur(); if(v==='area') openArea(); if(v==='rec') initRec();
-    if(v==='todo') openTodo(); if(v==='decode') openDecode();
+    if(v==='todo') openTodo(); if(v==='decode') openDecode(); if(v==='loan') openLoan();
   }); });
 
   /* ---------- רשימות ---------- */
@@ -764,5 +764,164 @@
   }
   var dcResetBtn=$('tkDcReset');
   if(dcResetBtn) dcResetBtn.addEventListener('click', function(){ if((dcImgURL||dcChosen.length) && !confirm('לאפס ולהתחיל מסמך חדש? כל מה שלא יוצא לאקסל יימחק.')) return; dcReset(); });
+
+  /* ---------- 🔁 השאלת ציוד ---------- */
+  var lnPane=$('tkLoan');
+  if(lnPane){
+    var LN_MAX=5, lnLoans=[], lnLoaded=false, lnSigDirty=false, lnKind='emp';
+    function lnSetKind(k){ lnKind=k;
+      $('tkLnEmpFields').style.display=(k==='emp')?'block':'none';
+      $('tkLnSupFields').style.display=(k==='supplier')?'block':'none';
+      var e=$('tkLnKindEmp'), s=$('tkLnKindSup');
+      if(e){ e.style.background=(k==='emp')?'#3b82f6':'#1f2430'; e.style.borderColor=(k==='emp')?'#3b82f6':'#343a45'; e.style.color=(k==='emp')?'#fff':'#cbd5e1'; }
+      if(s){ s.style.background=(k==='supplier')?'#3b82f6':'#1f2430'; s.style.borderColor=(k==='supplier')?'#3b82f6':'#343a45'; s.style.color=(k==='supplier')?'#fff':'#cbd5e1'; }
+    }
+    var kE=$('tkLnKindEmp'), kS=$('tkLnKindSup');
+    if(kE) kE.addEventListener('click', function(){ lnSetKind('emp'); });
+    if(kS) kS.addEventListener('click', function(){ lnSetKind('supplier'); });
+    function lnCatalog(){ try{ return window.DEFAULT_CATALOG||{}; }catch(e){ return {}; } }
+    function lnLookup(sku){ var c=lnCatalog(); sku=String(sku||'').trim(); if(!sku) return ''; if(c[sku]) return c[sku]; var p=('000000000'+sku).slice(-9); if(c[p]) return c[p]; var s=sku.replace(/^0+/,''); for(var k in c){ if(k.replace(/^0+/,'')===s) return c[k]; } return ''; }
+    function lnItemRow(i){
+      return '<div class="ln-item" style="background:#15171c;border:1px solid #343a45;border-radius:10px;padding:9px;margin-bottom:6px">'
+        +'<div style="display:flex;gap:6px"><input class="ln-sku" placeholder="מק״ט" inputmode="numeric" style="flex:1;min-width:0;background:#0f1115;border:1px solid #343a45;border-radius:8px;padding:9px;color:#f2f4f8;font-size:14px;font-family:\'Heebo\',sans-serif">'
+        +'<button type="button" class="ln-del" style="flex:0 0 auto;background:none;border:none;color:#f87171;font-size:16px;cursor:pointer">🗑️</button></div>'
+        +'<input class="ln-desc" placeholder="תיאור (נשלף אוטומטית)" style="width:100%;box-sizing:border-box;background:#0f1115;border:1px solid #343a45;border-radius:8px;padding:9px;color:#f2f4f8;font-size:14px;font-family:\'Heebo\',sans-serif;margin-top:6px">'
+        +'<input class="ln-serial" placeholder="מספר סידורי (אם יש)" style="width:100%;box-sizing:border-box;background:#0f1115;border:1px solid #343a45;border-radius:8px;padding:9px;color:#f2f4f8;font-size:14px;font-family:\'Heebo\',sans-serif;margin-top:6px">'
+        +'</div>';
+    }
+    function lnAddItem(){ var box=$('tkLnItems'); if(!box) return; if(box.querySelectorAll('.ln-item').length>=LN_MAX){ alert('עד '+LN_MAX+' פריטים להשאלה.'); return; } var d=document.createElement('div'); d.innerHTML=lnItemRow(); box.appendChild(d.firstChild); }
+    $('tkLnAddItem').addEventListener('click', lnAddItem);
+    $('tkLnItems').addEventListener('click', function(e){ if(e.target.classList.contains('ln-del')){ var it=e.target.closest('.ln-item'); if(it) it.remove(); } });
+    $('tkLnItems').addEventListener('input', function(e){ if(e.target.classList.contains('ln-sku')){ var it=e.target.closest('.ln-item'); var d=lnLookup(e.target.value); if(d && it){ it.querySelector('.ln-desc').value=d; } } });
+    /* חתימה */
+    var sg=$('tkLnSig'), sgx=sg.getContext('2d'), sgOn=false;
+    function sgFit(){ var dpr=window.devicePixelRatio||1; var w=sg.clientWidth||300; sg.width=w*dpr; sg.height=110*dpr; sgx.scale(dpr,dpr); sgx.fillStyle='#fff'; sgx.fillRect(0,0,w,110); sgx.strokeStyle='#111'; sgx.lineWidth=2.2; sgx.lineCap='round'; lnSigDirty=false; }
+    function sgPos(e){ var r=sg.getBoundingClientRect(); var t=(e.touches&&e.touches[0])||e; return {x:t.clientX-r.left, y:t.clientY-r.top}; }
+    function sgDown(e){ e.preventDefault(); sgOn=true; var p=sgPos(e); sgx.beginPath(); sgx.moveTo(p.x,p.y); }
+    function sgMove(e){ if(!sgOn) return; e.preventDefault(); var p=sgPos(e); sgx.lineTo(p.x,p.y); sgx.stroke(); lnSigDirty=true; }
+    function sgUp(){ sgOn=false; }
+    sg.addEventListener('mousedown',sgDown); sg.addEventListener('mousemove',sgMove); window.addEventListener('mouseup',sgUp);
+    sg.addEventListener('touchstart',sgDown,{passive:false}); sg.addEventListener('touchmove',sgMove,{passive:false}); sg.addEventListener('touchend',sgUp);
+    $('tkLnSigClear').addEventListener('click', sgFit);
+    /* טאבים פנימיים */
+    function lnShow(which){
+      $('tkLnNew').style.display=(which==='new')?'block':'none';
+      $('tkLnOpen').style.display=(which==='open')?'block':'none';
+      $('tkLnHist').style.display=(which==='hist')?'block':'none';
+      ['tkLnTabNew','tkLnTabOpen','tkLnTabHist'].forEach(function(id){ var b=$(id); if(!b) return; var on=(id==='tkLnTab'+(which==='new'?'New':which==='open'?'Open':'Hist')); b.style.background=on?'#e2231a':'#1f2430'; b.style.borderColor=on?'#e2231a':'#343a45'; b.style.color=on?'#fff':'#cbd5e1'; });
+      if(which==='new'){ setTimeout(sgFit,50); }
+      if(which==='open'||which==='hist'){ lnLoad(); }
+    }
+    $('tkLnTabNew').addEventListener('click', function(){ lnShow('new'); });
+    $('tkLnTabOpen').addEventListener('click', function(){ lnShow('open'); });
+    $('tkLnTabHist').addEventListener('click', function(){ lnShow('hist'); });
+    function openLoanInit(){ if(!$('tkLnItems').querySelector('.ln-item')) lnAddItem(); lnShow('new'); }
+    window.__tkOpenLoan=openLoanInit;
+    /* שרת */
+    function lnApi(params){ var cfg=apiCfg(); if(!cfg.url) return Promise.reject('no api');
+      var qs=Object.keys(params).map(function(k){ return k+'='+encodeURIComponent(params[k]); }).join('&');
+      return new Promise(function(res,rej){ var cb='__lnCb'+(Math.random()*1e9|0); window[cb]=function(j){ delete window[cb]; res(j); };
+        var s=document.createElement('script'); s.src=cfg.url+'?token='+encodeURIComponent(cfg.token)+'&'+qs+'&callback='+cb;
+        s.onerror=function(){ delete window[cb]; rej('net'); }; document.body.appendChild(s); setTimeout(function(){ s.remove(); },15000); }); }
+    function lnPost(body){ var cfg=apiCfg(); if(!cfg.url) return Promise.reject('no api'); body.token=cfg.token;
+      return fetch(cfg.url,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)}).then(function(r){ return r.json(); }); }
+    function lnLoad(){ lnApi({action:'loans'}).then(function(j){ if(j&&j.ok){ lnLoans=j.loans||[]; lnLoaded=true; lnRender(); lnCheckOverdue(); } }).catch(function(){ $('tkLnOpen').innerHTML=$('tkLnHist').innerHTML='<div class="tk-note">שגיאת חיבור לשרת.</div>'; }); }
+    function lnFmtDate(s){ if(!s) return ''; var d=new Date(s); if(isNaN(d.getTime())) return esc(String(s)); return d.getDate()+'.'+(d.getMonth()+1)+'.'+d.getFullYear(); }
+    function lnItemsOf(L){ try{ return JSON.parse(L.items||'[]')||[]; }catch(e){ return []; } }
+    function lnCard(L, hist){
+      var items=lnItemsOf(L);
+      var overdue=!hist && L.dueDate && (new Date(L.dueDate+'T23:59:59').getTime()<Date.now());
+      var itHtml=items.map(function(it){ return '<div style="font-size:13px;color:#cbd5e1">• '+(it.sku?('<b>'+esc(it.sku)+'</b> · '):'')+esc(it.desc||'')+(it.serial?(' · מס״ד '+esc(it.serial)):'')+'</div>'; }).join('');
+      var head=(L.kind==='supplier')
+        ? '<div style="font-weight:800;color:#f2f4f8">🚚 '+esc(L.supplier||'')+(L.contact?(' · '+esc(L.contact)):'')+(L.phone?(' · '+esc(L.phone)):'')+'</div>'
+        : '<div style="font-weight:800;color:#f2f4f8">👷 '+esc((L.firstName||'')+' '+(L.lastName||''))+(L.empNum?(' · עובד '+esc(L.empNum)):'')+'</div>';
+      var due=L.dueDate?('<div style="font-size:12.5px;font-weight:700;color:'+(overdue?'#f87171':'#fbbf24')+'">'+(overdue?'⚠️ באיחור · ':'')+'להחזרה עד '+lnFmtDate(L.dueDate)+'</div>'):'';
+      var ret=hist?('<div style="font-size:12.5px;color:#34d399">✓ הוחזר '+lnFmtDate(L.returnedAt)+(L.returnedBy?(' · '+esc(L.returnedBy)):'')+'</div>'):'';
+      var btns=hist?'' : '<div style="display:flex;gap:6px;margin-top:8px">'
+        +'<button type="button" data-lnret="'+L.id+'" style="flex:1;background:#22c55e;color:#052e16;border:none;border-radius:9px;padding:9px;font-weight:800;cursor:pointer;font-size:13px;font-family:\'Heebo\',sans-serif">✓ הוחזר</button>'
+        +'<button type="button" data-lnwa="'+L.id+'" style="flex:1;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px;font-weight:700;cursor:pointer;font-size:13px;font-family:\'Heebo\',sans-serif">📲 תזכורת</button></div>';
+      return '<div style="background:#15171c;border:1px solid '+(overdue?'#7f1d1d':'#343a45')+';border-radius:11px;padding:11px;margin-bottom:8px">'+head+itHtml+due+ret+'<div style="font-size:11.5px;color:#697079;margin-top:4px">נרשם '+lnFmtDate(L.created)+(L.lender?(' ע״י '+esc(L.lender)):'')+'</div>'+btns+'</div>';
+    }
+    function lnRender(){
+      var open=lnLoans.filter(function(L){ return !L.returned; });
+      var hist=lnLoans.filter(function(L){ return L.returned; });
+      $('tkLnOpen').innerHTML=open.length?open.map(function(L){ return lnCard(L,false); }).join(''):'<div class="tk-note">אין השאלות פתוחות.</div>';
+      $('tkLnHist').innerHTML=hist.length?hist.map(function(L){ return lnCard(L,true); }).join(''):'<div class="tk-note">אין היסטוריה עדיין.</div>';
+    }
+    lnPane.addEventListener('click', function(e){
+      var rid=e.target.dataset&&e.target.dataset.lnret;
+      var wid=e.target.dataset&&e.target.dataset.lnwa;
+      if(rid){ if(!confirm('לסמן שהציוד הוחזר?')) return; var by=''; try{ by=(localStorage.getItem('afcon_me')||localStorage.getItem('afcon_reporter')||'').trim(); }catch(_){ }
+        lnPost({action:'loanReturn', id:rid, by:by}).then(function(j){ if(j&&j.ok){ lnLoad(); } else alert('שגיאה — נסה שוב.'); }).catch(function(){ alert('שגיאת חיבור.'); }); }
+      if(wid){ var L=lnLoans.filter(function(x){ return x.id===wid; })[0]; if(!L) return;
+        var items=lnItemsOf(L).map(function(it){ return (it.desc||it.sku||'')+(it.serial?(' (מס״ד '+it.serial+')'):''); }).join(', ');
+        var who=(L.kind==='supplier')?(L.contact||L.supplier||''):(L.firstName||'');
+        var msg='שלום '+who+', תזכורת מהמחסן: הציוד שנלקח — '+items+' — '+(L.dueDate?('היה אמור לחזור עד '+lnFmtDate(L.dueDate)+'. '):'')+'נא לתאם החזרה. תודה!';
+        var ph=String(L.phone||'').replace(/[^0-9]/g,'');
+        if(ph){ if(ph.indexOf('0')===0) ph='972'+ph.slice(1); window.open('https://wa.me/'+ph+'?text='+encodeURIComponent(msg),'_blank'); }
+        else { window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank'); } }
+    });
+    function lnCheckOverdue(){
+      var od=lnLoans.filter(function(L){ return !L.returned && L.dueDate && (new Date(L.dueDate+'T23:59:59').getTime()<Date.now()); });
+      if(od.length){ try{ if('Notification' in window && Notification.permission==='granted'){ new Notification('🔁 השאלות באיחור', { body: od.length+' פריטים לא הוחזרו בזמן', tag:'afcon-loans' }); } }catch(e){}
+        try{ if(navigator.vibrate) navigator.vibrate([150,80,150]); }catch(e){} }
+    }
+    var lnExp=$('tkLnExport');
+    if(lnExp) lnExp.addEventListener('click', function(){
+      function doExport(){
+        if(!lnLoans.length){ alert('אין השאלות לייצוא עדיין.'); return; }
+        var rows=[['סוג','שם / ספק','איש קשר','טלפון','מס\u05f3 עובד','מק"ט','תיאור','מס\u05f3 סידורי','תאריך השאלה','להחזרה עד','סטטוס','הוחזר בתאריך','סומן ע"י','נרשם ע"י']];
+        lnLoans.forEach(function(L){
+          var items=lnItemsOf(L); if(!items.length) items=[{}];
+          items.forEach(function(it){
+            rows.push([
+              (L.kind==='supplier'?'ספק':'עובד'),
+              (L.kind==='supplier'?(L.supplier||''):((L.firstName||'')+' '+(L.lastName||'')).trim()),
+              (L.kind==='supplier'?(L.contact||''):''),
+              (L.kind==='supplier'?(L.phone||''):''),
+              (L.kind==='supplier'?'':(L.empNum||'')),
+              String(it.sku||''), String(it.desc||''), String(it.serial||''),
+              lnFmtDate(L.created), (L.dueDate?lnFmtDate(L.dueDate):''),
+              (L.returned?'הוחזר':(L.dueDate&&(new Date(L.dueDate+'T23:59:59').getTime()<Date.now())?'באיחור':'פתוח')),
+              (L.returnedAt?lnFmtDate(L.returnedAt):''), String(L.returnedBy||''), String(L.lender||'')
+            ]);
+          });
+        });
+        try{
+          var ws=XLSX.utils.aoa_to_sheet(rows);
+          for(var r=1;r<rows.length;r++){
+            ['D','E','F','H'].forEach(function(col){ var c=ws[col+(r+1)]; if(c){ c.t='s'; c.v=String(c.v==null?'':c.v); } });
+          }
+          ws['!cols']=[{wch:6},{wch:18},{wch:14},{wch:13},{wch:9},{wch:12},{wch:28},{wch:14},{wch:11},{wch:11},{wch:8},{wch:11},{wch:12},{wch:12}];
+          var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'השאלות');
+          var d=new Date(); var nm='השאלות_ציוד_'+d.getDate()+'-'+(d.getMonth()+1)+'-'+d.getFullYear()+'.xlsx';
+          XLSX.writeFile(wb,nm);
+        }catch(e){
+          var csv=rows.map(function(r2){ return r2.map(function(v){ return '"'+String(v==null?'':v).replace(/"/g,'""')+'"'; }).join(','); }).join('\r\n');
+          var blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}); var a=document.createElement('a');
+          a.href=URL.createObjectURL(blob); a.download='השאלות_ציוד.csv'; a.click();
+        }
+      }
+      if(!lnLoaded){ lnApi({action:'loans'}).then(function(j){ if(j&&j.ok){ lnLoans=j.loans||[]; lnLoaded=true; } doExport(); }).catch(function(){ alert('שגיאת חיבור — נסה שוב.'); }); }
+      else doExport();
+    });
+    $('tkLnSave').addEventListener('click', function(){
+      var fn=$('tkLnFirst').value.trim(), ln2=$('tkLnLast').value.trim(), emp=$('tkLnEmp').value.trim();
+      var sup=$('tkLnSupName')?$('tkLnSupName').value.trim():'', sc=$('tkLnSupContact')?$('tkLnSupContact').value.trim():'', sp=$('tkLnSupPhone')?$('tkLnSupPhone').value.trim():'';
+      if(lnKind==='emp' && (!fn||!ln2)){ $('tkLnNote').textContent='נא למלא שם פרטי ושם משפחה.'; return; }
+      if(lnKind==='supplier' && !sup){ $('tkLnNote').textContent='נא למלא את שם הספק.'; return; }
+      var items=[]; lnPane.querySelectorAll('.ln-item').forEach(function(it){ var sku=it.querySelector('.ln-sku').value.trim(), d=it.querySelector('.ln-desc').value.trim(), sr=it.querySelector('.ln-serial').value.trim(); if(sku||d||sr) items.push({sku:sku,desc:d,serial:sr}); });
+      if(!items.length){ $('tkLnNote').textContent='נא להוסיף לפחות פריט אחד.'; return; }
+      if(!lnSigDirty){ $('tkLnNote').textContent='נא לחתום (בכתב יד) לפני שמירה.'; return; }
+      var sig=''; try{ sig=sg.toDataURL('image/jpeg',0.6); }catch(e){}
+      var lender=''; try{ lender=(localStorage.getItem('afcon_me')||localStorage.getItem('afcon_reporter')||'').trim(); }catch(_){ }
+      $('tkLnNote').textContent='שומר…';
+      lnPost({action:'loanAdd', id:'L'+Date.now()+(Math.random()*1000|0), kind:lnKind, firstName:fn, lastName:ln2, empNum:emp, supplier:sup, contact:sc, phone:sp, items:JSON.stringify(items), dueDate:$('tkLnDue').value||'', signature:sig, lender:lender})
+        .then(function(j){ if(j&&j.ok){ $('tkLnNote').textContent='✓ ההשאלה נשמרה'; $('tkLnFirst').value=''; $('tkLnLast').value=''; $('tkLnEmp').value=''; if($('tkLnSupName'))$('tkLnSupName').value=''; if($('tkLnSupContact'))$('tkLnSupContact').value=''; if($('tkLnSupPhone'))$('tkLnSupPhone').value=''; $('tkLnDue').value=''; $('tkLnItems').innerHTML=''; lnAddItem(); sgFit(); lnLoad(); }
+          else $('tkLnNote').textContent='שמירה נכשלה — נסה שוב.'; })
+        .catch(function(){ $('tkLnNote').textContent='שגיאת חיבור לשרת.'; });
+    });
+  }
+  function openLoan(){ try{ if(window.__tkOpenLoan) window.__tkOpenLoan(); }catch(e){} }
 
 })();

@@ -1953,6 +1953,7 @@
       <button class="tk-tab" data-tk="rec">🎙️ רשמקול</button>
       <button class="tk-tab" data-tk="todo">⏰ תזכורות</button>
       <button class="tk-tab" data-tk="decode">🔢 מס׳ סידוריים</button>
+      <button class="tk-tab" data-tk="loan">🔁 השאלות</button>
     </div>
     <div class="tk-body">
       <div class="tk-pane" id="tkLists"></div>
@@ -2056,6 +2057,44 @@
           <div id="tkTodoList" style="display:flex;flex-direction:column;gap:7px"></div>
           <button id="tkTodoClear" type="button" style="background:none;border:1px solid #7f1d1d;color:#f87171;border-radius:11px;padding:11px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif">🗑️ מחק הכל</button>
         </div>
+      </div>
+      <div class="tk-pane" id="tkLoan" hidden>
+        <div style="display:flex;gap:6px;margin-bottom:10px">
+          <button type="button" id="tkLnTabNew" style="flex:1;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;background:#e2231a;border-color:#e2231a;color:#fff">➕ השאלה חדשה</button>
+          <button type="button" id="tkLnTabOpen" style="flex:1;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif">📋 פתוחות</button>
+          <button type="button" id="tkLnTabHist" style="flex:1;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif">🗂️ היסטוריה</button>
+        </div>
+        <button type="button" id="tkLnExport" style="width:100%;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;background:#14532d;border-color:#166534;color:#bbf7d0;margin-bottom:10px">📊 ייצא לאקסל</button>
+        <div id="tkLnNew">
+          <div style="display:flex;gap:6px;margin-bottom:8px">
+            <button type="button" id="tkLnKindEmp" style="flex:1;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;background:#3b82f6;border-color:#3b82f6;color:#fff">👷 השאלה לעובד</button>
+            <button type="button" id="tkLnKindSup" style="flex:1;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif">🚚 השאלה לספק</button>
+          </div>
+          <div id="tkLnEmpFields">
+            <div style="display:flex;gap:6px">
+              <input id="tkLnFirst" placeholder="שם פרטי" style="flex:1;min-width:0;width:100%;box-sizing:border-box;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px 12px;color:#f2f4f8;font-size:14.5px;font-family:'Heebo',sans-serif">
+              <input id="tkLnLast" placeholder="שם משפחה" style="flex:1;min-width:0;width:100%;box-sizing:border-box;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px 12px;color:#f2f4f8;font-size:14.5px;font-family:'Heebo',sans-serif">
+            </div>
+            <input id="tkLnEmp" placeholder="מספר עובד" inputmode="numeric" style="width:100%;box-sizing:border-box;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px 12px;color:#f2f4f8;font-size:14.5px;font-family:'Heebo',sans-serif;margin-top:7px">
+          </div>
+          <div id="tkLnSupFields" style="display:none">
+            <input id="tkLnSupName" placeholder="שם הספק" style="width:100%;box-sizing:border-box;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px 12px;color:#f2f4f8;font-size:14.5px;font-family:'Heebo',sans-serif">
+            <input id="tkLnSupContact" placeholder="איש קשר" style="width:100%;box-sizing:border-box;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px 12px;color:#f2f4f8;font-size:14.5px;font-family:'Heebo',sans-serif;margin-top:7px">
+            <input id="tkLnSupPhone" placeholder="טלפון" inputmode="tel" style="width:100%;box-sizing:border-box;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px 12px;color:#f2f4f8;font-size:14.5px;font-family:'Heebo',sans-serif;margin-top:7px">
+          </div>
+          <div style="color:#9aa2ad;font-size:12.5px;margin:10px 0 5px;font-weight:700">פריטים להשאלה (עד 5):</div>
+          <div id="tkLnItems"></div>
+          <button type="button" id="tkLnAddItem" style="background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;width:100%;margin-top:5px">➕ הוסף פריט</button>
+          <div style="color:#9aa2ad;font-size:12.5px;margin:10px 0 5px;font-weight:700">להחזרה עד:</div>
+          <input id="tkLnDue" type="date" style="width:100%;box-sizing:border-box;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px 12px;color:#f2f4f8;font-size:14.5px;font-family:'Heebo',sans-serif">
+          <div style="color:#9aa2ad;font-size:12.5px;margin:10px 0 5px;font-weight:700">חתימת המקבל (בכתב יד):</div>
+          <canvas id="tkLnSig" style="width:100%;height:110px;background:#fff;border-radius:10px;touch-action:none"></canvas>
+          <button type="button" id="tkLnSigClear" style="background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;margin-top:5px">🧹 נקה חתימה</button>
+          <button type="button" id="tkLnSave" style="width:100%;background:#22c55e;color:#052e16;border:none;border-radius:11px;padding:13px;font-weight:800;cursor:pointer;font-family:'Rubik','Heebo',sans-serif;font-size:15px;margin-top:10px">💾 שמור השאלה</button>
+          <div id="tkLnNote" class="tk-note" style="margin-top:7px"></div>
+        </div>
+        <div id="tkLnOpen" style="display:none"></div>
+        <div id="tkLnHist" style="display:none"></div>
       </div>
       <div class="tk-pane" id="tkDecode" hidden>
         <div style="display:flex;flex-direction:column;gap:10px">
