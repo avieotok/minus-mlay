@@ -1745,7 +1745,11 @@
     const yr=new Date().getFullYear();
     if(!confirm('לאפס את מספור תעודות ההשאלה? התעודה הבאה תקבל מספר 1-'+yr+'.')) return;
     $('loanSeqNote').textContent='מאפס…';
-    try{ const r=await apiPost('loanSeqReset'); $('loanSeqNote').textContent=(r&&r.ok)?('✓ המונה אופס — התעודה הבאה: 1-'+yr):'האיפוס נכשל — ודא שהשרת עודכן ונפרס.'; }
+    try{
+      const rr=await fetch(apiUrl(),{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({token:apiToken(),action:'loanSeqReset'})});
+      const r=JSON.parse(await rr.text());
+      $('loanSeqNote').textContent=(r&&r.ok)?('✓ המונה אופס — התעודה הבאה: 1-'+yr):'האיפוס נכשל — ודא שהשרת עודכן ונפרס.';
+    }
     catch(e){ $('loanSeqNote').textContent='שגיאת חיבור.'; }
   });
   const cp=$('clearPhones'); if(cp) cp.addEventListener('click', async ()=>{
