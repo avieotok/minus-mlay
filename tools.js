@@ -37,9 +37,10 @@
     tabs.forEach(function(x){ x.classList.toggle('on', x===t); });
     var v=t.getAttribute('data-tk');
     $('tkLists').hidden=(v!=='lists'); $('tkPhone').hidden=(v!=='phone'); $('tkCur').hidden=(v!=='cur'); $('tkArea').hidden=(v!=='area'); $('tkRec').hidden=(v!=='rec');
-    var _np={todo:'tkTodo',decode:'tkDecode',loan:'tkLoan'};
+    var _np={todo:'tkTodo',decode:'tkDecode',loan:'tkLoan',vrep:'tkVrep'};
     for(var _k in _np){ var _el=$(_np[_k]); if(_el) _el.hidden=(v!==_k); }
     if(v!=='rec'){ try{ recStop(); }catch(e){} }
+    if(v!=='vrep'){ try{ if(window.__vrStop) window.__vrStop(); }catch(e){} }
     if(v==='phone'){ renderPhones(); loadShared(); } if(v==='cur') openCur(); if(v==='area') openArea(); if(v==='rec') initRec();
     if(v==='todo') openTodo(); if(v==='decode') openDecode(); if(v==='loan') openLoan();
   }); });
@@ -1068,5 +1069,88 @@
     });
   }
   function openLoan(){ try{ if(window.__tkOpenLoan) window.__tkOpenLoan(); }catch(e){} }
+
+  /* ---------- 🎤 דיווח קולי חכם ---------- */
+  var vrPane=$('tkVrep');
+  if(vrPane){
+    var vrSR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    var vrRec=null, vrOn=false, vrSel=null;
+    function vrStatus(t,c){ var s=$('tkVrStatus'); if(s){ s.textContent=t||''; s.style.color=c||'#9aa2ad'; } }
+    function vrStopFn(){ vrOn=false; if(vrRec){ try{ vrRec.onend=null; vrRec.stop(); }catch(e){} vrRec=null; } var b=$('tkVrMic'); if(b){ b.textContent='🎤 התחל הקלטה'; b.style.background='#e2231a'; } }
+    window.__vrStop=vrStopFn;
+    $('tkVrMic').addEventListener('click', function(){
+      if(vrOn){ vrStopFn(); return; }
+      if(!vrSR){ vrStatus('תמלול קולי לא נתמך בדפדפן זה — הקלד ידנית.', '#fbbf24'); return; }
+      try{
+        vrRec=new vrSR(); vrRec.lang='he-IL'; vrRec.continuous=true; vrRec.interimResults=true;
+        var base=($('tkVrText').value||'').replace(/\s+$/,''); if(base) base+=' ';
+        vrRec.onresult=function(ev){ var fin='', tmp='';
+          for(var i=0;i<ev.results.length;i++){ var r=ev.results[i]; if(r.isFinal) fin+=r[0].transcript+' '; else tmp+=r[0].transcript; }
+          $('tkVrText').value=(base+fin+tmp).replace(/\s+/g,' ');
+        };
+        vrRec.onend=function(){ if(vrOn){ try{ vrRec.start(); }catch(e){} } };
+        vrRec.onerror=function(){ vrStatus('שגיאת מיקרופון — נסה שוב.', '#f87171'); vrStopFn(); };
+        vrRec.start(); vrOn=true;
+        var b=$('tkVrMic'); b.textContent='⏹️ עצור הקלטה'; b.style.background='#7f1d1d';
+        vrStatus('🎙️ מקליט… דבר בחופשיות');
+      }catch(e){ vrStatus('לא ניתן להפעיל מיקרופון.', '#f87171'); }
+    });
+    function vrMatch(item){
+      var c=(function(){ try{ return window.DEFAULT_CATALOG||{}; }catch(e){ return {}; } })();
+      var toks=String(item||'').split(/[\s,.\-–\/]+/).filter(function(t){ return t.length>=2 || /\d/.test(t); });
+      if(!toks.length) return [];
+      var res=[];
+      for(var k in c){ var d=String(c[k]||''); var sc=0;
+        for(var i=0;i<toks.length;i++){ if(d.indexOf(toks[i])>=0) sc++; }
+        if(sc>0) res.push({sku:k,desc:d,sc:sc}); }
+      res.sort(function(a,b){ return (b.sc-a.sc)||(a.desc.length-b.desc.length); });
+      return res.slice(0,6);
+    }
+    function vrRenderMatches(list){
+      var box=$('tkVrMatches'); vrSel=null;
+      var fill=$('tkVrFill'); fill.disabled=true; fill.style.opacity='.5';
+      if(!list.length){ box.innerHTML='<div class="tk-note">לא נמצאה התאמה בקטלוג — אפשר למלא רק כמות, ולהקליד מק״ט ידנית בטופס.</div>'; fill.disabled=false; fill.style.opacity='1'; return; }
+      box.innerHTML=list.map(function(m){ return '<div class="vr-m" data-sku="'+esc(m.sku)+'" style="background:#15171c;border:1px solid #343a45;border-radius:9px;padding:10px 11px;margin-bottom:6px;cursor:pointer;font-size:13.5px;color:#e2e8f0"><b style="color:#fbbf24;pointer-events:none">'+esc(m.sku)+'</b> · '+esc(m.desc)+'</div>'; }).join('');
+    }
+    $('tkVrMatches').addEventListener('click', function(e){
+      var m=e.target.closest('.vr-m'); if(!m) return;
+      vrSel=m.dataset.sku||null;
+      vrPane.querySelectorAll('.vr-m').forEach(function(x){ x.style.borderColor='#343a45'; x.style.background='#15171c'; });
+      m.style.borderColor='#22c55e'; m.style.background='#06281b';
+      var fill=$('tkVrFill'); fill.disabled=false; fill.style.opacity='1';
+    });
+    $('tkVrGo').addEventListener('click', function(){
+      vrStopFn();
+      var txt=($('tkVrText').value||'').trim();
+      if(!txt){ vrStatus('אין טקסט לפענוח — הקלט או הקלד קודם.', '#fbbf24'); return; }
+      var cfg=apiCfg(); if(!cfg.url){ vrStatus('לא מוגדר חיבור לשרת.', '#f87171'); return; }
+      var go=$('tkVrGo'); go.disabled=true; vrStatus('🤖 שולח ל-AI לפענוח…', '#a78bfa');
+      fetch(cfg.url,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({token:cfg.token, action:'parse_report', text:txt})})
+        .then(function(r){ return r.json(); })
+        .then(function(j){
+          go.disabled=false;
+          if(j&&j.ok){
+            $('tkVrOut').style.display='block';
+            $('tkVrQty').value=(j.qty!=null&&!isNaN(j.qty))?String(j.qty):'';
+            $('tkVrUrg').style.display=(j.urgency==='דחוף')?'inline-block':'none';
+            vrRenderMatches(vrMatch(j.item||txt));
+            vrStatus('✓ פוענח: '+(j.item||'')+(j.qty!=null?(' · כמות '+j.qty):''), '#34d399');
+          }
+          else if(j&&j.error==='no_key'){ vrStatus('⚠️ המפתח לא הוגדר בשרת.', '#f87171'); }
+          else if(j&&j.error&&String(j.error).indexOf('api_')===0){ vrStatus('⚠️ שגיאת AI ('+j.error+') — בדוק מפתח/קרדיט.', '#f87171'); }
+          else if(j&&j.error==='parse_fail'){ vrStatus('לא הצלחתי להבין — נסה לנסח קצת אחרת.', '#fbbf24'); }
+          else { vrStatus('⚠️ השרת לא מכיר את הפעולה — עדכן ופרוס את קוד השרת.', '#f87171'); }
+        })
+        .catch(function(){ go.disabled=false; vrStatus('שגיאת חיבור — נסה שוב.', '#f87171'); });
+    });
+    $('tkVrFill').addEventListener('click', function(){
+      var sku=$('txtSku'), qty=$('qtyText');
+      if(vrSel && sku){ sku.value=vrSel; try{ sku.dispatchEvent(new Event('input',{bubbles:true})); }catch(e){} }
+      if(qty){ var q=($('tkVrQty').value||'').trim(); if(q){ qty.value=q; try{ qty.dispatchEvent(new Event('input',{bubbles:true})); }catch(e){} } }
+      var modal=$('tkModal'); if(modal) modal.classList.remove('open');
+      try{ if(window.__AFCON_PRESENCE) window.__AFCON_PRESENCE(''); }catch(e){}
+      if(sku && !vrSel){ try{ sku.focus(); }catch(e){} }
+    });
+  }
 
 })();
