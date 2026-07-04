@@ -1078,6 +1078,17 @@
     function vrStatus(t,c){ var s=$('tkVrStatus'); if(s){ s.textContent=t||''; s.style.color=c||'#9aa2ad'; } }
     function vrStopFn(){ vrOn=false; if(vrRec){ try{ vrRec.onend=null; vrRec.stop(); }catch(e){} vrRec=null; } var b=$('tkVrMic'); if(b){ b.textContent='🎤 התחל הקלטה'; b.style.background='#e2231a'; } }
     window.__vrStop=vrStopFn;
+    var vrClr=$('tkVrClr');
+    if(vrClr) vrClr.addEventListener('click', function(){
+      vrStopFn(); vrSel=null;
+      $('tkVrText').value='';
+      $('tkVrQty').value='';
+      $('tkVrOut').style.display='none';
+      $('tkVrMatches').innerHTML='';
+      $('tkVrUrg').style.display='none';
+      var fill=$('tkVrFill'); if(fill){ fill.disabled=true; fill.style.opacity='.5'; }
+      vrStatus('');
+    });
     $('tkVrMic').addEventListener('click', function(){
       if(vrOn){ vrStopFn(); return; }
       if(!vrSR){ vrStatus('תמלול קולי לא נתמך בדפדפן זה — הקלד ידנית.', '#fbbf24'); return; }
