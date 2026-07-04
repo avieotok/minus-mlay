@@ -825,11 +825,28 @@
     sg.addEventListener('mousedown',sgDown); sg.addEventListener('mousemove',sgMove); window.addEventListener('mouseup',sgUp);
     sg.addEventListener('touchstart',sgDown,{passive:false}); sg.addEventListener('touchmove',sgMove,{passive:false}); sg.addEventListener('touchend',sgUp);
     $('tkLnSigClear').addEventListener('click', sgFit);
+    var lnFilter={q:'',from:'',to:''};
+    function lnFWire(id,key){ var el=$(id); if(el) el.addEventListener('input', function(){ lnFilter[key]=el.value.trim(); lnRender(); }); }
+    lnFWire('tkLnQ','q'); lnFWire('tkLnFrom','from'); lnFWire('tkLnTo','to');
+    var lnFClr=$('tkLnFClr'); if(lnFClr) lnFClr.addEventListener('click', function(){ lnFilter={q:'',from:'',to:''}; if($('tkLnQ'))$('tkLnQ').value=''; if($('tkLnFrom'))$('tkLnFrom').value=''; if($('tkLnTo'))$('tkLnTo').value=''; lnRender(); });
+    function lnMatch(L){
+      if(lnFilter.q){ var q=lnFilter.q, hit=false;
+        if(String(L.docNum||'').indexOf(q)>=0) hit=true;
+        var nm=((L.firstName||'')+' '+(L.lastName||'')+' '+(L.supplier||'')+' '+(L.contact||'')+' '+(L.empNum||''));
+        if(nm.indexOf(q)>=0) hit=true;
+        lnItemsOf(L).forEach(function(it){ if(String(it.sku||'').indexOf(q)>=0||String(it.desc||'').indexOf(q)>=0||String(it.serial||'').indexOf(q)>=0) hit=true; });
+        if(!hit) return false; }
+      var d=String(L.created||'').slice(0,10);
+      if(lnFilter.from && d && d<lnFilter.from) return false;
+      if(lnFilter.to && d && d>lnFilter.to) return false;
+      return true;
+    }
     /* טאבים פנימיים */
     function lnShow(which){
       $('tkLnNew').style.display=(which==='new')?'block':'none';
       $('tkLnOpen').style.display=(which==='open')?'block':'none';
       $('tkLnHist').style.display=(which==='hist')?'block':'none';
+      var flt=$('tkLnFilter'); if(flt) flt.style.display=(which==='new')?'none':'flex';
       ['tkLnTabNew','tkLnTabOpen','tkLnTabHist'].forEach(function(id){ var b=$(id); if(!b) return; var on=(id==='tkLnTab'+(which==='new'?'New':which==='open'?'Open':'Hist')); b.style.background=on?'#e2231a':'#1f2430'; b.style.borderColor=on?'#e2231a':'#343a45'; b.style.color=on?'#fff':'#cbd5e1'; });
       if(which==='new'){ setTimeout(sgFit,50); }
       if(which==='open'||which==='hist'){ lnLoad(); }
@@ -874,13 +891,14 @@
         +'<button type="button" data-lnedit="'+L.id+'" style="flex:1;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:8px;font-weight:700;cursor:pointer;font-size:12.5px;font-family:\'Heebo\',sans-serif">✏️ ערוך</button>'
         +(del?'<button type="button" data-lndel="'+L.id+'" style="flex:1;background:#1f2430;border:1px solid #7f1d1d;color:#f87171;border-radius:9px;padding:8px;font-weight:700;cursor:pointer;font-size:12.5px;font-family:\'Heebo\',sans-serif">🗑️ מחק</button>':'')
         +'</div>';
-      return '<div style="background:#15171c;border:1px solid '+(overdue?'#7f1d1d':'#343a45')+';border-radius:11px;padding:11px;margin-bottom:8px">'+head+itHtml+due+ret+sigH+'<div style="font-size:11.5px;color:#697079;margin-top:4px">נרשם '+lnFmtDate(L.created)+(L.lender?(' ע״י '+esc(L.lender)):'')+'</div>'+btns+'</div>';
+      return '<div style="background:#15171c;border:1px solid '+(overdue?'#7f1d1d':'#343a45')+';border-radius:11px;padding:11px;margin-bottom:8px">'+head+itHtml+due+ret+sigH+'<div style="font-size:11.5px;color:#697079;margin-top:4px">'+(L.docNum?('📄 תעודה '+esc(L.docNum)+' · '):'')+'נרשם '+lnFmtDate(L.created)+(L.lender?(' ע״י '+esc(L.lender)):'')+'</div>'+btns+'</div>';
     }
     function lnRender(){
-      var open=lnLoans.filter(function(L){ return !L.returned; });
-      var hist=lnLoans.filter(function(L){ return L.returned; });
-      $('tkLnOpen').innerHTML=open.length?open.map(function(L){ return lnCard(L,false); }).join(''):'<div class="tk-note">אין השאלות פתוחות.</div>';
-      $('tkLnHist').innerHTML=hist.length?hist.map(function(L){ return lnCard(L,true); }).join(''):'<div class="tk-note">אין היסטוריה עדיין.</div>';
+      var vis=lnLoans.filter(lnMatch);
+      var open=vis.filter(function(L){ return !L.returned; });
+      var hist=vis.filter(function(L){ return L.returned; });
+      $('tkLnOpen').innerHTML=open.length?open.map(function(L){ return lnCard(L,false); }).join(''):'<div class="tk-note">'+(lnFilter.q||lnFilter.from||lnFilter.to?'אין תוצאות לחיפוש.':'אין השאלות פתוחות.')+'</div>';
+      $('tkLnHist').innerHTML=hist.length?hist.map(function(L){ return lnCard(L,true); }).join(''):'<div class="tk-note">'+(lnFilter.q||lnFilter.from||lnFilter.to?'אין תוצאות לחיפוש.':'אין היסטוריה עדיין.')+'</div>';
     }
     /* --- תעודת השאלה (הדפסה + וואטסאפ) --- */
     (function(){ var st=document.createElement('style'); st.textContent='@media print{body *{visibility:hidden!important}#tkLnDocWrap{position:absolute!important;inset:0!important;background:#fff!important;padding:0!important;overflow:visible!important}#tkLnDoc,#tkLnDoc *{visibility:visible!important}#tkLnDoc{box-shadow:none!important;margin:0!important;max-width:none!important}.tkLnDocBar{display:none!important}}'; document.head.appendChild(st); })();
@@ -927,7 +945,7 @@
       d.querySelector('#tkLnDoc').innerHTML=
         '<div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #e2231a;padding-bottom:12px;margin-bottom:14px">'
         +'<div style="display:flex;gap:12px;align-items:center"><img src="icon.png" alt="לוגו" style="height:48px;width:48px;border-radius:10px;flex:0 0 auto"><div><div style="font-size:21px;font-weight:900">אפקון — שרשרת האספקה</div><div style="font-size:15px;color:#334155;font-weight:700;margin-top:2px">תעודת השאלת ציוד</div></div></div>'
-        +'<div style="text-align:left;font-size:12.5px;color:#475569">מס׳: '+esc(String(L.id||'').slice(-8))+'<br>תאריך: '+lnFmtDate(L.created)+'</div></div>'
+        +'<div style="text-align:left;font-size:12.5px;color:#475569">מס׳ תעודה: <b style="font-size:14px;color:#111">'+esc(L.docNum||String(L.id||'').slice(-8))+'</b><br>תאריך: '+lnFmtDate(L.created)+'</div></div>'
         +who
         +'<table style="width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px"><thead><tr style="background:#f1f5f9">'
         +'<th style="border:1px solid #cbd5e1;padding:7px 9px;width:34px">#</th><th style="border:1px solid #cbd5e1;padding:7px 9px;width:110px">מק"ט</th><th style="border:1px solid #cbd5e1;padding:7px 9px">תיאור הפריט</th><th style="border:1px solid #cbd5e1;padding:7px 9px;width:130px">מס׳ סידורי</th>'
@@ -995,11 +1013,12 @@
     if(lnExp) lnExp.addEventListener('click', function(){
       function doExport(){
         if(!lnLoans.length){ alert('אין השאלות לייצוא עדיין.'); return; }
-        var rows=[['סוג','שם / ספק','איש קשר','טלפון','מס\u05f3 עובד','מק"ט','תיאור','מס\u05f3 סידורי','תאריך השאלה','להחזרה עד','סטטוס','הוחזר בתאריך','סומן ע"י','נרשם ע"י']];
+        var rows=[['מס\u05f3 תעודה','סוג','שם / ספק','איש קשר','טלפון','מס\u05f3 עובד','מק"ט','תיאור','מס\u05f3 סידורי','תאריך השאלה','להחזרה עד','סטטוס','הוחזר בתאריך','סומן ע"י','נרשם ע"י']];
         lnLoans.forEach(function(L){
           var items=lnItemsOf(L); if(!items.length) items=[{}];
           items.forEach(function(it){
             rows.push([
+              String(L.docNum||''),
               (L.kind==='supplier'?'ספק':'עובד'),
               (L.kind==='supplier'?(L.supplier||''):((L.firstName||'')+' '+(L.lastName||'')).trim()),
               (L.kind==='supplier'?(L.contact||''):''),
@@ -1015,9 +1034,9 @@
         try{
           var ws=XLSX.utils.aoa_to_sheet(rows);
           for(var r=1;r<rows.length;r++){
-            ['D','E','F','H'].forEach(function(col){ var c=ws[col+(r+1)]; if(c){ c.t='s'; c.v=String(c.v==null?'':c.v); } });
+            ['A','E','F','G','I'].forEach(function(col){ var c=ws[col+(r+1)]; if(c){ c.t='s'; c.v=String(c.v==null?'':c.v); } });
           }
-          ws['!cols']=[{wch:6},{wch:18},{wch:14},{wch:13},{wch:9},{wch:12},{wch:28},{wch:14},{wch:11},{wch:11},{wch:8},{wch:11},{wch:12},{wch:12}];
+          ws['!cols']=[{wch:10},{wch:6},{wch:18},{wch:14},{wch:13},{wch:9},{wch:12},{wch:28},{wch:14},{wch:11},{wch:11},{wch:8},{wch:11},{wch:12},{wch:12}];
           var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'השאלות');
           var d=new Date(); var nm='השאלות_ציוד_'+d.getDate()+'-'+(d.getMonth()+1)+'-'+d.getFullYear()+'.xlsx';
           XLSX.writeFile(wb,nm);

@@ -566,6 +566,8 @@
         <p style="font-size:12.5px;color:var(--faint);line-height:1.6;margin-bottom:10px">מוחק את <b>כל</b> ההתראות מהמערכת לצמיתות (ממתינות, בטיפול וטופלו). השמות והקטלוג יישארו. פעולה זו אינה הפיכה.</p>
         <button class="ghost" id="clearAll" style="border-color:#7f1d1d;color:#f87171">🧹 אפס את כל ההתראות</button>
         <button class="ghost" id="loansMgr" style="border-color:var(--line2)">🔁 השאלות ציוד — פתח ניהול</button>
+        <button class="ghost" id="loanSeqReset" style="border-color:#7f1d1d;color:#f87171">🔢 איפוס מספור תעודות השאלה</button>
+        <div class="note" id="loanSeqNote"></div>
         <div class="note" id="clearNote"></div>
       </div>
       <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
@@ -1738,6 +1740,14 @@
     $('tkModal').classList.add('open');
     const t=document.querySelector('#tkModal .tk-tab[data-tk="loan"]'); if(t) t.click();
   });
+  const lsr=$('loanSeqReset'); if(lsr) lsr.addEventListener('click', async ()=>{
+    if(me()!=='אבידן קוטאי'){ alert('איפוס המספור מותר רק לאבידן (מפתח).'); return; }
+    const yr=new Date().getFullYear();
+    if(!confirm('לאפס את מספור תעודות ההשאלה? התעודה הבאה תקבל מספר 1-'+yr+'.')) return;
+    $('loanSeqNote').textContent='מאפס…';
+    try{ const r=await apiPost('loanSeqReset'); $('loanSeqNote').textContent=(r&&r.ok)?('✓ המונה אופס — התעודה הבאה: 1-'+yr):'האיפוס נכשל — ודא שהשרת עודכן ונפרס.'; }
+    catch(e){ $('loanSeqNote').textContent='שגיאת חיבור.'; }
+  });
   const cp=$('clearPhones'); if(cp) cp.addEventListener('click', async ()=>{
     if(!confirm('למחוק את כל ספר הטלפונים המשותף? כל הספקים ששותפו יוסרו אצל כולם. (ספקים אישיים במכשירים לא יושפעו.)')) return;
     $('clearPhNote').textContent='מוחק…';
@@ -2049,6 +2059,16 @@
           <button type="button" id="tkLnTabHist" style="flex:1;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif">🗂️ היסטוריה</button>
         </div>
         <button type="button" id="tkLnExport" style="width:100%;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;background:#14532d;border-color:#166534;color:#bbf7d0;margin-bottom:10px">📊 ייצא לאקסל</button>
+        <div id="tkLnFilter" style="display:none;flex-direction:column;gap:6px;margin-bottom:10px">
+          <input id="tkLnQ" placeholder="🔍 חיפוש — מק&quot;ט / תיאור / שם / מס׳ תעודה" style="width:100%;box-sizing:border-box;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px 12px;color:#f2f4f8;font-size:14px;font-family:'Heebo',sans-serif">
+          <div style="display:flex;gap:6px;align-items:center">
+            <span style="color:#9aa2ad;font-size:12px;flex:0 0 auto">מתאריך</span>
+            <input id="tkLnFrom" type="date" style="flex:1;min-width:0;background:#15171c;border:1px solid #343a45;border-radius:9px;padding:9px;color:#f2f4f8;font-size:13px;font-family:'Heebo',sans-serif">
+            <span style="color:#9aa2ad;font-size:12px;flex:0 0 auto">עד</span>
+            <input id="tkLnTo" type="date" style="flex:1;min-width:0;background:#15171c;border:1px solid #343a45;border-radius:9px;padding:9px;color:#f2f4f8;font-size:13px;font-family:'Heebo',sans-serif">
+            <button type="button" id="tkLnFClr" style="flex:0 0 auto;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px 11px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif">נקה</button>
+          </div>
+        </div>
         <div id="tkLnNew">
           <div style="display:flex;gap:6px;margin-bottom:8px">
             <button type="button" id="tkLnKindEmp" style="flex:1;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;background:#3b82f6;border-color:#3b82f6;color:#fff">👷 השאלה לעובד</button>
@@ -2126,7 +2146,7 @@
   <div style="flex:1;overflow:auto;-webkit-overflow-scrolling:touch;display:flex;align-items:flex-start;justify-content:center"><img id="tkDcZoomImg" style="min-width:100%;height:auto;touch-action:pinch-zoom"></div>
 </div>
 <script src="catalog.js"></script>
-<script src="tools.js?v=34"></script>
+<script src="tools.js?v=35"></script>
 <!-- ===== סוף כלי עזר ===== -->
 
 </body>
