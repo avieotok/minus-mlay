@@ -769,6 +769,9 @@
   var lnPane=$('tkLoan');
   if(lnPane){
     var LN_MAX=5, lnLoans=[], lnLoaded=false, lnSigDirty=false, lnKind='emp';
+    var LN_ADMIN='אבידן קוטאי';
+    function lnMe(){ try{ return (localStorage.getItem('afcon_me')||localStorage.getItem('afcon_reporter')||'').trim(); }catch(e){ return ''; } }
+    function lnCanDel(){ return lnMe()===LN_ADMIN; }
     function lnSetKind(k){ lnKind=k;
       $('tkLnEmpFields').style.display=(k==='emp')?'block':'none';
       $('tkLnSupFields').style.display=(k==='supplier')?'block':'none';
@@ -785,14 +788,33 @@
       return '<div class="ln-item" style="background:#15171c;border:1px solid #343a45;border-radius:10px;padding:9px;margin-bottom:6px">'
         +'<div style="display:flex;gap:6px"><input class="ln-sku" placeholder="מק״ט" inputmode="numeric" style="flex:1;min-width:0;background:#0f1115;border:1px solid #343a45;border-radius:8px;padding:9px;color:#f2f4f8;font-size:14px;font-family:\'Heebo\',sans-serif">'
         +'<button type="button" class="ln-del" style="flex:0 0 auto;background:none;border:none;color:#f87171;font-size:16px;cursor:pointer">🗑️</button></div>'
-        +'<input class="ln-desc" placeholder="תיאור (נשלף אוטומטית)" style="width:100%;box-sizing:border-box;background:#0f1115;border:1px solid #343a45;border-radius:8px;padding:9px;color:#f2f4f8;font-size:14px;font-family:\'Heebo\',sans-serif;margin-top:6px">'
+        +'<input class="ln-desc" placeholder="תיאור — או חפש כאן פריט מהקטלוג…" style="width:100%;box-sizing:border-box;background:#0f1115;border:1px solid #343a45;border-radius:8px;padding:9px;color:#f2f4f8;font-size:14px;font-family:\'Heebo\',sans-serif;margin-top:6px">'
         +'<input class="ln-serial" placeholder="מספר סידורי (אם יש)" style="width:100%;box-sizing:border-box;background:#0f1115;border:1px solid #343a45;border-radius:8px;padding:9px;color:#f2f4f8;font-size:14px;font-family:\'Heebo\',sans-serif;margin-top:6px">'
         +'</div>';
     }
     function lnAddItem(){ var box=$('tkLnItems'); if(!box) return; if(box.querySelectorAll('.ln-item').length>=LN_MAX){ alert('עד '+LN_MAX+' פריטים להשאלה.'); return; } var d=document.createElement('div'); d.innerHTML=lnItemRow(); box.appendChild(d.firstChild); }
     $('tkLnAddItem').addEventListener('click', lnAddItem);
-    $('tkLnItems').addEventListener('click', function(e){ if(e.target.classList.contains('ln-del')){ var it=e.target.closest('.ln-item'); if(it) it.remove(); } });
-    $('tkLnItems').addEventListener('input', function(e){ if(e.target.classList.contains('ln-sku')){ var it=e.target.closest('.ln-item'); var d=lnLookup(e.target.value); if(d && it){ it.querySelector('.ln-desc').value=d; } } });
+    $('tkLnItems').addEventListener('click', function(e){
+      var s=e.target.closest('.ln-sug-item');
+      if(s){ var row=s.closest('.ln-item'); if(row){ row.querySelector('.ln-sku').value=s.dataset.sku||''; row.querySelector('.ln-desc').value=s.dataset.desc||''; lnSugHide(row); } return; }
+      if(e.target.classList.contains('ln-del')){ var it=e.target.closest('.ln-item'); if(it) it.remove(); }
+    });
+    function lnSugHide(row){ var b=row.querySelector('.ln-sug'); if(b) b.remove(); }
+    function lnSugShow(row,q){
+      q=String(q||'').trim();
+      var box=row.querySelector('.ln-sug');
+      if(q.length<2){ if(box) box.remove(); return; }
+      var c=lnCatalog(), res=[];
+      for(var k in c){ var dsc=String(c[k]||''); if(dsc.indexOf(q)>=0){ res.push({sku:k,desc:dsc}); if(res.length>=8) break; } }
+      if(!res.length){ if(box) box.remove(); return; }
+      if(!box){ box=document.createElement('div'); box.className='ln-sug'; box.style.cssText='margin-top:6px;background:#0f1115;border:1px solid #3b4252;border-radius:8px;max-height:170px;overflow:auto'; row.appendChild(box); }
+      box.innerHTML=res.map(function(r){ return '<div class="ln-sug-item" data-sku="'+esc(r.sku)+'" data-desc="'+esc(r.desc)+'" style="padding:9px 10px;border-bottom:1px solid #1f2430;cursor:pointer;font-size:13px;color:#e2e8f0"><b style="color:#fbbf24;pointer-events:none">'+esc(r.sku)+'</b> · '+esc(r.desc)+'</div>'; }).join('');
+    }
+    $('tkLnItems').addEventListener('input', function(e){
+      var it=e.target.closest('.ln-item'); if(!it) return;
+      if(e.target.classList.contains('ln-sku')){ var d=lnLookup(e.target.value); if(d){ it.querySelector('.ln-desc').value=d; } lnSugHide(it); }
+      else if(e.target.classList.contains('ln-desc')){ lnSugShow(it, e.target.value); }
+    });
     /* חתימה */
     var sg=$('tkLnSig'), sgx=sg.getContext('2d'), sgOn=false;
     function sgFit(){ var dpr=window.devicePixelRatio||1; var w=sg.clientWidth||300; sg.width=w*dpr; sg.height=110*dpr; sgx.scale(dpr,dpr); sgx.fillStyle='#fff'; sgx.fillRect(0,0,w,110); sgx.strokeStyle='#111'; sgx.lineWidth=2.2; sgx.lineCap='round'; lnSigDirty=false; }
@@ -840,9 +862,18 @@
       var sigH=(L.signature&&L.signature.indexOf('data:image')===0)
         ? '<div style="margin-top:6px;display:flex;align-items:center;gap:7px"><span style="font-size:11.5px;color:#697079;flex:0 0 auto">✍️ חתימה:</span><img src="'+esc(L.signature)+'" alt="חתימה" data-lnsig="1" style="height:42px;max-width:70%;background:#fff;border-radius:6px;border:1px solid #343a45;cursor:pointer"></div>'
         : '';
-      var btns=hist?'' : '<div style="display:flex;gap:6px;margin-top:8px">'
+      var del=lnCanDel();
+      var docBtn='<button type="button" data-lndoc="'+L.id+'" style="flex:1;background:#1f2430;border:1px solid #343a45;color:#93c5fd;border-radius:9px;padding:9px;font-weight:700;cursor:pointer;font-size:13px;font-family:\'Heebo\',sans-serif">📄 תעודה</button>';
+      var btns=hist
+        ? '<div style="display:flex;gap:6px;margin-top:8px">'+docBtn+(del?'<button type="button" data-lndel="'+L.id+'" style="flex:1;background:#1f2430;border:1px solid #7f1d1d;color:#f87171;border-radius:9px;padding:8px;font-weight:700;cursor:pointer;font-size:12.5px;font-family:\'Heebo\',sans-serif">🗑️ מחק</button>':'')+'</div>'
+        : '<div style="display:flex;gap:6px;margin-top:8px">'
         +'<button type="button" data-lnret="'+L.id+'" style="flex:1;background:#22c55e;color:#052e16;border:none;border-radius:9px;padding:9px;font-weight:800;cursor:pointer;font-size:13px;font-family:\'Heebo\',sans-serif">✓ הוחזר</button>'
-        +'<button type="button" data-lnwa="'+L.id+'" style="flex:1;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px;font-weight:700;cursor:pointer;font-size:13px;font-family:\'Heebo\',sans-serif">📲 תזכורת</button></div>';
+        +'<button type="button" data-lnwa="'+L.id+'" style="flex:1;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px;font-weight:700;cursor:pointer;font-size:13px;font-family:\'Heebo\',sans-serif">📲 תזכורת</button>'
+        +docBtn+'</div>'
+        +'<div style="display:flex;gap:6px;margin-top:6px">'
+        +'<button type="button" data-lnedit="'+L.id+'" style="flex:1;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:8px;font-weight:700;cursor:pointer;font-size:12.5px;font-family:\'Heebo\',sans-serif">✏️ ערוך</button>'
+        +(del?'<button type="button" data-lndel="'+L.id+'" style="flex:1;background:#1f2430;border:1px solid #7f1d1d;color:#f87171;border-radius:9px;padding:8px;font-weight:700;cursor:pointer;font-size:12.5px;font-family:\'Heebo\',sans-serif">🗑️ מחק</button>':'')
+        +'</div>';
       return '<div style="background:#15171c;border:1px solid '+(overdue?'#7f1d1d':'#343a45')+';border-radius:11px;padding:11px;margin-bottom:8px">'+head+itHtml+due+ret+sigH+'<div style="font-size:11.5px;color:#697079;margin-top:4px">נרשם '+lnFmtDate(L.created)+(L.lender?(' ע״י '+esc(L.lender)):'')+'</div>'+btns+'</div>';
     }
     function lnRender(){
@@ -851,8 +882,98 @@
       $('tkLnOpen').innerHTML=open.length?open.map(function(L){ return lnCard(L,false); }).join(''):'<div class="tk-note">אין השאלות פתוחות.</div>';
       $('tkLnHist').innerHTML=hist.length?hist.map(function(L){ return lnCard(L,true); }).join(''):'<div class="tk-note">אין היסטוריה עדיין.</div>';
     }
+    /* --- תעודת השאלה (הדפסה + וואטסאפ) --- */
+    (function(){ var st=document.createElement('style'); st.textContent='@media print{body *{visibility:hidden!important}#tkLnDocWrap{position:absolute!important;inset:0!important;background:#fff!important;padding:0!important;overflow:visible!important}#tkLnDoc,#tkLnDoc *{visibility:visible!important}#tkLnDoc{box-shadow:none!important;margin:0!important;max-width:none!important}.tkLnDocBar{display:none!important}}'; document.head.appendChild(st); })();
+    function lnDocEl(){
+      var w=document.getElementById('tkLnDocWrap'); if(w) return w;
+      w=document.createElement('div'); w.id='tkLnDocWrap';
+      w.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:400;display:none;overflow:auto;padding:14px;-webkit-overflow-scrolling:touch';
+      w.innerHTML='<div class="tkLnDocBar" style="max-width:640px;margin:0 auto 10px;display:flex;gap:7px">'
+        +'<button type="button" id="tkLnDocX" style="flex:0 0 auto;background:#1f2430;border:1px solid #343a45;color:#f2f4f8;border-radius:10px;padding:11px 14px;font-weight:800;cursor:pointer;font-family:\'Heebo\',sans-serif">✕ סגור</button>'
+        +'<button type="button" id="tkLnDocPr" style="flex:1;background:#3b82f6;border:none;color:#fff;border-radius:10px;padding:11px;font-weight:800;cursor:pointer;font-family:\'Heebo\',sans-serif">🖨️ הדפס</button>'
+        +'<button type="button" id="tkLnDocWa" style="flex:1;background:#22c55e;border:none;color:#052e16;border-radius:10px;padding:11px;font-weight:800;cursor:pointer;font-family:\'Heebo\',sans-serif">📲 וואטסאפ</button></div>'
+        +'<div id="tkLnDoc" dir="rtl" style="max-width:640px;margin:0 auto;background:#fff;color:#111;border-radius:12px;padding:22px;font-family:\'Heebo\',\'Rubik\',sans-serif;box-shadow:0 8px 30px rgba(0,0,0,.4)"></div>';
+      document.body.appendChild(w);
+      w.querySelector('#tkLnDocX').addEventListener('click', function(){ w.style.display='none'; });
+      w.addEventListener('click', function(e){ if(e.target===w) w.style.display='none'; });
+      w.querySelector('#tkLnDocPr').addEventListener('click', function(){ try{ window.print(); }catch(e){} });
+      w.querySelector('#tkLnDocWa').addEventListener('click', lnDocShare);
+      return w;
+    }
+    function lnH2C(){ if(window.html2canvas) return Promise.resolve(); return new Promise(function(res,rej){ var s=document.createElement('script'); s.src='https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js'; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); }
+    function lnDocShare(){
+      var doc=document.getElementById('tkLnDoc'); if(!doc) return;
+      var wa=document.getElementById('tkLnDocWa'); if(wa){ wa.disabled=true; wa.textContent='מכין תמונה…'; }
+      lnH2C().then(function(){ return window.html2canvas(doc,{backgroundColor:'#ffffff',scale:2,useCORS:true}); })
+        .then(function(cv){ return new Promise(function(res){ cv.toBlob(res,'image/png'); }); })
+        .then(function(blob){
+          if(wa){ wa.disabled=false; wa.textContent='📲 וואטסאפ'; }
+          if(!blob){ alert('יצירת התמונה נכשלה.'); return; }
+          var f=new File([blob],'תעודת_השאלת_ציוד.png',{type:'image/png'});
+          if(navigator.canShare && navigator.canShare({files:[f]})){ navigator.share({files:[f], title:'תעודת השאלת ציוד'}).catch(function(){}); }
+          else { var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='תעודת_השאלת_ציוד.png'; a.click(); alert('התמונה ירדה למכשיר — צרף אותה בוואטסאפ.'); }
+        })
+        .catch(function(){ if(wa){ wa.disabled=false; wa.textContent='📲 וואטסאפ'; } alert('שגיאה ביצירת התעודה — בדוק חיבור לאינטרנט ונסה שוב.'); });
+    }
+    function lnDoc(id){
+      var L=lnLoans.filter(function(x){ return x.id===id; })[0]; if(!L) return;
+      var items=lnItemsOf(L);
+      var rows=items.map(function(it,i){ return '<tr><td style="border:1px solid #cbd5e1;padding:7px 9px;text-align:center">'+(i+1)+'</td><td style="border:1px solid #cbd5e1;padding:7px 9px">'+esc(it.sku||'')+'</td><td style="border:1px solid #cbd5e1;padding:7px 9px">'+esc(it.desc||'')+'</td><td style="border:1px solid #cbd5e1;padding:7px 9px">'+esc(it.serial||'')+'</td></tr>'; }).join('');
+      var who=(L.kind==='supplier')
+        ? '<div style="font-size:14px;line-height:1.9"><b>ספק:</b> '+esc(L.supplier||'')+'<br><b>איש קשר:</b> '+esc(L.contact||'—')+'<br><b>טלפון:</b> '+esc(L.phone||'—')+'</div>'
+        : '<div style="font-size:14px;line-height:1.9"><b>שם המקבל:</b> '+esc(((L.firstName||'')+' '+(L.lastName||'')).trim())+'<br><b>מספר עובד:</b> '+esc(L.empNum||'—')+'</div>';
+      var sig=(L.signature&&L.signature.indexOf('data:image')===0)?'<img src="'+esc(L.signature)+'" alt="חתימה" style="height:70px;max-width:240px;border-bottom:1.5px solid #111">':'<div style="width:220px;border-bottom:1.5px solid #111;height:44px"></div>';
+      var d=lnDocEl();
+      d.querySelector('#tkLnDoc').innerHTML=
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #e2231a;padding-bottom:12px;margin-bottom:14px">'
+        +'<div style="display:flex;gap:12px;align-items:center"><img src="icon.png" alt="לוגו" style="height:48px;width:48px;border-radius:10px;flex:0 0 auto"><div><div style="font-size:21px;font-weight:900">אפקון — שרשרת האספקה</div><div style="font-size:15px;color:#334155;font-weight:700;margin-top:2px">תעודת השאלת ציוד</div></div></div>'
+        +'<div style="text-align:left;font-size:12.5px;color:#475569">מס׳: '+esc(String(L.id||'').slice(-8))+'<br>תאריך: '+lnFmtDate(L.created)+'</div></div>'
+        +who
+        +'<table style="width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px"><thead><tr style="background:#f1f5f9">'
+        +'<th style="border:1px solid #cbd5e1;padding:7px 9px;width:34px">#</th><th style="border:1px solid #cbd5e1;padding:7px 9px;width:110px">מק"ט</th><th style="border:1px solid #cbd5e1;padding:7px 9px">תיאור הפריט</th><th style="border:1px solid #cbd5e1;padding:7px 9px;width:130px">מס׳ סידורי</th>'
+        +'</tr></thead><tbody>'+rows+'</tbody></table>'
+        +'<div style="font-size:14px;line-height:1.9"><b>להחזרה עד:</b> '+(L.dueDate?lnFmtDate(L.dueDate):'—')+'<br><b>נרשם ע"י:</b> '+esc(L.lender||'—')+(L.returned?('<br><b>הוחזר:</b> '+lnFmtDate(L.returnedAt)+(L.returnedBy?(' · '+esc(L.returnedBy)):'')):'')+'</div>'
+        +'<div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:26px">'
+        +'<div><div style="font-size:12.5px;color:#475569;margin-bottom:6px">חתימת המקבל:</div>'+sig+'</div>'
+        +'<div style="font-size:11px;color:#94a3b8">הופק מאפליקציית שרשרת האספקה</div></div>';
+      d.style.display='block'; d.scrollTop=0;
+    }
+    var lnEditId=null;
+    function lnResetForm(){
+      lnEditId=null;
+      $('tkLnFirst').value=''; $('tkLnLast').value=''; $('tkLnEmp').value='';
+      if($('tkLnSupName'))$('tkLnSupName').value=''; if($('tkLnSupContact'))$('tkLnSupContact').value=''; if($('tkLnSupPhone'))$('tkLnSupPhone').value='';
+      $('tkLnDue').value=''; $('tkLnItems').innerHTML=''; lnAddItem(); sgFit();
+      $('tkLnSave').textContent='💾 שמור השאלה';
+      var c=$('tkLnCancelEdit'); if(c) c.style.display='none';
+      $('tkLnNote').textContent='';
+    }
+    var lnCancel=$('tkLnCancelEdit'); if(lnCancel) lnCancel.addEventListener('click', lnResetForm);
+    function lnEdit(id){
+      var L=lnLoans.filter(function(x){ return x.id===id; })[0]; if(!L) return;
+      lnSetKind(L.kind==='supplier'?'supplier':'emp');
+      $('tkLnFirst').value=L.firstName||''; $('tkLnLast').value=L.lastName||''; $('tkLnEmp').value=L.empNum||'';
+      if($('tkLnSupName'))$('tkLnSupName').value=L.supplier||''; if($('tkLnSupContact'))$('tkLnSupContact').value=L.contact||''; if($('tkLnSupPhone'))$('tkLnSupPhone').value=L.phone||'';
+      $('tkLnDue').value=L.dueDate||'';
+      var items=lnItemsOf(L); $('tkLnItems').innerHTML='';
+      (items.length?items:[{}]).forEach(function(it){ lnAddItem(); var rows=$('tkLnItems').querySelectorAll('.ln-item'); var row=rows[rows.length-1];
+        row.querySelector('.ln-sku').value=it.sku||''; row.querySelector('.ln-desc').value=it.desc||''; row.querySelector('.ln-serial').value=it.serial||''; });
+      sgFit();
+      lnEditId=id;
+      $('tkLnSave').textContent='💾 עדכן השאלה';
+      var c=$('tkLnCancelEdit'); if(c) c.style.display='block';
+      $('tkLnNote').textContent='עורך השאלה קיימת · חתום מחדש רק אם רוצים להחליף את החתימה';
+      lnShow('new');
+    }
     lnPane.addEventListener('click', function(e){
       if(e.target.dataset&&e.target.dataset.lnsig){ var im=e.target; im.style.height=(im.style.height==='42px'||!im.style.height)?'150px':'42px'; im.style.maxWidth=(im.style.height==='150px')?'100%':'70%'; return; }
+      var docId=e.target.dataset&&e.target.dataset.lndoc;
+      if(docId){ lnDoc(docId); return; }
+      var eid=e.target.dataset&&e.target.dataset.lnedit;
+      if(eid){ lnEdit(eid); return; }
+      var did=e.target.dataset&&e.target.dataset.lndel;
+      if(did){ if(!lnCanDel()){ alert('מחיקה מותרת רק לאבידן (מפתח).'); return; } if(!confirm('למחוק את ההשאלה לצמיתות?')) return;
+        lnPost({action:'loanDelete', id:did}).then(function(j){ if(j&&j.ok){ if(lnEditId===did) lnResetForm(); lnLoad(); } else alert('מחיקה נכשלה — נסה שוב.'); }).catch(function(){ alert('שגיאת חיבור.'); }); return; }
       var rid=e.target.dataset&&e.target.dataset.lnret;
       var wid=e.target.dataset&&e.target.dataset.lnwa;
       if(rid){ if(!confirm('לסמן שהציוד הוחזר?')) return; var by=''; try{ by=(localStorage.getItem('afcon_me')||localStorage.getItem('afcon_reporter')||'').trim(); }catch(_){ }
@@ -916,12 +1037,13 @@
       if(lnKind==='supplier' && !sup){ $('tkLnNote').textContent='נא למלא את שם הספק.'; return; }
       var items=[]; lnPane.querySelectorAll('.ln-item').forEach(function(it){ var sku=it.querySelector('.ln-sku').value.trim(), d=it.querySelector('.ln-desc').value.trim(), sr=it.querySelector('.ln-serial').value.trim(); if(sku||d||sr) items.push({sku:sku,desc:d,serial:sr}); });
       if(!items.length){ $('tkLnNote').textContent='נא להוסיף לפחות פריט אחד.'; return; }
-      if(!lnSigDirty){ $('tkLnNote').textContent='נא לחתום (בכתב יד) לפני שמירה.'; return; }
-      var sig=''; try{ sig=sg.toDataURL('image/jpeg',0.6); }catch(e){}
+      if(!lnEditId && !lnSigDirty){ $('tkLnNote').textContent='נא לחתום (בכתב יד) לפני שמירה.'; return; }
+      var sig=''; if(lnSigDirty){ try{ sig=sg.toDataURL('image/jpeg',0.6); }catch(e){} }
       var lender=''; try{ lender=(localStorage.getItem('afcon_me')||localStorage.getItem('afcon_reporter')||'').trim(); }catch(_){ }
       $('tkLnNote').textContent='שומר…';
-      lnPost({action:'loanAdd', id:'L'+Date.now()+(Math.random()*1000|0), kind:lnKind, firstName:fn, lastName:ln2, empNum:emp, supplier:sup, contact:sc, phone:sp, items:JSON.stringify(items), dueDate:$('tkLnDue').value||'', signature:sig, lender:lender})
-        .then(function(j){ if(j&&j.ok){ $('tkLnNote').textContent='✓ ההשאלה נשמרה'; $('tkLnFirst').value=''; $('tkLnLast').value=''; $('tkLnEmp').value=''; if($('tkLnSupName'))$('tkLnSupName').value=''; if($('tkLnSupContact'))$('tkLnSupContact').value=''; if($('tkLnSupPhone'))$('tkLnSupPhone').value=''; $('tkLnDue').value=''; $('tkLnItems').innerHTML=''; lnAddItem(); sgFit(); lnLoad(); }
+      var body={action:(lnEditId?'loanUpdate':'loanAdd'), id:(lnEditId||('L'+Date.now()+(Math.random()*1000|0))), kind:lnKind, firstName:fn, lastName:ln2, empNum:emp, supplier:sup, contact:sc, phone:sp, items:JSON.stringify(items), dueDate:$('tkLnDue').value||'', signature:sig, lender:lender};
+      lnPost(body)
+        .then(function(j){ if(j&&j.ok){ var wasEdit=!!lnEditId; lnResetForm(); lnShow('open'); $('tkLnNote').textContent=wasEdit?'✓ ההשאלה עודכנה':'✓ ההשאלה נשמרה'; lnLoad(); }
           else $('tkLnNote').textContent='שמירה נכשלה — נסה שוב.'; })
         .catch(function(){ $('tkLnNote').textContent='שגיאת חיבור לשרת.'; });
     });
