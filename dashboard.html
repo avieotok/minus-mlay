@@ -1266,9 +1266,14 @@
   async function saveResp(id, text){
     const a=ALERTS.find(x=>String(x.id)===String(id));
     const status=(a&&a.status==='טופל')?'טופל':'בטיפול';
-    if(a){ a.response=text; a.status=status; a.ackBy=me(); a.updated=new Date().toISOString(); }
+    const needAssign=(a && !String(a.assignee||'').trim() && status!=='טופל');
+    if(a){ a.response=text; a.status=status; a.ackBy=me(); if(needAssign) a.assignee=me(); a.updated=new Date().toISOString(); }
     render();
-    try{ await apiPost('ack',{id:id, ackBy:me(), response:text, status:status}); toast('נשמר ✓'); setTimeout(load,400); }
+    try{
+      if(needAssign){ await apiPost('assign',{id:id, assignee:me(), status:status}); }
+      await apiPost('ack',{id:id, ackBy:me(), response:text, status:status});
+      toast('נשמר ✓'); setTimeout(load,600);
+    }
     catch(e){ toast('השמירה נכשלה — רענן ונסה שוב'); }
   }
   function needMe(){ if(!me()){ toast('בחר את שמך בהגדרות ⚙️'); openModal(); return true; } return false; }
@@ -1456,7 +1461,9 @@
         const al=ALERTS.find(x=>String(x.id)===String(id));
         if(al && String(al.status)==='בטיפול' && String(al.assignee||'')===me()){ backToPending(id); return; } // לחיצה שנייה → חזרה לממתין
         const ed=card.querySelector('.editor textarea'); assignTo(id, me(), 'בטיפול', ed?ed.value:''); return; }
-      if(a==='טופל'){ if(needMe()) return; const ed=card.querySelector('.editor textarea'); const txt=ed?ed.value.trim():'';
+      if(a==='טופל'){ if(needMe()) return; const ed=card.querySelector('.editor textarea');
+        const alD=ALERTS.find(x=>String(x.id)===String(id));
+        const txt=(ed?ed.value.trim():'')||String((alD&&alD.response)||'').trim();
         if(!txt){ card.querySelector('.editor').classList.add('open'); if(ed) ed.focus(); toast('יש למלא "פעולות לטיפול" לפני סגירת הפנייה'); return; }
         assignTo(id, me(), 'טופל', txt); return; }
       return;
