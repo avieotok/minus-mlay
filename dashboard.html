@@ -1197,8 +1197,8 @@
           +genBtn(a)
           +'</div>'
           +'<div class="transfer"><select class="tsel">'+buyerOptions()+'</select><button class="tgo">העבר</button></div>'
-          +'<div class="editor"><div style="font-size:12.5px;color:#a8a29e;margin-bottom:5px;font-weight:700">📋 פעולות לטיפול בפנייה (חובה לסגירת הפנייה)</div><textarea placeholder="מה בוצע? לדוגמה: הוזמן מספק X · מספר הזמנה 123 · מגיע יום ג׳">'+esc(a.response||'')+'</textarea>'
-          +'<button class="save">שמור פעולות ועדכן</button></div>'
+          +'<div class="editor'+(pendingDone[a.id]?' open':'')+'"><div style="font-size:12.5px;color:#a8a29e;margin-bottom:5px;font-weight:700">📋 פעולות לטיפול בפנייה (חובה לסגירת הפנייה)</div><textarea placeholder="מה בוצע? לדוגמה: הוזמן מספק X · מספר הזמנה 123 · מגיע יום ג׳">'+esc(a.response||'')+'</textarea>'
+          +'<button class="save">'+(pendingDone[a.id]?'✅ שמור וסגור — טופל':'שמור פעולות ועדכן')+'</button></div>'
           +genPanel(a))
         ))
         +'</div>';
@@ -1277,6 +1277,7 @@
     catch(e){ toast('השמירה נכשלה — רענן ונסה שוב'); }
   }
   function needMe(){ if(!me()){ toast('בחר את שמך בהגדרות ⚙️'); openModal(); return true; } return false; }
+  const pendingDone={};
 
   $('list').addEventListener('change', e=>{
     const cb=e.target;
@@ -1457,14 +1458,18 @@
       if(a==='transfer'){ card.querySelector('.transfer').classList.toggle('open'); return; }
       if(a==='order'){ openOrderPanel(card, id); return; }
       if(a==='reopen'){ reopenAlert(id); return; }
-      if(a==='בטיפול'){ if(needMe()) return;
+      if(a==='בטיפול'){ if(needMe()) return; delete pendingDone[id];
         const al=ALERTS.find(x=>String(x.id)===String(id));
         if(al && String(al.status)==='בטיפול' && String(al.assignee||'')===me()){ backToPending(id); return; } // לחיצה שנייה → חזרה לממתין
         const ed=card.querySelector('.editor textarea'); assignTo(id, me(), 'בטיפול', ed?ed.value:''); return; }
       if(a==='טופל'){ if(needMe()) return; const ed=card.querySelector('.editor textarea');
         const alD=ALERTS.find(x=>String(x.id)===String(id));
         const txt=(ed?ed.value.trim():'')||String((alD&&alD.response)||'').trim();
-        if(!txt){ card.querySelector('.editor').classList.add('open'); if(ed) ed.focus(); toast('יש למלא "פעולות לטיפול" לפני סגירת הפנייה'); return; }
+        if(!txt){ pendingDone[id]=true;
+          card.querySelector('.editor').classList.add('open'); if(ed) ed.focus();
+          const sv=card.querySelector('.editor .save'); if(sv) sv.textContent='✅ שמור וסגור — טופל';
+          toast('כתוב את הפעולות ולחץ "שמור וסגור" — הפנייה תיסגר להיסטוריה'); return; }
+        delete pendingDone[id];
         assignTo(id, me(), 'טופל', txt); return; }
       return;
     }
@@ -1493,7 +1498,14 @@
     }
     if(e.target.closest('.save')){
       if(needMe()) return;
-      saveResp(id, card.querySelector('.editor textarea').value.trim());
+      const txtS=card.querySelector('.editor textarea').value.trim();
+      if(pendingDone[id]){
+        if(!txtS){ toast('יש למלא "פעולות לטיפול" לפני הסגירה'); return; }
+        delete pendingDone[id];
+        assignTo(id, me(), 'טופל', txtS);
+        return;
+      }
+      saveResp(id, txtS);
       return;
     }
     // לחיצה על אזור "נייטרלי" של הרשומה (לא על כפתור/שדה) → פתיחה במסך מלא
