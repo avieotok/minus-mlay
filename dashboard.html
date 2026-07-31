@@ -603,6 +603,14 @@
       </div>
 
       <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
+        <div style="font-weight:700;font-size:calc(14px * var(--ts));margin-bottom:8px;color:var(--amber2)">🔢 מחיקת קריאה ומספור מחדש</div>
+        <p style="font-size:calc(13px * var(--ts));color:var(--faint);line-height:1.6;margin-bottom:10px">מוחק קריאה אחת ומסדר מחדש את המספרים של כל השאר ברצף — בלי חורים. גיבוי מלא יורד למחשב אוטומטית לפני הביצוע, ואם משהו נכשל בדרך שום דבר לא משתנה.</p>
+        <div class="field"><select id="renumSel"><option value="">— בחר קריאה למחיקה —</option></select></div>
+        <button class="ghost" id="renumBtn" style="border-color:#7f1d1d;color:#f87171">🔢 מחק ומספר מחדש</button>
+        <div class="note" id="renumNote"></div>
+        <p style="font-size:calc(13px * var(--ts));color:var(--faint);line-height:1.6;margin-top:8px">⚠️ המספר של הקריאה <b>הבאה</b> נקבע במונה שיושב בשרת (Apps Script) ולא מתעדכן מכאן. אחרי מספור מחדש — שלח דיווח בדיקה אחד וודא שהמספר ממשיך ברצף.</p>
+      </div>
+      <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
         <div style="font-weight:700;font-size:calc(14px * var(--ts));margin-bottom:8px;color:#f87171">🧹 איפוס כל ההתראות</div>
         <p style="font-size:calc(13px * var(--ts));color:var(--faint);line-height:1.6;margin-bottom:10px">מוחק את <b>כל</b> ההתראות מהמערכת לצמיתות (ממתינות, בטיפול וטופלו). השמות והקטלוג יישארו. פעולה זו אינה הפיכה.</p>
         <button class="ghost" id="clearAll" style="border-color:#7f1d1d;color:#f87171">🧹 אפס את כל ההתראות</button>
@@ -1810,6 +1818,91 @@
     try{ const r=await apiPost('versionSet'); if(r&&r.ok){ LOADED_VER=Number(r.version); $('pubNote').textContent='✓ פורסם — כל המכשירים יתעדכנו תוך דקה'; } else $('pubNote').textContent='הפרסום נכשל.'; }
     catch(e){ $('pubNote').textContent='הפרסום נכשל — בדוק חיבור.'; }
   });
+  /* ===== מחיקת קריאה + מספור מחדש של כל השאר ===== */
+  (function(){
+    const sel=$('renumSel'), btn=$('renumBtn'), note=$('renumNote');
+    if(!sel||!btn) return;
+
+    const RX=/^(.*?)(\d+)$/;
+    function tkNum(t){ const m=RX.exec(String(t||'')); return m?parseInt(m[2],10):null; }
+    function tkPre(t){ const m=RX.exec(String(t||'')); return m?m[1]:''; }
+    function tkPad(t){ const m=RX.exec(String(t||'')); return m?m[2].length:4; }
+
+    function fill(){
+      const keep=sel.value;
+      const rows=(ALERTS||[]).filter(a=>a&&a.ticket).slice()
+        .sort((a,b)=>(tkNum(a.ticket)||0)-(tkNum(b.ticket)||0));
+      sel.innerHTML='<option value="">— בחר קריאה למחיקה —</option>'+rows.map(a=>{
+        const d=String(a.desc||a.sku||'').slice(0,40);
+        return '<option value="'+esc(String(a.id))+'">'+esc(a.ticket)+' · '+esc(d)+(a.status?(' · '+esc(a.status)):'')+'</option>';
+      }).join('');
+      if(keep) sel.value=keep;
+    }
+    sel.addEventListener('mousedown',fill);
+    sel.addEventListener('focus',fill);
+    setTimeout(fill,1500);
+
+    function downloadSnap(snap,tag){
+      try{
+        const blob=new Blob([JSON.stringify(snap)],{type:'application/json'});
+        const url=URL.createObjectURL(blob); const a=document.createElement('a');
+        const stamp=new Date().toISOString().slice(0,16).replace(/[:T]/g,'-');
+        a.href=url; a.download='גיבוי-'+tag+'-'+stamp+'.json';
+        document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+        return true;
+      }catch(e){ return false; }
+    }
+
+    btn.addEventListener('click', async ()=>{
+      const id=sel.value;
+      if(!id){ note.textContent='בחר קריאה מהרשימה.'; return; }
+      const cur=(ALERTS||[]).find(x=>String(x.id)===String(id));
+      const label=cur?(cur.ticket+' · '+String(cur.desc||cur.sku||'')):String(id);
+
+      if(!confirm('למחוק את הקריאה '+label+' ולמספר מחדש את כל השאר ברצף?\n\nלפני הביצוע יירד למחשב גיבוי מלא.\nהפעולה אינה הפיכה.')) return;
+      const typed=prompt('אישור אחרון. הקלד את המילה: מספר');
+      if((typed||'').trim()!=='מספר'){ note.textContent='בוטל.'; return; }
+
+      btn.disabled=true;
+      note.textContent='אוסף נתונים ומכין גיבוי (כולל תמונות — עשוי לקחת רגע)…';
+      try{
+        const [all,contacts,news,roster,catalog,photos]=await Promise.all([
+          apiGet('all'), apiGet('contacts'), apiGet('news'), apiGet('roster'), apiGet('catalog'), apiGet('photosAll')
+        ]);
+        const parts=[['פניות',all],['אנשי קשר',contacts],['ידיעון',news],['שמות',roster],['קטלוג',catalog],['תמונות',photos]];
+        const bad=parts.filter(x=>!x[1]||x[1].ok===false).map(x=>x[0]);
+        if(bad.length){ note.textContent='שליפת '+bad.join(', ')+' נכשלה — בוטל. שום דבר לא שונה.'; btn.disabled=false; return; }
+        if(!Array.isArray(all.alerts)){ note.textContent='תשובת השרת לא תקינה — בוטל. שום דבר לא שונה.'; btn.disabled=false; return; }
+
+        const snap={ _app:'afcon-portal', _ver:1, _exported:new Date().toISOString(),
+          alerts:all.alerts||[], contacts:contacts.contacts||[], news:news.news||[],
+          catalog:catalog.items||{}, buyers:roster.buyers||[], reporters:roster.reporters||[],
+          photos:photos.photos||[] };
+
+        if(!downloadSnap(snap,'לפני-מספור-מחדש')){ note.textContent='לא הצלחתי להוריד גיבוי — בוטל למען הזהירות.'; btn.disabled=false; return; }
+
+        const keep=snap.alerts.filter(x=>String(x.id)!==String(id));
+        if(keep.length===snap.alerts.length){ note.textContent='הקריאה לא נמצאה בנתוני השרת — בוטל. רענן ונסה שוב.'; btn.disabled=false; return; }
+
+        const ref=(cur&&cur.ticket)||(snap.alerts.find(x=>x&&x.ticket)||{}).ticket||'';
+        const pre=tkPre(ref), pad=tkPad(ref);
+        const numbered=keep.filter(x=>tkNum(x.ticket)!==null).sort((a,b)=>tkNum(a.ticket)-tkNum(b.ticket));
+        numbered.forEach((x,i)=>{ x.ticket=pre+String(i+1).padStart(pad,'0'); });
+
+        snap.alerts=keep;
+        note.textContent='כותב לשרת… נא לא לסגור את החלון.';
+        const r=await apiPost('importAll',{data:snap});
+        if(r&&r.ok){
+          note.textContent='✓ נמחקה '+label+' · '+numbered.length+' קריאות מוספרו מחדש החל מ-'+pre+String(1).padStart(pad,'0');
+          await load(); fill();
+        } else {
+          note.textContent='הכתיבה לשרת נכשלה — הנתונים לא שונו. אם משהו נראה חסר, שחזר מהגיבוי שירד.';
+        }
+      }catch(e){ note.textContent='הפעולה נכשלה — '+e+'. אם משהו נראה חסר, שחזר מהגיבוי שירד.'; }
+      btn.disabled=false;
+    });
+  })();
+
   const ca=$('clearAll'); if(ca) ca.addEventListener('click', async ()=>{
     if(!confirm('לאפס את כל ההתראות במערכת? כל הדיווחים (ממתינים, בטיפול וטופלו) יימחקו לצמיתות, ומספור הקריאות יתאפס חזרה ל-0001.')) return;
     const typed=prompt('פעולה בלתי הפיכה. הקלד את המילה: מחק');
