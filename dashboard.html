@@ -504,6 +504,23 @@
     .clockbar .clk-time{font-size:calc(17px * var(--ts))}
   }
   @media print{ .clockbar{display:none !important} }
+
+  /* ================= חיווי עדכון חי ================= */
+  .live{display:inline-flex;align-items:center;gap:6px;font-weight:700;
+    font-size:calc(13px * var(--ts));color:var(--muted);white-space:nowrap}
+  .live .dot2{width:8px;height:8px;border-radius:50%;background:var(--green);flex:0 0 auto;
+    box-shadow:0 0 0 0 rgba(34,197,94,.55);animation:livepulse 2.4s ease-out infinite}
+  @keyframes livepulse{
+    0%{box-shadow:0 0 0 0 rgba(34,197,94,.5)}
+    70%{box-shadow:0 0 0 7px rgba(34,197,94,0)}
+    100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}
+  }
+  .live.paused .dot2{background:var(--faint);animation:none}
+  .live.paused{color:var(--faint)}
+  .live.err .dot2{background:var(--amber);animation:none}
+  .live.err{color:var(--amber2)}
+  .live .live-n{background:var(--gold);color:#171309;border-radius:999px;padding:0 8px;font-weight:800}
+  @media print{ .live{display:none !important} }
 </style>
 </head>
 <body>
@@ -532,7 +549,8 @@
       <div class="badge"><img src="icon.png" alt="אפקון" onerror="this.outerHTML='<span style=\'font-family:Rubik;font-weight:900;color:#e2231a;font-size:22px\'>A</span>'"></div>
       <div>
         <div class="ttl">שרשרת האספקה</div>
-        <div class="sub"><span class="dot" id="dot"></span><span id="status">לא מחובר</span></div>
+        <div class="sub"><span class="dot" id="dot"></span><span id="status">לא מחובר</span>
+          <span class="live" id="liveTag" title="הלוח מתעדכן מעצמו — אין צורך לרענן"><span class="dot2"></span><span id="liveTxt">חי</span></span></div>
         <div id="meBar" style="font-size:calc(13px * var(--ts));color:var(--green2);font-weight:700;margin-top:2px"></div>
       </div>
       <div class="top-actions">
@@ -1466,6 +1484,7 @@
   async function load(){
     if(!apiOn()){ renderEmptyConfig(); setConn(); return; }
     if(busy) return; busy=true;
+    liveMark('טוען…');
     if(seen===null && !ALERTS.length){ try{ $('list').innerHTML='<div class="skel"></div><div class="skel"></div><div class="skel"></div>'; }catch(e){} }
     try{
       const res=await apiGet('all');
@@ -1475,13 +1494,36 @@
         if(seen===null){ seen=new Set(ids); }
         else { const freshIds=ids.filter(id=>!seen.has(id)); ids.forEach(id=>seen.add(id)); if(freshIds.length){ const fresh=ALERTS.filter(a=>freshIds.indexOf(String(a.id))>=0); notifyNew(fresh); } }
         reconcileChat();
-        $('status').textContent='מעודכן '+new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}); render(); loadNews();
+        $('status').textContent='מעודכן '+new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+        LAST_OK=Date.now(); LIVE_ERR=false;
+        render(); loadNews();
         if(document.querySelector('main.kpi-mode')) renderKpiDash();
       }
-      else { $('status').textContent='שגיאה — בדוק טוקן'; }
-    }catch(e){ $('status').textContent='אין חיבור — בדוק כתובת/רשת'; }
-    busy=false;
+      else { $('status').textContent='שגיאה — בדוק טוקן'; LIVE_ERR=true; }
+    }catch(e){ $('status').textContent='אין חיבור — בדוק כתובת/רשת'; LIVE_ERR=true; }
+    busy=false; liveMark();
   }
+
+  /* ================= עדכון חי =================
+     הלוח נשלף בקצב מותאם: מהיר כשעובדים עליו, איטי כשהוא פתוח ברקע.
+     קודם הרענון היה נעצר לחלוטין כל עוד הסמן היה בתוך שדה טקסט — כלומר
+     קניין שהשאיר את הסמן בתיבת צ'אט לא קיבל שום פנייה חדשה. */
+  let LAST_OK=0, LIVE_ERR=false, LAST_ACT=Date.now();
+  const FAST_MS=10000, SLOW_MS=30000, ACTIVE_WINDOW=120000;
+  ['click','keydown','touchstart','scroll'].forEach(function(ev){
+    document.addEventListener(ev, function(){ LAST_ACT=Date.now(); }, {passive:true, capture:true});
+  });
+  function liveInterval(){ return (Date.now()-LAST_ACT < ACTIVE_WINDOW) ? FAST_MS : SLOW_MS; }
+  function liveMark(txt){
+    const t=$('liveTag'), x=$('liveTxt'); if(!t||!x) return;
+    if(txt){ t.className='live'; x.textContent=txt; return; }
+    if(LIVE_ERR){ t.className='live err'; x.textContent='אין עדכון'; return; }
+    if(document.visibilityState==='hidden'){ t.className='live paused'; x.textContent='מושהה'; return; }
+    t.className='live';
+    const secs=LAST_OK?Math.round((Date.now()-LAST_OK)/1000):0;
+    x.textContent = secs<8 ? 'חי' : ('חי · לפני '+(secs<60?(secs+' שנ׳'):(Math.round(secs/60)+' דק׳')));
+  }
+  setInterval(liveMark, 3000);
 
   function kpis(){
     let w=0,p=0,u=0,d=0;
@@ -1582,11 +1624,25 @@
       k.classList.toggle('sel', f===fStatus);
     });
     const list=$('list'), items=filtered();
-    const openState={}; const orderDraft={};
+    const openState={}; const orderDraft={}; const textDraft={};
+    // שמירת כל מה שהוקלד ועדיין לא נשלח — קודם רענון היה מוחק אותו,
+    // ולכן הרענון האוטומטי נחסם לגמרי כל עוד הסמן היה בתוך שדה.
+    const _act=document.activeElement;
+    let _focus=null;
     list.querySelectorAll('.card').forEach(c=>{ const cid=c.dataset.id; const o=[];
       if(c.querySelector('.editor.open'))o.push('editor'); if(c.querySelector('.transfer.open'))o.push('transfer'); if(c.querySelector('.genchat.open'))o.push('genchat');
       const _op=c.querySelector('.order.open'); if(_op){ o.push('order'); orderDraft[cid]={ msg:(_op.querySelector('.omsg')||{}).value||'', ph:(_op.querySelector('.osel')||{}).value||'' }; }
-      if(o.length)openState[cid]=o; });
+      if(o.length)openState[cid]=o;
+      const gi=c.querySelector('.gin'), ed=c.querySelector('.editor textarea');
+      const d={};
+      if(gi && gi.value) d.gin=gi.value;
+      if(ed && ed.value) d.ed=ed.value;
+      if(d.gin||d.ed) textDraft[cid]=d;
+      if(_act && c.contains(_act)){
+        _focus={cid:cid, sel:(_act.classList&&_act.classList.contains('gin'))?'.gin':(_act.matches&&_act.matches('.editor textarea'))?'.editor textarea':null,
+                pos:(typeof _act.selectionStart==='number')?_act.selectionStart:null};
+      }
+    });
     if(!items.length){ list.innerHTML='<div class="empty"><div class="big">📭</div>אין דיווחים שתואמים לסינון.</div>'; applyFullCard(); return; }
     const bar = '';
     list.innerHTML = bar + items.map(a=>{
@@ -1643,6 +1699,18 @@
       if(cls==='order'){ const d=orderDraft[cid]||{}; const mg=el.querySelector('.omsg'); if(mg) mg.value=d.msg||orderMsg(ALERTS.find(x=>String(x.id)===cid)||{});
         const sl=el.querySelector('.osel'); loadSuppliers(function(sup){ var wp=sup.filter(function(x){return waPhone(x.p1)||waPhone(x.p2);}); wp.sort(function(x,y){return String(x.supplier||'').localeCompare(String(y.supplier||''),'he');}); sl.innerHTML='<option value="">בחר ספק…</option>'+wp.map(function(x){var ph=waPhone(x.p1)||waPhone(x.p2);return '<option value="'+ph+'"'+(ph===d.ph?' selected':'')+'>'+esc(x.supplier||'ספק')+' · '+esc(x.p1||x.p2)+'</option>';}).join(''); }); }
     } }); });
+    // החזרת הטיוטות והפוקוס בדיוק למקום שבו היו
+    Object.keys(textDraft).forEach(cid=>{
+      const c=list.querySelector('.card[data-id="'+cid+'"]'); if(!c) return;
+      const d=textDraft[cid];
+      if(d.gin){ const gi=c.querySelector('.gin'); if(gi) gi.value=d.gin; }
+      if(d.ed){ const ed=c.querySelector('.editor textarea'); if(ed) ed.value=d.ed; }
+    });
+    if(_focus && _focus.sel){
+      const c=list.querySelector('.card[data-id="'+_focus.cid+'"]');
+      const el=c&&c.querySelector(_focus.sel);
+      if(el){ try{ el.focus(); if(_focus.pos!=null && el.setSelectionRange) el.setSelectionRange(_focus.pos,_focus.pos); }catch(e){} }
+    }
     fetchPendingPhotos();
     fetchChatPhotos();
     updateTypeChipsBlink();
@@ -2023,7 +2091,23 @@
   // refresh + auto
   $('refreshBtn').addEventListener('click', load);
   function isTyping(){ const el=document.activeElement; return !!(el && el.closest && el.closest('#list') && /TEXTAREA|INPUT|SELECT/.test(el.tagName)); }
-  function startAuto(){ if(timer) clearInterval(timer); timer=setInterval(()=>{ if(auto&&document.visibilityState==='visible'&&!isTyping()) load(); }, 30000); }
+  function startAuto(){
+    if(timer) clearInterval(timer);
+    // בדיקה כל שנייה, שליפה בפועל לפי הקצב המותאם — כך המעבר בין
+    // "פעיל" ל"רקע" מיידי, בלי להמתין לסוף מחזור ארוך.
+    timer=setInterval(function(){
+      if(!auto || !apiOn()) return;
+      if(document.visibilityState==='hidden') return;
+      if(busy) return;
+      if(Date.now()-LAST_OK >= liveInterval()) load();
+    }, 1000);
+  }
+  // חזרה ללשונית — שליפה מיידית, בלי להמתין למחזור
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState!=='hidden' && auto && apiOn()) load();
+    liveMark();
+  });
+  window.addEventListener('online', function(){ if(auto&&apiOn()) load(); });
 
   // export — אקסל אחד, לשונית לכל תווית (חוסר מלאי / פגום / אי-התאמה)
   function buildExportWb(useAll){
