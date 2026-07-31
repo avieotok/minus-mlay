@@ -492,7 +492,7 @@
         </table>
       </div>
       <label class="field" id="fldNote" style="display:none"><span class="label" id="noteLabel">מה הבעיה?</span>
-        <textarea class="input" id="noteText" rows="2" placeholder="פרט כאן…" style="resize:vertical;min-height:48px;font-family:'Heebo',sans-serif"></textarea></label>
+        <textarea class="input" id="noteText" rows="2" maxlength="220" placeholder="פרט כאן…" style="resize:vertical;min-height:48px;font-family:'Heebo',sans-serif"></textarea></label>
       <div id="fldPhotos" style="display:none">
         <span class="label" id="photoFldLabel">תמונות (המוצר + המק״ט)</span>
         <input type="file" id="defFile" accept="image/*" capture="environment" multiple class="hidden">
@@ -786,7 +786,10 @@
   const K={boss:'afcon_boss', reporter:'afcon_reporter', hist:'afcon_history',
            api:'afcon_api_url', token:'afcon_api_token', seen:'afcon_seen_feedback'};
   // חיבור מוטמע מראש — האפליקציה מחוברת אוטומטית בלי הגדרה ידנית
-  try{ if(localStorage.getItem(K.api)!==EMBED_API){ localStorage.setItem(K.api, EMBED_API); } if(localStorage.getItem(K.token)!==EMBED_TOKEN){ localStorage.setItem(K.token, EMBED_TOKEN); } }catch(e){}
+  // גם כאן דרך typeof — הפניה ישירה ל-EMBED_API זורקת ReferenceError אם config.js לא נטען
+  try{ var _ea=(typeof EMBED_API!=='undefined')?EMBED_API:'', _et=(typeof EMBED_TOKEN!=='undefined')?EMBED_TOKEN:'';
+    if(_ea && localStorage.getItem(K.api)!==_ea){ localStorage.setItem(K.api, _ea); }
+    if(_et && localStorage.getItem(K.token)!==_et){ localStorage.setItem(K.token, _et); } }catch(e){}
   const APP_URL='https://avieotok.github.io/minus-mlay';
   // יצירת שני קודי QR — למחסנאים וללוח הקניינים
   function renderQRs(){
@@ -815,8 +818,12 @@
   let cardMode=false;
 
   // ===== חיבור למערכת המשותפת (Google Sheet דרך Apps Script) =====
-  function apiUrl(){ return (localStorage.getItem(K.api)||EMBED_API||'').trim(); }
-  function apiToken(){ return (localStorage.getItem(K.token)||EMBED_TOKEN||'').trim(); }
+  // typeof מגן מפני ReferenceError אם config.js לא הגיע — בלי זה
+  // מכשיר חדש בלי נתונים מקומיים היה נתקע על מסך ריק בלי שום הודעה.
+  function embedApi(){ try{ return (typeof EMBED_API!=='undefined' && EMBED_API) ? EMBED_API : ''; }catch(e){ return ''; } }
+  function embedTok(){ try{ return (typeof EMBED_TOKEN!=='undefined' && EMBED_TOKEN) ? EMBED_TOKEN : ''; }catch(e){ return ''; } }
+  function apiUrl(){ return (localStorage.getItem(K.api)||embedApi()||'').trim(); }
+  function apiToken(){ return (localStorage.getItem(K.token)||embedTok()||'').trim(); }
   try{ window.__AFCON_API={get url(){return apiUrl();}, get token(){return apiToken();}}; }catch(e){}
   function apiOn(){ return !!apiUrl(); }
   function newAlertId(){ return 'A'+Date.now()+Math.floor(Math.random()*1000); }
@@ -831,6 +838,12 @@
       if(params) for(const k in params){ if(params[k]!=null) url.searchParams.set(k, params[k]); }
       url.searchParams.set('callback', cb);
       url.searchParams.set('_', Date.now());
+      // הכתיבות עוברות בכתובת URL. טקסט עברי תופס שישה תווים לאות אחרי
+      // קידוד, ולכן טקסט ארוך חצה את גבול הכתובת ונכשל בלי שום הודעה.
+      // כאן זה הופך לשגיאה מפורשת במקום להיעלם בשקט.
+      if(url.toString().length > 1900){
+        var e=new Error('URL_TOO_LONG'); e.tooLong=true; reject(e); return;
+      }
       const s=document.createElement('script');
       let done=false;
       function cleanup(){ try{ delete window[cb]; }catch(e){ window[cb]=undefined; } if(s&&s.parentNode) s.parentNode.removeChild(s); }
@@ -1406,6 +1419,19 @@
   $('sendText').addEventListener('click',()=>{ hide($('sentWrap')); hide($('dupWrap')); if(!$('txtSku').value.trim()){ setStatus('נא למלא מק״ט.'); try{$('txtSku').focus();}catch(e){} return; } trySend('text'); });
 
   // נושא הדיווח הנוכחי (מק״ט/תיאור/כמות) לפי המצב
+  const NOTE_SOFT_MAX=170;   // מעבר לזה הכתובת מתקרבת לגבול הבטוח
+  (function(){
+    const el=document.getElementById('noteText'); if(!el) return;
+    const w=document.createElement('div');
+    w.style.cssText='font-size:calc(13px * var(--ts));color:var(--amber2);font-weight:700;margin-top:5px;display:none';
+    el.parentNode.appendChild(w);
+    el.addEventListener('input', function(){
+      const n=(el.value||'').length;
+      if(n>NOTE_SOFT_MAX){ w.style.display='block';
+        w.textContent='נותרו '+(220-n)+' תווים. לפירוט נוסף אפשר להמשיך בצ׳אט הפנייה.'; }
+      else w.style.display='none';
+    });
+  })();
   function subjectFor(kind){
     if(kind==='text' || cardMode){
       const sku=$('txtSku').value.trim();
@@ -1502,9 +1528,20 @@
     if(navigator.onLine===false){ if(manual) showToast('עדיין אין חיבור — הדיווחים שמורים ⏳'); return; }
     obxBusy=true;
     const bar=$('obxBar'); if(bar) bar.classList.add('sending');
-    let sent=0, dups=0, stop=false;
+    let sent=0, dups=0, stop=false, landed=0;
+    // אם כבר נעשה ניסיון קודם, ייתכן שהבקשה הגיעה והתשובה אבדה.
+    // שליפה אחת של המצב מונעת רשומות כפולות בכל התור.
+    let known=null;
+    if(q.some(x=>(x.tries||0)>0)){
+      try{ const all=await apiGet('all');
+        if(all && all.ok && Array.isArray(all.alerts)) known=all.alerts.map(a=>String(a.id)); }catch(e){}
+    }
     while(q.length && !stop){
       const it=q[0];
+      if(known && known.indexOf(String(it.id))>=0){
+        // הדיווח כבר רשום בשרת — הניסיון הקודם הצליח למרות שנראה ככישלון
+        histMark(it.id,'',false); q.shift(); obxSave(q); landed++; continue;
+      }
       try{
         const r=await apiSend(it.payload);
         if(r && r.duplicate){ histMark(it.id,'',true); q.shift(); dups++; obxSave(q); }
@@ -1513,12 +1550,20 @@
           histMark(it.id, r.ticket||'', false); q.shift(); sent++; obxSave(q);
         }
         else { it.tries=(it.tries||0)+1; obxSave(q); stop=true; }
-      }catch(e){ it.tries=(it.tries||0)+1; obxSave(q); stop=true; }
+      }catch(e){
+        if(e && e.tooLong){   // ארוך מדי — ניסיון חוזר לא יעזור לעולם
+          histMark(it.id,'',false); q.shift(); obxSave(q);
+          showToast('דיווח אחד היה ארוך מדי ולא נשלח — קצר את ההערה ודווח שוב','bad');
+          continue;
+        }
+        it.tries=(it.tries||0)+1; obxSave(q); stop=true;
+      }
     }
     obxBusy=false;
     if(bar) bar.classList.remove('sending');
     obxPaint(); renderHist();
-    if(sent) showToast(sent===1?'הדיווח הממתין נשלח ✓':sent+' דיווחים ממתינים נשלחו ✓','good');
+    const okN=sent+landed;
+    if(okN) showToast(okN===1?'הדיווח הממתין נשלח ✓':okN+' דיווחים ממתינים נשלחו ✓','good');
     else if(dups) showToast('הדיווח הממתין כבר קיים במערכת','bad');
     else if(manual) showToast('עדיין אין חיבור — הדיווחים שמורים ⏳','bad');
   }
@@ -1863,7 +1908,7 @@
             +'<div class="wpending"></div>'
             +'<div class="winrow"><button class="wphoto" type="button" title="צרף או הדבק תמונה (Ctrl+V)">📷</button>'
             +'<input type="file" class="wfile" accept="image/*" style="display:none">'
-            +'<textarea class="win" placeholder="כתוב/י הודעה…"></textarea>'
+            +'<textarea class="win" maxlength="250" placeholder="כתוב/י הודעה…"></textarea>'
             +'<button class="wsend" type="button">שלח</button></div></div>'
           +'</div>';
       }).join('');
@@ -1950,7 +1995,14 @@
         const r=await apiPost('msgAdd',{id:it.id, author:it.author, text:it.text, photo:it.photo||''});
         if(r && r.ok===false) throw new Error('rejected');
         clearMsgFailed(it.mid); q.shift(); mqSave(q); sent++;
-      }catch(e){ markMsgFailed(it.mid); break; }
+      }catch(e){
+        if(e && e.tooLong){
+          q.shift(); mqSave(q);
+          showToast('הודעה אחת הייתה ארוכה מדי ולא נשלחה — קצר ונסה שוב','bad');
+          continue;
+        }
+        markMsgFailed(it.mid); break;
+      }
     }
     mqBusy=false;
     if(sent) showToast(sent===1?'ההודעה נשלחה ✓':sent+' הודעות נשלחו ✓','good');
@@ -2269,7 +2321,7 @@
 </script>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div id="platTag" style="position:fixed;bottom:5px;right:7px;font-size:10px;color:var(--faint);z-index:5;font-family:monospace;opacity:.55"></div>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:calc(13px * var(--ts));color:var(--faint);z-index:5;font-family:monospace">build 87</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:calc(13px * var(--ts));color:var(--faint);z-index:5;font-family:monospace">build 89</div>
 <!-- ===== כלי עזר (מודול עצמאי — זהה בשתי האפליקציות) ===== -->
 <style>
   #tkModal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;display:none;align-items:flex-start;justify-content:center}

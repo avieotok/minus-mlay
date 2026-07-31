@@ -836,10 +836,17 @@
   const $ = id => document.getElementById(id);
   const K = { api:'afcon_api_url', token:'afcon_api_token', me:'afcon_me', sheet:'afcon_sheet', boss:'afcon_boss' };
   // חיבור מוטמע מראש — הלוח מחובר אוטומטית בלי הגדרה ידנית
-  try{ if(localStorage.getItem(K.api)!==EMBED_API){ localStorage.setItem(K.api, EMBED_API); } if(localStorage.getItem(K.token)!==EMBED_TOKEN){ localStorage.setItem(K.token, EMBED_TOKEN); } }catch(e){}
+  // גם כאן דרך typeof — הפניה ישירה ל-EMBED_API זורקת ReferenceError אם config.js לא נטען
+  try{ var _ea=(typeof EMBED_API!=='undefined')?EMBED_API:'', _et=(typeof EMBED_TOKEN!=='undefined')?EMBED_TOKEN:'';
+    if(_ea && localStorage.getItem(K.api)!==_ea){ localStorage.setItem(K.api, _ea); }
+    if(_et && localStorage.getItem(K.token)!==_et){ localStorage.setItem(K.token, _et); } }catch(e){}
 
-  function apiUrl(){ return (localStorage.getItem(K.api)||EMBED_API||'').trim(); }
-  function apiToken(){ return (localStorage.getItem(K.token)||EMBED_TOKEN||'').trim(); }
+  // typeof מגן מפני ReferenceError אם config.js לא הגיע — בלי זה
+  // מכשיר חדש בלי נתונים מקומיים היה נתקע על מסך ריק בלי שום הודעה.
+  function embedApi(){ try{ return (typeof EMBED_API!=='undefined' && EMBED_API) ? EMBED_API : ''; }catch(e){ return ''; } }
+  function embedTok(){ try{ return (typeof EMBED_TOKEN!=='undefined' && EMBED_TOKEN) ? EMBED_TOKEN : ''; }catch(e){ return ''; } }
+  function apiUrl(){ return (localStorage.getItem(K.api)||embedApi()||'').trim(); }
+  function apiToken(){ return (localStorage.getItem(K.token)||embedTok()||'').trim(); }
   try{ window.__AFCON_API={get url(){return apiUrl();}, get token(){return apiToken();}}; }catch(e){}
   function apiOn(){ return !!apiUrl(); }
   function apiGetJsonp(action, params){
@@ -852,6 +859,12 @@
       if(params) for(const k in params){ if(params[k]!=null) url.searchParams.set(k, params[k]); }
       url.searchParams.set('callback', cb);
       url.searchParams.set('_', Date.now());
+      // הכתיבות עוברות בכתובת URL. טקסט עברי תופס שישה תווים לאות אחרי
+      // קידוד, ולכן טקסט ארוך חצה את גבול הכתובת ונכשל בלי שום הודעה.
+      // כאן זה הופך לשגיאה מפורשת במקום להיעלם בשקט.
+      if(url.toString().length > 1900){
+        var e=new Error('URL_TOO_LONG'); e.tooLong=true; reject(e); return;
+      }
       const s=document.createElement('script');
       let done=false;
       function cleanup(){ try{ delete window[cb]; }catch(e){ window[cb]=undefined; } if(s&&s.parentNode) s.parentNode.removeChild(s); }
@@ -1155,7 +1168,7 @@
       +'<div class="gpending"></div>'
       +'<div class="ginrow"><button class="gphoto" title="צרף או הדבק תמונה (Ctrl+V)">📷</button>'
       +'<input type="file" class="gfile" accept="image/*" style="display:none">'
-      +'<textarea class="gin" placeholder="כתוב/י הודעה…"></textarea>'
+      +'<textarea class="gin" maxlength="250" placeholder="כתוב/י הודעה…"></textarea>'
       +'<button class="gsend">שלח</button></div></div>';
   }
   async function fetchChatPhotos(){
@@ -1203,7 +1216,14 @@
         const r=await apiPost('msgAdd',{id:it.id, author:it.author, text:it.text, photo:it.photo||''});
         if(r && r.ok===false) throw new Error('rejected');
         clearMsgFailed(it.mid); q.shift(); mqSave(q); sent++;
-      }catch(e){ markMsgFailed(it.mid); break; }
+      }catch(e){
+        if(e && e.tooLong){
+          q.shift(); mqSave(q);
+          toast('הודעה אחת הייתה ארוכה מדי ולא נשלחה — קצר ונסה שוב');
+          continue;
+        }
+        markMsgFailed(it.mid); break;
+      }
     }
     mqBusy=false;
     if(sent) toast(sent===1?'ההודעה נשלחה ✓':sent+' הודעות נשלחו ✓');
