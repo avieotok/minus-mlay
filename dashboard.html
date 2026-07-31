@@ -450,6 +450,33 @@
   /* ================= נגישות מקלדת ================= */
   :focus-visible{outline:2px solid var(--gold);outline-offset:2px}
   .kpi[role="button"]{cursor:pointer}
+
+  /* ================= תג גיל הפנייה ================= */
+  .age{border-radius:999px;padding:2px 10px;font-weight:800;border:1px solid;
+    font-size:calc(13px * var(--ts));white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
+  .a-ok{color:var(--muted);border-color:var(--line2)}
+  .a-warn{color:var(--amber2);border-color:rgba(245,158,11,.55);background:rgba(245,158,11,.11)}
+  .a-bad{color:#fca5a5;border-color:rgba(226,35,26,.6);background:rgba(226,35,26,.13)}
+
+  /* ================= תצוגת הדפסה ================= */
+  @media print{
+    @page{ margin:14mm; }
+    html,body{ background:#fff !important; color:#000 !important; }
+    *{ box-shadow:none !important; text-shadow:none !important; backdrop-filter:none !important;
+       animation:none !important; transition:none !important; }
+    .topbar,.filters,.vtabs,.foot,.modal,.toast,.kpis,#bossBar,#fcHint,#fcExit,
+    .fc-open,.del,.chat,.genchat,.editor,.transfer,.order,.gsend,.tplbar,
+    #newsCompose,#soundBar,.filt-toggle{ display:none !important; }
+    .wrap,.list{ max-width:none !important; display:block !important; }
+    main{ padding:0 !important; }
+    .card{ background:#fff !important; border:1px solid #999 !important; border-radius:6px !important;
+      margin:0 0 6mm 0 !important; padding:5mm !important; break-inside:avoid; page-break-inside:avoid; }
+    .card,.card *{ color:#000 !important; }
+    .card .rail{ display:none !important; }
+    .pill,.tkt,.age{ border:1px solid #666 !important; background:#fff !important; }
+    .dcmp,.dcmp td,.dcmp th{ border-color:#999 !important; }
+    a[href]:after{ content:'' !important; }
+  }
 </style>
 </head>
 <body>
@@ -527,6 +554,10 @@
         <button class="chip" data-u="דחוף">⚠️ דחוף</button>
         <button class="chip" data-u="אזל לגמרי">🔴 אזל</button>
         <button class="chip" data-u="כמות נמוכה">🟠 כמות נמוכה</button>
+      </div>
+      <div class="chips" id="sortChips">
+        <button class="chip on" data-o="smart">⚡ דחיפות קודם</button>
+        <button class="chip" data-o="age">⏳ הוותיקות קודם</button>
       </div>
       <div class="chips" id="typeChips">
         <button class="chip on" data-t="all">כל הסוגים</button>
@@ -715,6 +746,7 @@
         <div style="font-weight:700;font-size:calc(14px * var(--ts));margin-bottom:8px">🗂️ גיבוי הנתונים</div>
         <p style="font-size:calc(13px * var(--ts));color:var(--faint);line-height:1.6;margin-bottom:10px">גיבוי יומי אוטומטי של כל הנתונים נשמר בתיקיית Drive (נשמרים 30 הגיבויים האחרונים). אפשר גם לגבות עכשיו ידנית כדי לבדוק.</p>
         <button class="ghost" id="backupNow" style="border-color:var(--line2)">🗂️ גבה עכשיו</button>
+        <div class="note" id="bkHealth" style="text-align:start;line-height:1.6"></div>
         <div class="note" id="backupNote"></div>
         <div style="margin-top:12px">
           <button class="ghost" id="loadBackups" style="border-color:var(--line2)">↩️ שחזור מגיבוי…</button>
@@ -1070,6 +1102,18 @@
     });
   }
 
+  /* ===== גיל הפנייה — כמה זמן היא כבר יושבת =====
+     תאריך מוחלט מחייב חשבון בראש; זה מה שהלוח קיים בשבילו. */
+  function ageInfo(a){
+    if(String(a.status)==='טופל') return null;
+    const t=Date.parse(a.created||''); if(!t || isNaN(t)) return null;
+    const h=(Date.now()-t)/3600000; if(h<0) return null;
+    let txt;
+    if(h<1){ txt=Math.max(1,Math.round(h*60))+' דק׳'; }
+    else if(h<24){ const n=Math.round(h); txt=(n===1?'שעה':n+' שע׳'); }
+    else { const n=Math.round(h/24); txt=(n===1?'יום':n===2?'יומיים':n+' ימים'); }
+    return { lvl:(h>=72?'a-bad':h>=24?'a-warn':'a-ok'), txt:txt, h:h };
+  }
   function fmt(iso){ if(!iso) return ''; try{ return new Date(iso).toLocaleString('he-IL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }catch(e){ return ''; } }
   function fmtLog(s){ s=String(s==null?'':s); if(!s) return '';
     return s.split(' | ').map(function(part){ var m=part.match(/^(.*?)\s*\((.*)\)\s*$/);
@@ -1272,6 +1316,9 @@
     $('kWait').textContent=w; $('kProg').textContent=p; $('kUrg').textContent=u; $('kDone').textContent=d;
   }
 
+  let fSort=(function(){ try{ return localStorage.getItem('afcon_sort')||'smart'; }catch(e){ return 'smart'; } })();
+  (function(){ const g=document.getElementById('sortChips'); if(!g) return;
+    g.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on', x.dataset.o===fSort)); })();
   function filtered(){
     let r=ALERTS.slice();
     if(fStatus==='history' || fStatus==='טופל'){ r=r.filter(a=>String(a.status)==='טופל'); }
@@ -1284,9 +1331,14 @@
     if(fStatus==='history' || fStatus==='טופל'){
       r.sort((a,b)=>((b.ackAt||b.updated||b.created||'').localeCompare(a.ackAt||a.updated||a.created||'')));
     } else {
-      r.sort((a,b)=>{ const oa=isOpen(a)?1:0, ob=isOpen(b)?1:0; if(oa!==ob) return ob-oa;
-        const ua=URANK[a.urgency]||0, ub=URANK[b.urgency]||0; if(ua!==ub) return ub-ua;
-        return (b.created||'').localeCompare(a.created||''); });
+      if(fSort==='age'){
+        r.sort((a,b)=>{ const oa=isOpen(a)?1:0, ob=isOpen(b)?1:0; if(oa!==ob) return ob-oa;
+          return (a.created||'').localeCompare(b.created||''); });   // הוותיקה קודם
+      } else {
+        r.sort((a,b)=>{ const oa=isOpen(a)?1:0, ob=isOpen(b)?1:0; if(oa!==ob) return ob-oa;
+          const ua=URANK[a.urgency]||0, ub=URANK[b.urgency]||0; if(ua!==ub) return ub-ua;
+          return (b.created||'').localeCompare(a.created||''); });
+      }
     }
     return r;
   }
@@ -1385,6 +1437,7 @@
                :((a.qty)?('<span><b>'+(isDef?'פגומות':'נותרו')+':</b> '+esc(a.qty)+'</span>'):''))
         +'<span><b>דווח:</b> '+esc(a.reporter||'—')+'</span>'
         +(a.created?('<span>🕒 '+fmt(a.created)+'</span>'):'')
+        +(function(){ const g=ageInfo(a); return g?('<span class="age '+g.lvl+'" title="זמן שחלף מאז הדיווח">⏳ יושבת '+g.txt+'</span>'):''; })()
         +'</div>'
         +(isMis?('<table class="dcmp"><tr><th></th><th>הוזמן</th><th>התקבל</th></tr>'
             +'<tr><td>תיאור</td><td>'+esc(a.desc||'—')+'</td><td>'+esc(a.descRecv||'—')+'</td></tr>'
@@ -1731,6 +1784,10 @@
   $('statusChips').addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b) return;
     markStatus(b.dataset.s); render(); });
   $('histBtn').addEventListener('click',()=>{ markStatus(fStatus==='history' ? 'all' : 'history'); render(); });
+  $('sortChips').addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b) return;
+    fSort=b.dataset.o; document.querySelectorAll('#sortChips .chip').forEach(x=>x.classList.toggle('on',x===b));
+    try{ localStorage.setItem('afcon_sort', fSort); }catch(_){}
+    render(); });
   $('urgChips').addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b) return;
     fUrg=b.dataset.u; document.querySelectorAll('#urgChips .chip').forEach(x=>x.classList.toggle('on',x===b)); render(); });
   $('typeChips').addEventListener('click',e=>{ const b=e.target.closest('.chip'); if(!b) return;
@@ -1794,7 +1851,36 @@
     if(u) window.open(u,'_blank'); else toast('לא הוגדר קישור לגיליון. מנהל יכול להוסיפו דרך גלגל השיניים (קוד מפתח).'); });
 
   // settings modal
-  function openModal(){ fillIdentity(); $('mName').value=me(); $('mUrl').value=apiUrl(); $('mTok').value=apiToken(); $('mSheet').value=localStorage.getItem(K.sheet)||''; $('mBoss').checked=isBoss(); $('mNote').textContent=''; $('advNote').textContent=''; $('catNote').textContent=''; $('advBox').classList.add('hidden'); $('modal').classList.add('open'); if(apiOn()) loadRoster(); }
+  /* ===== מחוון בריאות הגיבוי — האם בכלל קיימים גיבויים בשרת ===== */
+  function bkAgeFromName(name){
+    const m=String(name||'').match(/(\d{4})[-_.\/](\d{2})[-_.\/](\d{2})/);
+    if(!m) return null;
+    const t=Date.parse(m[1]+'-'+m[2]+'-'+m[3]);
+    if(isNaN(t)) return null;
+    return Math.floor((Date.now()-t)/86400000);
+  }
+  async function checkBackupHealth(){
+    const el=$('bkHealth'); if(!el) return;
+    if(!apiOn()){ el.textContent=''; return; }
+    el.style.color='var(--faint)'; el.textContent='בודק מצב גיבויים…';
+    try{
+      const r=await apiGet('backupsList');
+      if(!r || !r.ok){ el.style.color='var(--amber2)'; el.textContent='⚠️ לא ניתן לבדוק מצב גיבויים — ייתכן שהשרת לא עודכן.'; return; }
+      const list=r.backups||[];
+      if(!list.length){
+        el.style.color='#f87171';
+        el.textContent='⚠️ אין אף גיבוי בשרת. הגיבוי האוטומטי כנראה לא הופעל — יש להריץ installBackupTrigger בעורך הסקריפט.';
+        return;
+      }
+      const newest=list[0].name||'';
+      const days=bkAgeFromName(newest);
+      if(days===null){ el.style.color='var(--green2)'; el.textContent='🛡️ '+list.length+' גיבויים בשרת · האחרון: '+newest; return; }
+      if(days<=2){ el.style.color='var(--green2)'; el.textContent='🛡️ '+list.length+' גיבויים · האחרון '+(days===0?'היום':days===1?'אתמול':'לפני '+days+' ימים'); }
+      else if(days<=7){ el.style.color='var(--amber2)'; el.textContent='⚠️ הגיבוי האחרון לפני '+days+' ימים ('+list.length+' בסך הכל).'; }
+      else { el.style.color='#f87171'; el.textContent='⚠️ הגיבוי האחרון לפני '+days+' ימים — הגיבוי האוטומטי כנראה הפסיק לרוץ.'; }
+    }catch(e){ el.style.color='var(--amber2)'; el.textContent='⚠️ בדיקת הגיבויים נכשלה — בדוק חיבור.'; }
+  }
+  function openModal(){ setTimeout(checkBackupHealth, 250); fillIdentity(); $('mName').value=me(); $('mUrl').value=apiUrl(); $('mTok').value=apiToken(); $('mSheet').value=localStorage.getItem(K.sheet)||''; $('mBoss').checked=isBoss(); $('mNote').textContent=''; $('advNote').textContent=''; $('catNote').textContent=''; $('advBox').classList.add('hidden'); $('modal').classList.add('open'); if(apiOn()) loadRoster(); }
   function closeModal(){ $('modal').classList.remove('open'); }
   function openSettingsUnlocked(){ openModal(); $('advPinRow').style.display='none'; $('advBox').classList.remove('hidden'); devOpen=true; renderTplAdmin(); render(); renderQRs(); renderNames(); if(apiOn()) loadRoster(); }
   $('tplTypeTabs').addEventListener('click', e=>{ const b=e.target.closest('.chip'); if(!b) return; tplAdminType=b.getAttribute('data-tt'); document.querySelectorAll('#tplTypeTabs .chip').forEach(x=>x.classList.toggle('on',x===b)); renderTplAdmin(); });

@@ -356,6 +356,23 @@
   /* ================= נגישות מקלדת ================= */
   :focus-visible{outline:2px solid var(--gold);outline-offset:2px}
   .panel-head[role="button"]{cursor:pointer}
+
+  /* ================= תצוגת הדפסה ================= */
+  @media print{
+    @page{ margin:14mm; }
+    html,body{ background:#fff !important; color:#000 !important; }
+    *{ box-shadow:none !important; text-shadow:none !important; backdrop-filter:none !important;
+       animation:none !important; transition:none !important; }
+    .header,.tabs,.controls,.seg,.urg-block,.send,.ghost-btn,.scan-btn,.obx,.send-hint,
+    #photoMode,#textMode,.status,.toast,#buildTag,#platTag,#tkModal,.recip-overlay,
+    #cnHead,#catHead,#setHead,#soundBar{ display:none !important; }
+    main{ max-width:none !important; padding:0 !important; }
+    .panel{ background:#fff !important; border:0 !important; }
+    .panel-body{ display:block !important; }
+    .panel,.panel *{ color:#000 !important; }
+    .hist-row{ border:1px solid #999 !important; background:#fff !important;
+      break-inside:avoid; page-break-inside:avoid; margin-bottom:2mm; }
+  }
 </style>
 </head>
 <body>
@@ -1498,6 +1515,10 @@
     else if(dups) showToast('הדיווח הממתין כבר קיים במערכת','bad');
     else if(manual) showToast('עדיין אין חיבור — הדיווחים שמורים ⏳','bad');
   }
+  // אזהרה לפני סגירה כשיש דיווח שעדיין לא נשלח — ניקוי נתוני דפדפן ימחק אותו בשקט
+  window.addEventListener('beforeunload', function(e){
+    try{ if(obxLoad().length){ e.preventDefault(); e.returnValue=''; return ''; } }catch(_){}
+  });
   window.addEventListener('online', function(){ obxFlush(false); });
   document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible') obxFlush(false); });
   setInterval(function(){ obxFlush(false); }, 45000);
@@ -2169,7 +2190,7 @@
 </script>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div id="platTag" style="position:fixed;bottom:5px;right:7px;font-size:10px;color:var(--faint);z-index:5;font-family:monospace;opacity:.55"></div>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:calc(13px * var(--ts));color:var(--faint);z-index:5;font-family:monospace">build 85</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:calc(13px * var(--ts));color:var(--faint);z-index:5;font-family:monospace">build 86</div>
 <!-- ===== כלי עזר (מודול עצמאי — זהה בשתי האפליקציות) ===== -->
 <style>
   #tkModal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;display:none;align-items:flex-start;justify-content:center}
