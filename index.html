@@ -12,25 +12,34 @@
 <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjogIlx1MDVlOVx1MDVlOFx1MDVlOVx1MDVlOFx1MDVlYSBcdTA1ZDRcdTA1ZDBcdTA1ZTFcdTA1ZTRcdTA1ZTdcdTA1ZDQiLCAic2hvcnRfbmFtZSI6ICJcdTA1ZTlcdTA1ZThcdTA1ZTlcdTA1ZThcdTA1ZWEgXHUwNWQ0XHUwNWQwXHUwNWUxXHUwNWU0XHUwNWU3XHUwNWQ0IiwgInN0YXJ0X3VybCI6ICJodHRwczovL2F2aWVvdG9rLmdpdGh1Yi5pby9taW51cy1tbGF5LyIsICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLCAiYmFja2dyb3VuZF9jb2xvciI6ICIjMGMwYTA5IiwgInRoZW1lX2NvbG9yIjogIiNlMjIzMWEiLCAiaWNvbnMiOiBbeyJzcmMiOiAiaHR0cHM6Ly9hdmllb3Rvay5naXRodWIuaW8vbWludXMtbWxheS9pY29uLnBuZyIsICJzaXplcyI6ICI1MTJ4NTEyIiwgInR5cGUiOiAiaW1hZ2UvcG5nIiwgInB1cnBvc2UiOiAiYW55IG1hc2thYmxlIn1dfQ==">
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Rubik:wght@700;900&display=swap" rel="stylesheet">
 <style>
+  /* ===== טוקנים משותפים — זהים ללוח הקניינים (dashboard.html) ===== */
+  :root{
+    --ink:#0a0b0e; --surface:#15171c; --surface2:#1c1f26; --line:#242830; --line2:#343a45;
+    --text:#f2f4f8; --muted:#a8b0bc; --faint:#8a929e;
+    --red:#e2231a; --amber:#f59e0b; --amber2:#fbbf24; --green:#22c55e; --green2:#34d399;
+    --blue:#3b82f6; --blue2:#60a5fa; --gold:#d9b56b; --gold2:#f0d6a0;
+    --ts:1; /* מכפיל גודל טקסט — נשלט מכפתור "אא" בכותרת */
+  }
+
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   body { font-family: 'Heebo', sans-serif; background: #0a0b0e; color: #f2f4f8; min-height: 100vh; }
   .header { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid #242830; max-width: 520px; margin: 0 auto; }
   .logo-badge { width: 46px; height: 46px; border-radius: 11px; background: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
   .logo-badge img { width: 100%; height: 100%; object-fit: contain; padding: 5px; }
-  .title { font-family: 'Rubik', sans-serif; font-weight: 900; font-size: 21px; }
-  .sub { font-size: 12.5px; color: #98a0ac; }
+  .title { font-family: 'Rubik', sans-serif; font-weight: 900; font-size:calc(21px * var(--ts)); }
+  .sub { font-size:calc(13.5px * var(--ts)); color: var(--muted); }
   main { max-width: 520px; margin: 0 auto; padding: 16px 20px 32px; display: flex; flex-direction: column; gap: 14px; }
   .tabs { display: flex; gap: 6px; background: #15171c; padding: 5px; border-radius: 14px; border: 1px solid #242830; }
-  .tab { flex: 1; text-align: center; padding: 11px; border-radius: 10px; font-weight: 700; font-size: 14.5px; cursor: pointer; color: #98a0ac; background: transparent; border: none; font-family: 'Heebo', sans-serif; }
+  .tab { flex: 1; text-align: center; padding: 12px 10px; border-radius: 10px; font-weight: 700; font-size:calc(15.5px * var(--ts)); cursor: pointer; color: var(--muted); background: transparent; border: none; font-family: 'Heebo', sans-serif; }
   .tab.active { background: #f59e0b; color: #0a0b0e; }
   .tab-about { color: #fff; background: #2563eb; border-color: transparent; }
   .tab-about.active { background: #1d4ed8; }
-  .urg-label { font-size: 13px; color: #98a0ac; font-weight: 500; margin-bottom: -4px; }
+  .urg-label { font-size:calc(14px * var(--ts)); color: var(--muted); font-weight: 500; margin-bottom: -4px; }
   .seg { display: flex; gap: 6px; }
-  .seg button { flex: 1; padding: 11px 6px; border-radius: 11px; border: 1.5px solid #343a45; background: #15171c; color: #cdd2da; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Heebo', sans-serif; }
+  .seg button { flex: 1; padding: 11px 6px; border-radius: 11px; border: 1.5px solid #343a45; background: #15171c; color: #cdd2da; font-size:calc(14px * var(--ts)); font-weight: 700; cursor: pointer; font-family: 'Heebo', sans-serif; }
   .shoot { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: linear-gradient(160deg,#fbbf24,#f59e0b); border: none; border-radius: 20px; padding: 44px 20px; cursor: pointer; color: #0a0b0e; box-shadow: 0 8px 30px rgba(245,158,11,0.25); width: 100%; }
-  .shoot-txt { font-family: 'Rubik', sans-serif; font-weight: 900; font-size: 22px; }
-  .shoot-hint { font-size: 13px; font-weight: 500; opacity: 0.75; }
+  .shoot-txt { font-family: 'Rubik', sans-serif; font-weight: 900; font-size:calc(22px * var(--ts)); }
+  .shoot-hint { font-size:calc(13px * var(--ts)); font-weight: 500; opacity: 0.75; }
   .cam-wrap, .preview-wrap { position: relative; border-radius: 18px; overflow: hidden; border: 1px solid #242830; background: #000; }
   @keyframes frameBlink { 0%,100% { border-color:#7f1d1d; box-shadow:0 0 0 0 rgba(226,35,26,0); } 50% { border-color:#e2231a; box-shadow:0 0 22px 5px rgba(226,35,26,0.75); } }
   .preview-wrap { border:3px solid #e2231a; animation: frameBlink 1.05s ease-in-out infinite; }
@@ -41,141 +50,141 @@
   .icon-btn { position: absolute; top: 12px; inset-inline-start: 12px; background: rgba(12,10,9,0.7); border: 1px solid #343a45; border-radius: 10px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(4px); }
   .field { display: flex; flex-direction: column; gap: 7px; }
   .row2 { display: flex; gap: 10px; }
-  .label { font-size: 13px; color: #98a0ac; font-weight: 500; }
-  .input { background: #15171c; border: 1px solid #343a45; border-radius: 12px; padding: 13px 14px; color: #f2f4f8; font-size: 16px; font-family: 'Heebo', sans-serif; width: 100%; }
-  .pobox { flex:1 1 0; min-width:0; width:100%; aspect-ratio:1/1.15; max-width:32px; background:#15171c; border:1.5px solid #343a45; border-radius:8px; color:#f2f4f8; font-size:17px; font-weight:800; text-align:center; font-family:'Rubik',sans-serif; padding:0; }
+  .label { font-size:calc(14px * var(--ts)); color: var(--muted); font-weight: 500; }
+  .input { background: #15171c; border: 1px solid #343a45; border-radius: 12px; padding: 13px 14px; color: #f2f4f8; font-size:calc(16px * var(--ts)); font-family: 'Heebo', sans-serif; width: 100%; }
+  .pobox { flex:1 1 0; min-width:0; width:100%; aspect-ratio:1/1.15; max-width:32px; background:#15171c; border:1.5px solid #343a45; border-radius:8px; color:#f2f4f8; font-size:calc(17px * var(--ts)); font-weight:800; text-align:center; font-family:'Rubik',sans-serif; padding:0; }
   .pobox:focus { border-color:#22c55e; outline:none; background:#0f1f14; }
   .pobox.filled { border-color:#60a5fa; }
   .cmp-tbl { width:100%; border-collapse:collapse; margin-top:6px; }
-  .cmp-tbl th { font-size:13px; color:#98a0ac; font-weight:700; padding:5px; text-align:center; }
+  .cmp-tbl th { font-size:calc(13px * var(--ts)); color:var(--muted); font-weight:700; padding:5px; text-align:center; }
   .cmp-tbl th:nth-child(2){ color:#fbbf24; } .cmp-tbl th:nth-child(3){ color:#60a5fa; }
   .cmp-tbl td { padding:4px; }
-  .cmp-h { font-size:13.5px; font-weight:700; color:#cdd2da; white-space:nowrap; text-align:center; }
-  .cmp-in { width:100%; background:#15171c; border:1px solid #343a45; border-radius:10px; padding:11px 10px; color:#f2f4f8; font-size:15px; font-family:'Heebo',sans-serif; text-align:center; }
+  .cmp-h { font-size:calc(13.5px * var(--ts)); font-weight:700; color:#cdd2da; white-space:nowrap; text-align:center; }
+  .cmp-in { width:100%; background:#15171c; border:1px solid #343a45; border-radius:10px; padding:11px 10px; color:#f2f4f8; font-size:calc(15px * var(--ts)); font-family:'Heebo',sans-serif; text-align:center; }
   .cmp-in:focus { border-color:#22c55e; outline:none; }
   .input:focus { outline: none; border-color: #22c55e; }
-  .scan-btn, .ghost-btn { display: flex; align-items: center; justify-content: center; gap: 8px; background: #242830; border: 1.5px solid #343a45; color: #f2f4f8; border-radius: 12px; padding: 12px; font-size: 14.5px; font-weight: 700; cursor: pointer; font-family: 'Heebo', sans-serif; width: 100%; }
-  .send { display: flex; align-items: center; justify-content: center; gap: 9px; background: #22c55e; border: none; color: #052e16; border-radius: 14px; padding: 16px; font-size: 18px; font-weight: 800; font-family: 'Rubik', sans-serif; cursor: pointer; width: 100%; }
+  .scan-btn, .ghost-btn { display: flex; align-items: center; justify-content: center; gap: 8px; background: #242830; border: 1.5px solid #343a45; color: #f2f4f8; border-radius: 12px; padding: 12px; font-size:calc(14.5px * var(--ts)); font-weight: 700; cursor: pointer; font-family: 'Heebo', sans-serif; width: 100%; }
+  .send { display: flex; align-items: center; justify-content: center; gap: 9px; background: #22c55e; border: none; color: #052e16; border-radius: 14px; padding: 16px; font-size:calc(18px * var(--ts)); font-weight: 800; font-family: 'Rubik', sans-serif; cursor: pointer; width: 100%; }
   .send:disabled { opacity: 0.4; cursor: not-allowed; }
   button:active:not(.shutter) { transform: scale(0.985); }
   /* נגישות מקלדת — סימון פוקוס ברור (לא משפיע על שימוש בעכבר/מגע) */
   :focus-visible { outline: 3px solid #60a5fa; outline-offset: 2px; border-radius: 6px; }
   button:focus-visible, .tab:focus-visible, .seg button:focus-visible { outline-offset: 3px; }
-  .status { font-size: 13.5px; color: #fbbf24; text-align: center; line-height: 1.5; min-height: 4px; }
+  .status { font-size:calc(14.5px * var(--ts)); color: #fbbf24; text-align: center; line-height: 1.5; min-height: 4px; }
   .hidden { display: none !important; }
   .panel { background: #15171c; border: 1px solid #242830; border-radius: 14px; overflow: hidden; }
-  .panel-head { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px; cursor: pointer; font-weight: 700; font-size: 14.5px; }
+  .panel-head { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px; cursor: pointer; font-weight: 700; font-size:calc(14.5px * var(--ts)); }
   .panel-body { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 12px; }
-  .badge-count { background: #f59e0b; color: #0a0b0e; font-size: 12px; font-weight: 800; padding: 2px 9px; border-radius: 20px; }
-  #soundBar { display:none; background:linear-gradient(90deg,#f59e0b,#fbbf24); color:#15171c; font-weight:800; font-size:14px; text-align:center; padding:12px; border-radius:12px; margin-bottom:14px; cursor:pointer; font-family:'Rubik',sans-serif; }
-  .hist-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid #242830; font-size: 13px; }
-  .gchatbtn{margin-top:6px;background:#06281b;border:1px solid #166534;color:#34d399;border-radius:10px;padding:8px 12px;font-size:13.5px;font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer;align-self:flex-start}
+  .badge-count { background: #f59e0b; color: #0a0b0e; font-size:calc(13px * var(--ts)); font-weight: 800; padding: 2px 9px; border-radius: 20px; }
+  #soundBar { display:none; background:linear-gradient(90deg,#f59e0b,#fbbf24); color:#15171c; font-weight:800; font-size:calc(14px * var(--ts)); text-align:center; padding:12px; border-radius:12px; margin-bottom:14px; cursor:pointer; font-family:'Rubik',sans-serif; }
+  .hist-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid #242830; font-size:calc(14px * var(--ts)); }
+  .gchatbtn{margin-top:6px;background:#06281b;border:1px solid #166534;color:#34d399;border-radius:10px;padding:8px 12px;font-size:calc(13.5px * var(--ts));font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer;align-self:flex-start}
   .gchatbtn.unread{background:#2a0b0b;border-color:#e2231a;color:#fca5a5}
-  .ubadge{display:inline-block;background:#e2231a;color:#fff;border-radius:999px;font-size:11px;font-weight:800;padding:1px 7px;margin-inline-start:4px;animation:upulse 1.4s ease-in-out infinite}
+  .ubadge{display:inline-block;background:#e2231a;color:#fff;border-radius:999px;font-size:calc(13px * var(--ts));font-weight:800;padding:1px 7px;margin-inline-start:4px;animation:upulse 1.4s ease-in-out infinite}
   @keyframes upulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
   .news-compose{margin-bottom:16px}
-  .nc-open{width:100%;background:#15171c;border:1px dashed #343a45;color:#34d399;border-radius:13px;padding:14px;font-size:15px;font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer}
+  .nc-open{width:100%;background:#15171c;border:1px dashed #343a45;color:#34d399;border-radius:13px;padding:14px;font-size:calc(15px * var(--ts));font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer}
   .nc-form{display:none;background:#15171c;border:1px solid #242830;border-radius:14px;padding:14px;flex-direction:column;gap:10px;margin-top:10px}
   .nc-form.open{display:flex}
   .nc-cats{display:flex;gap:7px;flex-wrap:wrap}
-  .nc-cat{background:#0a0b0e;border:1px solid #343a45;color:#98a0ac;border-radius:999px;padding:7px 13px;font-size:13px;font-weight:700;cursor:pointer}
+  .nc-cat{background:#0a0b0e;border:1px solid #343a45;color:var(--muted);border-radius:999px;padding:7px 13px;font-size:calc(13px * var(--ts));font-weight:700;cursor:pointer}
   .nc-cat.on{background:rgba(226,35,26,.12);border-color:#e2231a;color:#fca5a5}
-  .nc-title,.nc-body{background:#0a0b0e;border:1px solid #343a45;border-radius:11px;padding:11px 13px;color:#f2f4f8;font-size:15px;font-family:'Heebo',sans-serif}
+  .nc-title,.nc-body{background:#0a0b0e;border:1px solid #343a45;border-radius:11px;padding:11px 13px;color:#f2f4f8;font-size:calc(15px * var(--ts));font-family:'Heebo',sans-serif}
   .nc-title:focus,.nc-body:focus{outline:none;border-color:#e2231a}
   .nc-body{min-height:90px;resize:vertical;line-height:1.55}
   .nc-pending{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
   .nc-row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
-  .nc-pin{font-size:13.5px;color:#98a0ac;font-weight:700;display:flex;align-items:center;gap:5px;cursor:pointer}
-  .nc-photo{background:#1c1f26;border:1px solid #343a45;color:#f2f4f8;border-radius:11px;padding:8px 13px;font-size:13.5px;font-weight:700;cursor:pointer}
-  .nc-cancel{background:none;border:1px solid #343a45;color:#98a0ac;border-radius:11px;padding:8px 14px;font-size:13.5px;font-weight:700;cursor:pointer}
-  .nc-send{background:#e2231a;border:none;color:#fff;border-radius:11px;padding:9px 20px;font-size:14.5px;font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer}
+  .nc-pin{font-size:calc(13.5px * var(--ts));color:var(--muted);font-weight:700;display:flex;align-items:center;gap:5px;cursor:pointer}
+  .nc-photo{background:#1c1f26;border:1px solid #343a45;color:#f2f4f8;border-radius:11px;padding:8px 13px;font-size:calc(13.5px * var(--ts));font-weight:700;cursor:pointer}
+  .nc-cancel{background:none;border:1px solid #343a45;color:var(--muted);border-radius:11px;padding:8px 14px;font-size:calc(13.5px * var(--ts));font-weight:700;cursor:pointer}
+  .nc-send{background:#e2231a;border:none;color:#fff;border-radius:11px;padding:9px 20px;font-size:calc(14.5px * var(--ts));font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer}
   .news-item{background:#15171c;border:1px solid #242830;border-radius:14px;padding:14px 16px;margin-bottom:12px}
   .news-item.pinned{border-color:rgba(251,191,36,.5)}
   .ni-top{display:flex;align-items:center;gap:8px;margin-bottom:7px;flex-wrap:wrap}
-  .ni-cat{font-size:12px;font-weight:800;border-radius:999px;padding:2px 10px;border:1px solid}
+  .ni-cat{font-size:calc(13px * var(--ts));font-weight:800;border-radius:999px;padding:2px 10px;border:1px solid}
   .ni-cat.general{color:#93c5fd;border-color:#3b82f6}
   .ni-cat.supplier{color:#6ee7b7;border-color:#10b981}
   .ni-cat.urgent{color:#fca5a5;border-color:#e2231a}
   .ni-cat.procedure{color:#fcd34d;border-color:#f59e0b}
-  .ni-pin{color:#fbbf24;font-size:13px;font-weight:800}
-  .ni-title{font-size:16.5px;font-weight:800;font-family:'Rubik',sans-serif;color:#f2f4f8;margin-bottom:4px}
-  .ni-body{font-size:14.5px;color:#f2f4f8;line-height:1.6;white-space:pre-wrap;word-break:break-word}
-  .ni-meta{font-size:12px;color:#697079;margin-top:8px;font-weight:600}
+  .ni-pin{color:#fbbf24;font-size:calc(13px * var(--ts));font-weight:800}
+  .ni-title{font-size:calc(16.5px * var(--ts));font-weight:800;font-family:'Rubik',sans-serif;color:#f2f4f8;margin-bottom:4px}
+  .ni-body{font-size:calc(16px * var(--ts));color:#f2f4f8;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+  .ni-meta{font-size:calc(13px * var(--ts));color:var(--faint);margin-top:8px;font-weight:600}
   .ni-img{margin-top:10px}
   .ni-img img{max-width:240px;max-height:240px;border-radius:10px;border:1px solid #343a45;cursor:pointer;display:block}
   .ni-acts{display:flex;gap:8px;margin-top:9px}
-  .ni-act{background:#1c1f26;border:1px solid #343a45;color:#98a0ac;border-radius:9px;padding:5px 11px;font-size:12.5px;font-weight:700;cursor:pointer}
+  .ni-act{background:#1c1f26;border:1px solid #343a45;color:var(--muted);border-radius:9px;padding:5px 11px;font-size:calc(13px * var(--ts));font-weight:700;cursor:pointer}
   .ni-act.del{color:#fca5a5;border-color:rgba(226,35,26,.4)}
-  .news-empty{text-align:center;color:#697079;padding:40px 20px;font-size:15px}
+  .news-empty{text-align:center;color:var(--faint);padding:40px 20px;font-size:calc(15px * var(--ts))}
   .whchat{display:none;flex-direction:column;gap:8px;width:100%;margin-top:8px}
   .whchat.open{display:flex}
   .wthread{display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto;background:#0a0b0e;border:1px solid #343a45;border-radius:11px;padding:10px}
   .wmsg{background:#1c1f26;border:1px solid #242830;border-radius:10px;padding:8px 10px;max-width:86%;align-self:flex-start}
   .wmsg.me{align-self:flex-end;background:rgba(34,197,94,.10);border-color:rgba(34,197,94,.4)}
-  .wmeta{font-size:11.5px;color:#697079;margin-bottom:3px;font-weight:700}
-  .wtext{font-size:14px;color:#f2f4f8;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+  .wmeta{font-size:calc(13px * var(--ts));color:var(--faint);margin-bottom:3px;font-weight:700}
+  .wtext{font-size:calc(15px * var(--ts));color:#f2f4f8;line-height:1.5;white-space:pre-wrap;word-break:break-word}
   .wimg{margin-top:6px}
   .wpending{display:flex;align-items:center;flex-wrap:wrap}
   .winrow{display:flex;gap:7px;align-items:stretch}
-  .wphoto{background:#1c1f26;border:1px solid #343a45;border-radius:11px;font-size:18px;cursor:pointer;padding:0 12px;color:#f2f4f8}
-  .win{flex:1;background:#0a0b0e;border:1px solid #343a45;border-radius:11px;padding:10px 12px;color:#f2f4f8;font-size:14.5px;font-family:'Heebo',sans-serif;min-height:44px;resize:vertical}
+  .wphoto{background:#1c1f26;border:1px solid #343a45;border-radius:11px;font-size:calc(18px * var(--ts));cursor:pointer;padding:0 12px;color:#f2f4f8}
+  .win{flex:1;background:#0a0b0e;border:1px solid #343a45;border-radius:11px;padding:10px 12px;color:#f2f4f8;font-size:calc(14.5px * var(--ts));font-family:'Heebo',sans-serif;min-height:44px;resize:vertical}
   .win:focus{outline:none;border-color:#22c55e}
-  .wsend{background:#22c55e;border:none;color:#052e16;border-radius:11px;padding:0 18px;font-size:14.5px;font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer;white-space:nowrap}
+  .wsend{background:#22c55e;border:none;color:#052e16;border-radius:11px;padding:0 18px;font-size:calc(14.5px * var(--ts));font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer;white-space:nowrap}
   .hist-txt { color: #e7eaef; font-weight: 500; display:flex; flex-direction:column; gap:2px; }
-  .hist-meta { color: #697079; white-space: nowrap; }
-  .hist-meta2 { color: #697079; font-size: 12px; font-weight: 400; }
-  .hist-stat { background:transparent; border:1.5px solid #f59e0b; color:#f59e0b; border-radius:20px; padding:5px 12px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; font-family:'Heebo',sans-serif; flex-shrink:0; }
+  .hist-meta { color: var(--faint); white-space: nowrap; }
+  .hist-meta2 { color: var(--faint); font-size:calc(13px * var(--ts)); font-weight: 400; }
+  .hist-stat { background:transparent; border:1.5px solid #f59e0b; color:#f59e0b; border-radius:20px; padding:5px 12px; font-size:calc(13px * var(--ts)); font-weight:700; cursor:pointer; white-space:nowrap; font-family:'Heebo',sans-serif; flex-shrink:0; }
   .hist-stat.done { background:#0f1f14; border-color:#22c55e; color:#34d399; }
-  .hist-sent { color:#697079; font-size:12px; font-weight:600; white-space:nowrap; flex-shrink:0; font-family:'Heebo',sans-serif; }
-  .hist-empty { color: #697079; font-size: 13px; padding: 6px 0; }
-  .exit-btn { display: flex; align-items: center; justify-content: center; gap: 9px; background: transparent; border: 1.5px solid #7f1d1d; color: #f87171; border-radius: 14px; padding: 14px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: 'Heebo', sans-serif; width: 100%; margin-top: 4px; }
+  .hist-sent { color:var(--faint); font-size:calc(13px * var(--ts)); font-weight:600; white-space:nowrap; flex-shrink:0; font-family:'Heebo',sans-serif; }
+  .hist-empty { color: var(--faint); font-size:calc(14px * var(--ts)); padding: 6px 0; }
+  .exit-btn { display: flex; align-items: center; justify-content: center; gap: 9px; background: transparent; border: 1.5px solid #7f1d1d; color: #f87171; border-radius: 14px; padding: 14px; font-size:calc(16px * var(--ts)); font-weight: 700; cursor: pointer; font-family: 'Heebo', sans-serif; width: 100%; margin-top: 4px; }
   .scan-overlay { position: fixed; inset: 0; background: #000; z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; }
   .scan-overlay video { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
   .scan-frame { position: relative; width: 78%; max-width: 320px; aspect-ratio: 1.6/1; border: 3px solid #22c55e; border-radius: 16px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.45); }
-  .scan-hint { position: absolute; bottom: 90px; color: #fff; font-size: 15px; background: rgba(0,0,0,0.5); padding: 8px 16px; border-radius: 20px; }
-  .scan-close { position: absolute; top: 20px; inset-inline-start: 20px; background: rgba(0,0,0,0.6); color: #fff; border: 1px solid #555; border-radius: 12px; padding: 10px 18px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: 'Heebo', sans-serif; }
+  .scan-hint { position: absolute; bottom: 90px; color: #fff; font-size:calc(15px * var(--ts)); background: rgba(0,0,0,0.5); padding: 8px 16px; border-radius: 20px; }
+  .scan-close { position: absolute; top: 20px; inset-inline-start: 20px; background: rgba(0,0,0,0.6); color: #fff; border: 1px solid #555; border-radius: 12px; padding: 10px 18px; font-size:calc(15px * var(--ts)); font-weight: 700; cursor: pointer; font-family: 'Heebo', sans-serif; }
   .recip-overlay { position: fixed; inset:0; background: rgba(0,0,0,0.6); z-index:60; display:flex; align-items:flex-end; justify-content:center; }
   .recip-card { background:#15171c; width:100%; max-width:520px; border-radius:20px 20px 0 0; padding:18px 16px 24px; border-top:1px solid #242830; }
-  .recip-title { font-weight:800; font-size:16px; text-align:center; margin-bottom:14px; font-family:'Rubik',sans-serif; }
+  .recip-title { font-weight:800; font-size:calc(16px * var(--ts)); text-align:center; margin-bottom:14px; font-family:'Rubik',sans-serif; }
   .recip-list { display:flex; flex-direction:column; gap:8px; }
-  .recip-item { display:flex; justify-content:space-between; align-items:center; gap:10px; background:#0a0b0e; border:1px solid #343a45; color:#f2f4f8; border-radius:12px; padding:14px 16px; font-size:15.5px; font-weight:700; cursor:pointer; font-family:'Heebo',sans-serif; width:100%; text-align:right; }
+  .recip-item { display:flex; justify-content:space-between; align-items:center; gap:10px; background:#0a0b0e; border:1px solid #343a45; color:#f2f4f8; border-radius:12px; padding:14px 16px; font-size:calc(15.5px * var(--ts)); font-weight:700; cursor:pointer; font-family:'Heebo',sans-serif; width:100%; text-align:right; }
   .recip-item:active { transform:scale(0.99); border-color:#22c55e; }
-  .recip-num { font-size:13px; color:#697079; font-weight:500; }
-  .recip-cancel { width:100%; margin-top:12px; background:transparent; border:1px solid #343a45; color:#98a0ac; border-radius:12px; padding:13px; font-size:15px; font-weight:700; cursor:pointer; font-family:'Heebo',sans-serif; }
+  .recip-num { font-size:calc(13.5px * var(--ts)); color:var(--faint); font-weight:500; }
+  .recip-cancel { width:100%; margin-top:12px; background:transparent; border:1px solid #343a45; color:var(--muted); border-radius:12px; padding:13px; font-size:calc(15px * var(--ts)); font-weight:700; cursor:pointer; font-family:'Heebo',sans-serif; }
   .chips { display:flex; gap:7px; overflow-x:auto; padding-bottom:2px; -webkit-overflow-scrolling:touch; align-items:center; }
   .chips:empty { display:none; }
-  .chips-label { font-size:12px; color:#697079; flex-shrink:0; }
-  .chip { flex-shrink:0; background:#15171c; border:1px solid #343a45; color:#cdd2da; border-radius:20px; padding:7px 13px; font-size:13px; font-weight:600; cursor:pointer; font-family:'Heebo',sans-serif; white-space:nowrap; }
+  .chips-label { font-size:calc(13px * var(--ts)); color:var(--faint); flex-shrink:0; }
+  .chip { flex-shrink:0; background:#15171c; border:1px solid #343a45; color:#cdd2da; border-radius:20px; padding:7px 13px; font-size:calc(13px * var(--ts)); font-weight:600; cursor:pointer; font-family:'Heebo',sans-serif; white-space:nowrap; }
   .chip:active { border-color:#f59e0b; color:#fbbf24; }
-  .scan-manual { position:absolute; bottom:30px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.65); color:#fff; border:1px solid #666; border-radius:12px; padding:12px 22px; font-size:15px; font-weight:700; cursor:pointer; font-family:'Heebo',sans-serif; }
-  .desc-line { font-size:13.5px; color:#34d399; font-weight:600; min-height:2px; }
+  .scan-manual { position:absolute; bottom:30px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.65); color:#fff; border:1px solid #666; border-radius:12px; padding:12px 22px; font-size:calc(15px * var(--ts)); font-weight:700; cursor:pointer; font-family:'Heebo',sans-serif; }
+  .desc-line { font-size:calc(15px * var(--ts)); color:#34d399; font-weight:600; min-height:2px; }
   .recip-item input { width:23px; height:23px; accent-color:#22c55e; flex-shrink:0; }
   .recip-item:has(input:checked) { border-color:#22c55e; background:#0f1f14; }
-  .cn-row { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:9px 0; border-top:1px solid #242830; font-size:14px; }
+  .cn-row { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:9px 0; border-top:1px solid #242830; font-size:calc(14px * var(--ts)); }
   .cn-name { color:#e7eaef; font-weight:600; }
-  .cn-actions button { background:transparent; border:none; cursor:pointer; font-size:18px; padding:4px 6px; }
+  .cn-actions button { background:transparent; border:none; cursor:pointer; font-size:calc(18px * var(--ts)); padding:4px 6px; }
   .kp-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:70; display:flex; align-items:flex-end; justify-content:center; }
   .kp-card { background:#15171c; width:100%; max-width:520px; border-radius:20px 20px 0 0; padding:16px 14px 22px; border-top:1px solid #242830; }
-  .kp-title { text-align:center; font-weight:800; font-size:16px; font-family:'Rubik',sans-serif; margin-bottom:10px; }
-  .kp-display { background:#0a0b0e; border:1px solid #343a45; border-radius:12px; min-height:58px; display:flex; align-items:center; justify-content:center; font-size:30px; font-weight:800; letter-spacing:3px; color:#f2f4f8; margin-bottom:12px; direction:ltr; }
+  .kp-title { text-align:center; font-weight:800; font-size:calc(16px * var(--ts)); font-family:'Rubik',sans-serif; margin-bottom:10px; }
+  .kp-display { background:#0a0b0e; border:1px solid #343a45; border-radius:12px; min-height:58px; display:flex; align-items:center; justify-content:center; font-size:calc(30px * var(--ts)); font-weight:800; letter-spacing:3px; color:#f2f4f8; margin-bottom:12px; direction:ltr; }
   .kp-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; direction:ltr; }
-  .kp-key { padding:18px 0; font-size:25px; font-weight:800; background:#242830; border:1px solid #343a45; border-radius:12px; color:#f2f4f8; cursor:pointer; font-family:'Rubik',sans-serif; }
+  .kp-key { padding:18px 0; font-size:calc(25px * var(--ts)); font-weight:800; background:#242830; border:1px solid #343a45; border-radius:12px; color:#f2f4f8; cursor:pointer; font-family:'Rubik',sans-serif; }
   .kp-key:active { background:#343a45; transform:scale(0.96); }
   .kp-controls { display:flex; gap:8px; margin-top:10px; }
-  .kp-back { flex:0 0 72px; font-size:22px; background:#242830; border:1px solid #343a45; border-radius:12px; color:#f2f4f8; cursor:pointer; }
-  .kp-skip { flex:1; background:transparent; border:1.5px solid #f59e0b; color:#f59e0b; border-radius:12px; font-size:15px; font-weight:800; cursor:pointer; font-family:'Heebo',sans-serif; padding:14px 0; }
-  .kp-enter { flex:2; background:#22c55e; border:none; color:#052e16; border-radius:12px; font-size:16px; font-weight:800; cursor:pointer; font-family:'Rubik',sans-serif; padding:14px 0; }
-  .kp-cancel { width:100%; margin-top:10px; background:transparent; border:1px solid #343a45; color:#98a0ac; border-radius:12px; padding:11px; font-weight:700; cursor:pointer; font-family:'Heebo',sans-serif; }
+  .kp-back { flex:0 0 72px; font-size:calc(22px * var(--ts)); background:#242830; border:1px solid #343a45; border-radius:12px; color:#f2f4f8; cursor:pointer; }
+  .kp-skip { flex:1; background:transparent; border:1.5px solid #f59e0b; color:#f59e0b; border-radius:12px; font-size:calc(15px * var(--ts)); font-weight:800; cursor:pointer; font-family:'Heebo',sans-serif; padding:14px 0; }
+  .kp-enter { flex:2; background:#22c55e; border:none; color:#052e16; border-radius:12px; font-size:calc(16px * var(--ts)); font-weight:800; cursor:pointer; font-family:'Rubik',sans-serif; padding:14px 0; }
+  .kp-cancel { width:100%; margin-top:10px; background:transparent; border:1px solid #343a45; color:var(--muted); border-radius:12px; padding:11px; font-weight:700; cursor:pointer; font-family:'Heebo',sans-serif; }
   .srch-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:65; display:flex; align-items:flex-end; justify-content:center; }
   .srch-card { background:#15171c; width:100%; max-width:520px; border-radius:20px 20px 0 0; padding:16px 14px 22px; border-top:1px solid #242830; max-height:80vh; display:flex; flex-direction:column; }
   .srch-results { overflow-y:auto; margin-top:10px; display:flex; flex-direction:column; gap:7px; max-height:32vh; }
   .srch-item { text-align:right; background:#0a0b0e; border:1px solid #343a45; color:#f2f4f8; border-radius:11px; padding:12px 14px; cursor:pointer; font-family:'Heebo',sans-serif; }
   .srch-item:active { border-color:#22c55e; }
   .srch-item b { color:#fde68a; font-weight:700; }
-  .srch-item span { display:block; font-size:12.5px; color:#697079; margin-top:2px; }
+  .srch-item span { display:block; font-size:calc(13.5px * var(--ts)); color:var(--faint); margin-top:2px; }
   .ack-overlay { position:fixed; inset:0; background:#0a0b0e; z-index:80; display:flex; align-items:center; justify-content:center; padding:24px; }
   .ack-card { background:#15171c; border:1px solid #242830; border-radius:18px; padding:26px 20px; max-width:420px; width:100%; text-align:center; display:flex; flex-direction:column; align-items:center; gap:14px; }
-  .ack-check { display:flex; align-items:center; gap:12px; background:#0a0b0e; border:1.5px solid #343a45; border-radius:12px; padding:15px 16px; width:100%; font-size:15.5px; font-weight:700; cursor:pointer; }
+  .ack-check { display:flex; align-items:center; gap:12px; background:#0a0b0e; border:1.5px solid #343a45; border-radius:12px; padding:15px 16px; width:100%; font-size:calc(15.5px * var(--ts)); font-weight:700; cursor:pointer; }
   .ack-check input { width:25px; height:25px; accent-color:#22c55e; flex-shrink:0; }
   .ack-check:has(input:checked) { border-color:#22c55e; background:#0f1f14; }
   img.zoomable{cursor:zoom-in}
@@ -183,7 +192,7 @@
   #imgLightbox.open{display:flex}
   #imgLightbox img{max-width:100%;max-height:100%;border-radius:10px;box-shadow:0 12px 50px rgba(0,0,0,.7)}
   #imgLightbox .lb-bar{position:fixed;bottom:22px;left:0;right:0;display:flex;gap:12px;justify-content:center}
-  #imgLightbox .lb-bar button{border:none;border-radius:12px;padding:12px 18px;font-size:15px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer}
+  #imgLightbox .lb-bar button{border:none;border-radius:12px;padding:12px 18px;font-size:calc(15px * var(--ts));font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer}
   #imgLightbox .lb-share{background:#25d366;color:#04210f}
   #imgLightbox .lb-close{background:#343a45;color:#fff}
 
@@ -208,37 +217,83 @@
   .pobox{ background:rgba(255,255,255,.035); border-color:rgba(255,255,255,.12); }
   .pobox:focus{ outline:none; border-color:#d9b56b; box-shadow:0 0 0 3px rgba(217,181,107,.16); }
   .cmp-in{ background:rgba(255,255,255,.035); border-color:rgba(255,255,255,.09); }
+
+  /* ===== משוב: Toast (זהה ללוח הקניינים) ===== */
+  .toast{position:fixed;bottom:calc(22px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(22px);
+    background:linear-gradient(180deg,#f8f5ef,#e6e2d5);color:#171309;padding:12px 22px;border-radius:30px;
+    font-size:calc(14.5px * var(--ts));font-weight:800;font-family:'Heebo',sans-serif;opacity:0;transition:opacity .22s, transform .22s;
+    z-index:9000;pointer-events:none;max-width:88%;text-align:center;line-height:1.45;
+    box-shadow:0 14px 34px -12px rgba(0,0,0,.8), 0 0 0 1px rgba(217,181,107,.35)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.bad{background:linear-gradient(180deg,#fecaca,#f8a9a3);color:#450a0a}
+  .toast.good{background:linear-gradient(180deg,#bbf7d0,#86efac);color:#052e16}
+
+  /* ===== כפתור השליחה נשאר בהישג יד — בלי לגלול לתחתית ===== */
+  #textMode > .send, #photoMode > .send{
+    position:fixed; z-index:15;
+    bottom:calc(12px + env(safe-area-inset-bottom));
+    left:50%; transform:translateX(-50%);
+    width:calc(100% - 40px); max-width:480px;
+    box-shadow:0 14px 34px -12px rgba(0,0,0,.85), 0 10px 26px -12px rgba(34,197,94,.6);
+  }
+  #textMode > .send:active, #photoMode > .send:active{ transform:translateX(-50%) scale(.99); }
+  /* מקום נשימה כדי שהכפתור הצף לא יסתיר את סוף התוכן */
+  #opsWrap{ padding-bottom:88px; }
+
+  /* ===== שטח נגיעה מינימלי לאצבע ===== */
+  .tab, .seg button, .scan-btn, .ghost-btn{ min-height:46px; }
+  .send{ min-height:56px; }
+
+  /* ===== בקרת גודל טקסט ===== */
+  .ts-btn{ background:var(--surface2); border:1px solid var(--line2); color:var(--text);
+    height:46px; min-width:44px; padding:0 11px; border-radius:12px; cursor:pointer;
+    font-family:'Rubik',sans-serif; font-weight:800; font-size:15px; flex:0 0 auto; }
+  .ts-btn:hover{ border-color:rgba(217,181,107,.45); }
+
+  /* ===== מצב חיבור בכותרת (במקום פאנל שתפס שורה שלמה) ===== */
+  .conn{ display:inline-flex; align-items:center; gap:5px; font-weight:700; }
+  .conn::before{ content:''; width:7px; height:7px; border-radius:50%; background:var(--amber); flex:0 0 auto; }
+  .conn.on{ color:var(--green2); } .conn.on::before{ background:var(--green); }
+  .conn.off{ color:var(--faint); } .conn.off::before{ background:var(--faint); }
+
+  /* ===== שלד טעינה ===== */
+  @keyframes shimmer{ 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+  .skel{ height:74px; border-radius:14px; margin-bottom:11px; border:1px solid var(--line);
+    background:linear-gradient(100deg, var(--surface) 30%, var(--surface2) 50%, var(--surface) 70%);
+    background-size:200% 100%; animation:shimmer 1.35s linear infinite; }
+
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{ animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+  }
 </style>
 </head>
 <body>
-<div id="idGate" style="position:fixed;inset:0;background:#0c0a09;z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center">
-  <div style="font-family:'Rubik',sans-serif;font-weight:900;font-size:24px;color:#fafaf9">חיפוש שם</div>
-  <div style="color:#a8a29e;font-size:14.5px;max-width:340px;line-height:1.7">הקלד את שמך כדי למצוא אותו ברשימה, ולחץ עליו לבחירה. הבחירה נשמרת וננעלת למכשיר זה.</div>
-  <input id="gateSearch" type="text" autocomplete="off" placeholder="🔍 הקלד את שמך…" style="width:100%;max-width:320px;background:#1c1917;border:1px solid #44403c;border-radius:12px;padding:15px;color:#fafaf9;font-size:16px;font-family:'Heebo',sans-serif;text-align:center">
+<div id="idGate" style="position:fixed;inset:0;background:var(--ink);z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center">
+  <div style="font-family:'Rubik',sans-serif;font-weight:900;font-size:calc(24px * var(--ts));color:var(--text)">חיפוש שם</div>
+  <div style="color:var(--muted);font-size:calc(14.5px * var(--ts));max-width:340px;line-height:1.7">הקלד את שמך כדי למצוא אותו ברשימה, ולחץ עליו לבחירה. הבחירה נשמרת וננעלת למכשיר זה.</div>
+  <input id="gateSearch" type="text" autocomplete="off" placeholder="🔍 הקלד את שמך…" style="width:100%;max-width:320px;background:var(--surface);border:1px solid var(--line2);border-radius:12px;padding:15px;color:var(--text);font-size:calc(16px * var(--ts));font-family:'Heebo',sans-serif;text-align:center">
   <div id="gateResults" style="width:100%;max-width:320px;max-height:230px;overflow-y:auto;display:flex;flex-direction:column;gap:8px"></div>
   <button class="send" id="gateOk" style="max-width:320px;width:100%">כניסה</button>
-  <div id="gateMsg" style="color:#f87171;font-size:13px;min-height:16px"></div>
-  <button id="gateDev" style="background:none;border:none;color:#57534e;font-size:12px;cursor:pointer;text-decoration:underline">מפתח</button>
+  <div id="gateMsg" style="color:#f87171;font-size:calc(13px * var(--ts));min-height:16px"></div>
+  <button id="gateDev" style="background:none;border:none;color:var(--faint);font-size:calc(13px * var(--ts));cursor:pointer;text-decoration:underline">מפתח</button>
 </div>
   <div class="header">
     <div class="logo-badge"><img id="headerLogo" alt="לוגו"></div>
     <div>
       <div class="title">שרשרת האספקה</div>
-      <div class="sub">אפליקציית מחסן</div>
-      <div id="meBar" style="font-size:12.5px;color:#22c55e;font-weight:700;margin-top:2px"></div>
+      <div class="sub">אפליקציית מחסן &nbsp;·&nbsp; <span id="apiState" class="conn off">לא מחובר</span></div>
+      <div id="meBar" style="font-size:calc(13px * var(--ts));color:#22c55e;font-weight:700;margin-top:2px"></div>
     </div>
-    <button id="tkOpen" title="כלי עזר" style="margin-inline-start:auto;background:#211e1c;border:1px solid #3f3f46;color:#fafaf9;padding:0 13px;height:46px;border-radius:12px;font-size:14px;font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer;flex:0 0 auto;white-space:nowrap">כלי עזר 🧰</button>
+    <button id="tsBtn" class="ts-btn" title="גודל טקסט" aria-label="גודל טקסט" style="margin-inline-start:auto">אא</button>
+    <button id="tkOpen" title="כלי עזר" style="margin-inline-start:8px;background:#1c1f26;border:1px solid #343a45;color:#f2f4f8;padding:0 13px;height:46px;border-radius:12px;font-size:calc(14px * var(--ts));font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer;flex:0 0 auto;white-space:nowrap">כלי עזר 🧰</button>
   </div>
 
   <main>
     <div class="controls" id="controls">
-    <div class="panel" style="margin-bottom:14px">
-      <div class="panel-head" style="cursor:default"><span>🔗 חיבור למערכת &nbsp;·&nbsp; <span id="apiState" class="badge-count">לא מחובר</span></span></div>
-    </div>
     <div class="tabs">
       <button class="tab active" id="tabText">✍️ דיווח</button>
-      <button class="tab" id="tabInbox">📥 הדיווחים שלי<span id="inboxBadge" style="display:none;background:#e2231a;color:#fff;border-radius:999px;min-width:18px;height:18px;line-height:18px;text-align:center;font-size:11px;font-weight:800;margin-inline-start:6px;padding:0 5px">●</span></button>
-      <button class="tab" id="tabNews">📢 ידיעון<span id="newsBadge" style="display:none;background:#fbbf24;color:#1c1917;border-radius:999px;min-width:9px;height:9px;margin-inline-start:6px;vertical-align:middle;padding:0 4px;font-size:0">●</span></button>
+      <button class="tab" id="tabInbox">📥 הדיווחים שלי<span id="inboxBadge" style="display:none;background:#e2231a;color:#fff;border-radius:999px;min-width:18px;height:18px;line-height:18px;text-align:center;font-size:calc(13px * var(--ts));font-weight:800;margin-inline-start:6px;padding:0 5px">●</span></button>
+      <button class="tab" id="tabNews">📢 ידיעון<span id="newsBadge" style="display:none;background:#fbbf24;color:var(--surface);border-radius:999px;min-width:9px;height:9px;margin-inline-start:6px;vertical-align:middle;padding:0 4px;font-size:0">●</span></button>
       <button class="tab tab-about" id="tabAbout">ℹ️ אודות</button>
     </div>
     </div>
@@ -296,7 +351,7 @@
     <div id="textMode" style="display:flex;flex-direction:column;gap:14px">
       <div class="field" id="fldPo" style="display:none"><span class="label">מספר הזמנה</span>
         <div id="poBoxes" style="display:flex;align-items:center;gap:4px;direction:ltr;flex-wrap:nowrap">
-          <span style="font-weight:800;font-size:17px;color:#fbbf24;font-family:'Rubik',sans-serif;margin-inline-end:3px;flex:0 0 auto">PO</span>
+          <span style="font-weight:800;font-size:calc(17px * var(--ts));color:#fbbf24;font-family:'Rubik',sans-serif;margin-inline-end:3px;flex:0 0 auto">PO</span>
           <input class="pobox" inputmode="numeric" maxlength="1"><input class="pobox" inputmode="numeric" maxlength="1"><input class="pobox" inputmode="numeric" maxlength="1"><input class="pobox" inputmode="numeric" maxlength="1"><input class="pobox" inputmode="numeric" maxlength="1"><input class="pobox" inputmode="numeric" maxlength="1"><input class="pobox" inputmode="numeric" maxlength="1"><input class="pobox" inputmode="numeric" maxlength="1"><input class="pobox" inputmode="numeric" maxlength="1">
         </div></div>
       <label class="field"><span class="label">מק״ט</span>
@@ -336,7 +391,7 @@
 
     <!-- Contacts -->
     <div class="panel" style="display:none">
-      <div class="panel-head" id="cnHead"><span>👥 אנשי קשר &nbsp;·&nbsp; <span id="cnCount" class="badge-count">0</span></span><span style="color:#78716c">▾</span></div>
+      <div class="panel-head" id="cnHead"><span>👥 אנשי קשר &nbsp;·&nbsp; <span id="cnCount" class="badge-count">0</span></span><span style="color:var(--faint)">▾</span></div>
       <div class="panel-body hidden" id="cnBody">
         <div id="cnList"></div>
         <div class="row2">
@@ -349,7 +404,7 @@
 
     <!-- Catalog (Excel) -->
     <div class="panel" style="display:none">
-      <div class="panel-head" id="catHead"><span>📦 קובץ פריטים &nbsp;·&nbsp; נטענו: <span id="catCount" class="badge-count">0</span></span><span style="color:#78716c">▾</span></div>
+      <div class="panel-head" id="catHead"><span>📦 קובץ פריטים &nbsp;·&nbsp; נטענו: <span id="catCount" class="badge-count">0</span></span><span style="color:var(--faint)">▾</span></div>
       <div class="panel-body hidden" id="catBody">
         <p class="hist-empty">העלה קובץ אקסל/CSV — עמודה A: מק״ט, עמודה B: תיאור. אחרי הטעינה, סריקה או הקלדת מק״ט תשלים את התיאור אוטומטית.</p>
         <input type="file" id="catFile" accept=".xlsx,.xls,.csv" style="display:none">
@@ -360,7 +415,7 @@
 
     <!-- Fixed details -->
     <div class="panel" style="display:none">
-      <div class="panel-head" id="setHead"><span>⚙️ פרטים קבועים (שם שולח)</span><span style="color:#78716c">▾</span></div>
+      <div class="panel-head" id="setHead"><span>⚙️ פרטים קבועים (שם שולח)</span><span style="color:var(--faint)">▾</span></div>
       <div class="panel-body hidden" id="setBody">
         <label class="field"><span class="label">השם שלך (בחר מהרשימה)</span>
           <select class="input" id="reporter"><option value="">— בחר —</option></select></label>
@@ -371,7 +426,7 @@
 
     <!-- History -->
     <div class="panel">
-      <div class="panel-head" id="histHead"><span>📋 היסטוריית דיווחים &nbsp;·&nbsp; נשלחו היום: <span id="todayCount" class="badge-count">0</span></span><span style="color:#78716c">▾</span></div>
+      <div class="panel-head" id="histHead"><span>📋 היסטוריית דיווחים &nbsp;·&nbsp; נשלחו היום: <span id="todayCount" class="badge-count">0</span></span><span style="color:var(--faint)">▾</span></div>
       <div class="panel-body hidden" id="histBody">
         <div id="histList"></div>
         <button class="ghost-btn" id="exportHist"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fafaf9" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> ייצא דוח לאקסל</button>
@@ -384,7 +439,7 @@
 
     <div id="inboxMode" class="hidden">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <div style="font-family:'Rubik',sans-serif;font-weight:800;font-size:18px">📥 הדיווחים שלי</div>
+        <div style="font-family:'Rubik',sans-serif;font-weight:800;font-size:calc(18px * var(--ts))">📥 הדיווחים שלי</div>
         <button class="scan-btn" id="inboxRefresh" style="width:auto;padding:9px 14px">🔄 רענן</button>
       </div>
       <div id="inboxList"></div>
@@ -392,7 +447,7 @@
 
     <div id="newsMode" class="hidden">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <div style="font-family:'Rubik',sans-serif;font-weight:800;font-size:18px">📢 ידיעון</div>
+        <div style="font-family:'Rubik',sans-serif;font-weight:800;font-size:calc(18px * var(--ts))">📢 ידיעון</div>
         <button class="scan-btn" id="newsRefresh" style="width:auto;padding:9px 14px">🔄 רענן</button>
       </div>
       <div class="news-compose">
@@ -421,13 +476,13 @@
     </div>
 
     <div id="aboutMode" class="hidden">
-      <div style="background:#1c1917;border:1px solid #292524;border-radius:18px;padding:24px 20px;display:flex;flex-direction:column;align-items:center;gap:13px;text-align:center">
-        <div style="font-size:12px;color:#78716c">© אבידן קוטאי · כל הזכויות שמורות</div>
+      <div style="background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px 20px;display:flex;flex-direction:column;align-items:center;gap:13px;text-align:center">
+        <div style="font-size:calc(13px * var(--ts));color:var(--faint)">© אבידן קוטאי · כל הזכויות שמורות</div>
         <div style="width:74px;height:74px;border-radius:16px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden"><img id="aboutLogo" style="width:100%;height:100%;object-fit:contain;padding:8px" alt="לוגו"></div>
-        <div style="font-family:'Rubik',sans-serif;font-weight:900;font-size:22px">פורטל שרשרת האספקה</div>
-        <div style="color:#a8a29e;font-size:14.5px;line-height:1.8;max-width:420px">מערכת מקצה‑לקצה לניהול חוסרים ורכש בין המחסן לקנייני שרשרת האספקה — דיווח, טיפול, מעקב, תקשורת ותיעוד, הכול במקום אחד ובזמן אמת.</div>
-        <div style="background:#0c0a09;border:1px solid #292524;border-radius:14px;padding:15px 16px;max-width:430px;width:100%;text-align:start;font-size:13.5px;color:#e7e5e4;line-height:1.95;display:flex;flex-direction:column;gap:6px">
-          <div style="font-weight:800;color:#fff;font-size:14px;margin-bottom:3px">מה יש בפורטל</div>
+        <div style="font-family:'Rubik',sans-serif;font-weight:900;font-size:calc(22px * var(--ts))">פורטל שרשרת האספקה</div>
+        <div style="color:var(--muted);font-size:calc(14.5px * var(--ts));line-height:1.8;max-width:420px">מערכת מקצה‑לקצה לניהול חוסרים ורכש בין המחסן לקנייני שרשרת האספקה — דיווח, טיפול, מעקב, תקשורת ותיעוד, הכול במקום אחד ובזמן אמת.</div>
+        <div style="background:var(--ink);border:1px solid var(--line);border-radius:14px;padding:15px 16px;max-width:430px;width:100%;text-align:start;font-size:calc(13.5px * var(--ts));color:var(--text);line-height:1.95;display:flex;flex-direction:column;gap:6px">
+          <div style="font-weight:800;color:#fff;font-size:calc(14px * var(--ts));margin-bottom:3px">מה יש בפורטל</div>
           <div>📦 דיווח חוסר / פריט פגום / אי‑התאמה — סריקת ברקוד או הקלדת מק״ט עם השלמת תיאור אוטומטית</div>
           <div>🎫 מספר קריאה ייחודי לכל פנייה — למעקב ותיעוד</div>
           <div>🛒 לוח קניינים/מנהל — שיוך לקניין, סטטוס (ממתין · בטיפול · טופל) והיסטוריה מלאה</div>
@@ -439,14 +494,14 @@
           <div>📞 ספר טלפונים — אישי ומשותף, עם חיוג ישיר וניווט בלחיצה</div>
           <div>📑 תיעוד מלא ב‑Google Sheets וייצוא לאקסל</div>
         </div>
-        <div style="height:1px;background:#292524;width:100%;margin:8px 0"></div>
+        <div style="height:1px;background:var(--line);width:100%;margin:8px 0"></div>
         <button class="ghost-btn" id="qrUnlock" style="max-width:320px">🔒 הגדרות מערכת ו‑QR (מפתח)</button>
         <div id="qrPinRow" style="display:none;gap:8px;width:100%;max-width:320px">
-          <input id="qrPin" type="tel" inputmode="numeric" placeholder="סיסמת מפתח" style="flex:1;background:#0c0a09;border:1px solid #3f3f46;border-radius:10px;padding:11px 13px;color:#fafaf9;font-family:'Heebo',sans-serif;font-size:16px">
+          <input id="qrPin" type="tel" inputmode="numeric" placeholder="סיסמת מפתח" style="flex:1;background:var(--ink);border:1px solid var(--line2);border-radius:10px;padding:11px 13px;color:var(--text);font-family:'Heebo',sans-serif;font-size:calc(16px * var(--ts))">
           <button class="ghost-btn" id="qrPinOk" style="max-width:90px;margin:0">אישור</button>
         </div>
         <div id="qrLock" style="display:none;flex-direction:column;align-items:center;gap:13px;width:100%">
-        <div style="font-weight:700;font-size:15px;color:#e7e5e4">🔗 חיבור למערכת</div>
+        <div style="font-weight:700;font-size:calc(15px * var(--ts));color:var(--text)">🔗 חיבור למערכת</div>
         <p class="hist-empty" style="margin:0">כתובת ה-Web App והטוקן הסודי. זהה לכל הצוות.</p>
         <label class="field" style="width:100%;max-width:340px"><span class="label">כתובת המערכת (Web App URL)</span>
           <input class="input" id="apiUrlInp" placeholder="https://script.google.com/macros/s/..."></label>
@@ -454,21 +509,21 @@
           <input class="input" id="apiTokenInp" placeholder="אותו סוד שבקוד השרת"></label>
         <button class="scan-btn" id="apiTest" style="max-width:340px">בדוק חיבור ושמור</button>
         <div id="apiMsg" class="desc-line" style="color:#fbbf24"></div>
-        <div style="height:1px;background:#292524;width:100%;margin:4px 0"></div>
-        <div style="font-weight:700;font-size:15px;color:#e7e5e4">📲 הורדה ושיתוף — סרקו את הקוד</div>
-        <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;width:100%"><div style="display:flex;flex-direction:column;align-items:center;gap:7px"><div id="qrWh" style="background:#fff;padding:11px;border-radius:14px;width:168px;height:168px;display:flex;align-items:center;justify-content:center"></div><div style="font-weight:800;font-size:14.5px;color:#fafaf9">📦 למחסנאים</div><div style="font-size:12px;color:#78716c">דיווח חוסרים</div></div><div style="display:flex;flex-direction:column;align-items:center;gap:7px"><div id="qrBuy" style="background:#fff;padding:11px;border-radius:14px;width:168px;height:168px;display:flex;align-items:center;justify-content:center"></div><div style="font-weight:800;font-size:14.5px;color:#fafaf9">🛒 לקניינים ולמנהל</div><div style="font-size:12px;color:#78716c">לוח בקרה וטיפול</div></div></div>
+        <div style="height:1px;background:var(--line);width:100%;margin:4px 0"></div>
+        <div style="font-weight:700;font-size:calc(15px * var(--ts));color:var(--text)">📲 הורדה ושיתוף — סרקו את הקוד</div>
+        <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;width:100%"><div style="display:flex;flex-direction:column;align-items:center;gap:7px"><div id="qrWh" style="background:#fff;padding:11px;border-radius:14px;width:168px;height:168px;display:flex;align-items:center;justify-content:center"></div><div style="font-weight:800;font-size:calc(14.5px * var(--ts));color:var(--text)">📦 למחסנאים</div><div style="font-size:calc(13px * var(--ts));color:var(--faint)">דיווח חוסרים</div></div><div style="display:flex;flex-direction:column;align-items:center;gap:7px"><div id="qrBuy" style="background:#fff;padding:11px;border-radius:14px;width:168px;height:168px;display:flex;align-items:center;justify-content:center"></div><div style="font-weight:800;font-size:calc(14.5px * var(--ts));color:var(--text)">🛒 לקניינים ולמנהל</div><div style="font-size:calc(13px * var(--ts));color:var(--faint)">לוח בקרה וטיפול</div></div></div>
         <button class="ghost-btn" id="copyLink" style="max-width:280px"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fafaf9" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> העתק קישור</button>
-        <div style="height:1px;background:#292524;width:100%;margin:4px 0"></div>
+        <div style="height:1px;background:var(--line);width:100%;margin:4px 0"></div>
         <button class="ghost-btn" id="resetIdent" style="max-width:340px;border-color:#7f1d1d;color:#f87171">🔄 אפס זהות במכשיר זה</button>
-        <div style="height:1px;background:#292524;width:100%;margin:4px 0"></div>
-        <div style="font-weight:700;font-size:15px;color:#e7e5e4">👥 ניהול שמות</div>
+        <div style="height:1px;background:var(--line);width:100%;margin:4px 0"></div>
+        <div style="font-weight:700;font-size:calc(15px * var(--ts));color:var(--text)">👥 ניהול שמות</div>
         <div style="display:flex;gap:8px;width:100%;max-width:340px">
-          <button class="seg-btn on" id="nameTabBuyers" style="flex:1;padding:8px;border-radius:9px;background:#292524;color:#fafaf9;border:1px solid #3f3f46;font-family:'Heebo',sans-serif;font-size:13px;cursor:pointer">קניינים</button>
-          <button class="seg-btn" id="nameTabReporters" style="flex:1;padding:8px;border-radius:9px;background:transparent;color:#a8a29e;border:1px solid #3f3f46;font-family:'Heebo',sans-serif;font-size:13px;cursor:pointer">מחסנאים</button>
+          <button class="seg-btn on" id="nameTabBuyers" style="flex:1;padding:8px;border-radius:9px;background:var(--line);color:var(--text);border:1px solid var(--line2);font-family:'Heebo',sans-serif;font-size:calc(13px * var(--ts));cursor:pointer">קניינים</button>
+          <button class="seg-btn" id="nameTabReporters" style="flex:1;padding:8px;border-radius:9px;background:transparent;color:var(--muted);border:1px solid var(--line2);font-family:'Heebo',sans-serif;font-size:calc(13px * var(--ts));cursor:pointer">מחסנאים</button>
         </div>
         <div id="nameList" style="display:flex;flex-direction:column;gap:7px;width:100%;max-width:340px"></div>
         <div style="display:flex;gap:8px;width:100%;max-width:340px">
-          <input id="nameNew" placeholder="שם מלא חדש" style="flex:1;background:#0c0a09;border:1px solid #3f3f46;border-radius:10px;padding:10px 12px;color:#fafaf9;font-family:'Heebo',sans-serif;font-size:14px">
+          <input id="nameNew" placeholder="שם מלא חדש" style="flex:1;background:var(--ink);border:1px solid var(--line2);border-radius:10px;padding:10px 12px;color:var(--text);font-family:'Heebo',sans-serif;font-size:calc(14px * var(--ts))">
           <button class="ghost-btn" id="nameAdd" style="max-width:90px;margin:0">➕</button>
         </div>
         <div id="nameNote" class="desc-line" style="color:#fbbf24"></div>
@@ -481,7 +536,7 @@
     <div class="kp-card">
       <div class="kp-title" id="kpTitle">הקש מק״ט</div>
       <div class="kp-display" id="kpDisplay"></div>
-      <div id="kpDesc" style="text-align:center;min-height:20px;font-size:14.5px;font-weight:600;margin-bottom:10px"></div>
+      <div id="kpDesc" style="text-align:center;min-height:20px;font-size:calc(14.5px * var(--ts));font-weight:600;margin-bottom:10px"></div>
       <div class="kp-grid" id="kpGrid">
         <button class="kp-key" data-d="1">1</button>
         <button class="kp-key" data-d="2">2</button>
@@ -506,8 +561,8 @@
   <div class="ack-overlay hidden" id="ackWrap">
     <div class="ack-card">
       <div style="width:72px;height:72px;border-radius:16px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden"><img id="ackLogo" style="width:100%;height:100%;object-fit:contain;padding:8px" alt="לוגו"></div>
-      <div style="font-family:'Rubik',sans-serif;font-weight:900;font-size:20px">📩 התקבלה בקשת מלאי</div>
-      <div id="ackItem" style="color:#fde68a;font-size:16px;font-weight:700"></div>
+      <div style="font-family:'Rubik',sans-serif;font-weight:900;font-size:calc(20px * var(--ts))">📩 התקבלה בקשת מלאי</div>
+      <div id="ackItem" style="color:#fde68a;font-size:calc(16px * var(--ts));font-weight:700"></div>
       <label class="ack-check"><input type="checkbox" id="ackChk"><span>קיבלתי ואני מטפל בבקשה</span></label>
       <div class="seg" id="ackSeg" style="width:100%">
         <button data-s="בטיפול" style="background:#0f1f14;border-color:#22c55e;color:#34d399">🟠 בטיפול</button>
@@ -515,15 +570,15 @@
       </div>
       <textarea class="input" id="ackResp" placeholder="תגובה (לא חובה) — לדוגמה: הוזמן, מגיע יום ג׳" style="min-height:64px;resize:vertical"></textarea>
       <button class="send" id="ackSend" disabled>שלח אישור ורשום במערכת</button>
-      <div id="ackNote" style="font-size:12.5px;color:#78716c;min-height:2px"></div>
-      <a id="ackOpen" style="font-size:13px;color:#78716c" href="#">פתח את האפליקציה הרגילה</a>
+      <div id="ackNote" style="font-size:calc(13px * var(--ts));color:var(--faint);min-height:2px"></div>
+      <a id="ackOpen" style="font-size:calc(13px * var(--ts));color:var(--faint)" href="#">פתח את האפליקציה הרגילה</a>
     </div>
   </div>
 
   <div class="recip-overlay hidden" id="sentWrap">
     <div class="recip-card">
       <div class="recip-title">✅ הדיווח נשלח</div>
-      <div id="sentInfo" style="background:#0c0a09;border:1px solid #166534;border-radius:12px;padding:16px;font-size:14.5px;color:#e7e5e4;line-height:1.7;margin-bottom:12px;text-align:center"></div>
+      <div id="sentInfo" style="background:var(--ink);border:1px solid #166534;border-radius:12px;padding:16px;font-size:calc(14.5px * var(--ts));color:var(--text);line-height:1.7;margin-bottom:12px;text-align:center"></div>
       <button class="send" id="sentOk">סגור</button>
     </div>
   </div>
@@ -531,7 +586,7 @@
   <div class="recip-overlay hidden" id="dupWrap">
     <div class="recip-card">
       <div class="recip-title">⛔ המק״ט כבר דווח</div>
-      <div id="dupInfo" style="background:#0c0a09;border:1px solid #3f3f46;border-radius:12px;padding:14px 16px;font-size:14px;color:#e7e5e4;line-height:1.7;margin-bottom:12px"></div>
+      <div id="dupInfo" style="background:var(--ink);border:1px solid var(--line2);border-radius:12px;padding:14px 16px;font-size:calc(14px * var(--ts));color:var(--text);line-height:1.7;margin-bottom:12px"></div>
       <button class="recip-cancel" id="dupCancel">סגור</button>
     </div>
   </div>
@@ -539,7 +594,7 @@
   <div class="srch-overlay hidden" id="srchWrap">
     <div class="srch-card">
       <div id="srchNumRow" style="display:flex; gap:8px; align-items:center;">
-        <div class="kp-display" id="srchDisplay" style="flex:1; margin-bottom:0; min-height:48px; font-size:24px;"></div>
+        <div class="kp-display" id="srchDisplay" style="flex:1; margin-bottom:0; min-height:48px; font-size:calc(24px * var(--ts));"></div>
         <button class="kp-back" id="srchBack" style="flex:0 0 60px;">⌫</button>
       </div>
       <input class="input hidden" id="srchInput" placeholder="הקלד שם פריט" style="margin-top:0">
@@ -557,7 +612,7 @@
         <button class="kp-key" data-d="0">0</button>
       </div>
       <div style="display:flex; gap:8px; margin-top:10px;">
-        <button class="kp-skip" id="srchByName" style="border-color:#3f3f46; color:#d6d3d1;">🔤 חיפוש בשם</button>
+        <button class="kp-skip" id="srchByName" style="border-color:var(--line2); color:var(--text);">🔤 חיפוש בשם</button>
         <button class="recip-cancel" id="srchClose" style="margin-top:0; flex:1;">סגור</button>
       </div>
     </div>
@@ -568,11 +623,11 @@
       <div class="recip-title">בחר נמענים לשליחה</div>
       <div id="recipPicker">
         <div class="recip-list" id="recipList"></div>
-        <div id="recipMsg" style="color:#f87171;font-size:13px;text-align:center;min-height:2px;margin-top:8px"></div>
+        <div id="recipMsg" style="color:#f87171;font-size:calc(13px * var(--ts));text-align:center;min-height:2px;margin-top:8px"></div>
         <button class="send" id="recipSend" style="margin-top:12px">שלח לנבחרים</button>
       </div>
       <div id="recipProgress" class="hidden" style="text-align:center">
-        <div id="recipProgText" style="font-size:15px;color:#e7e5e4;line-height:1.8;margin-bottom:14px"></div>
+        <div id="recipProgText" style="font-size:calc(15px * var(--ts));color:var(--text);line-height:1.8;margin-bottom:14px"></div>
         <button class="send hidden" id="recipNext"></button>
       </div>
       <button class="recip-cancel" id="recipClose">סגור</button>
@@ -696,7 +751,35 @@
   }
   let currentAlertId='';   // ה-id של ההתראה הנוכחית שנשלחת (משובץ בקישור האישור)
   let dupExisting=null;    // התראה פתוחה זהה שנמצאה בבדיקת כפילות
-  function setStatus(t){ $('status').textContent=t; }
+  /* ---- Toast: משוב צף שקשה לפספס (במקום שורת סטטוס בלבד) ---- */
+  var _toastT=null;
+  function showToast(msg, kind){
+    var el=$('toast'); if(!el||!msg) return;
+    el.textContent=msg;
+    el.className='toast show'+(kind?(' '+kind):'');
+    if(_toastT) clearTimeout(_toastT);
+    _toastT=setTimeout(function(){ el.className='toast'; }, 3200);
+  }
+  function toastKind(t){
+    if(/שגיא|נכשל|לא ניתן|בעיה|שגויה|נא ל|חייב|אין חיבור/.test(t)) return 'bad';
+    if(/\u2713|\u2714|הופעלו|נבחר|הודבקה/.test(t)) return 'good';
+    return '';
+  }
+  function setStatus(t){ $('status').textContent=t; if(t) showToast(t, toastKind(t)); }
+
+  /* ---- גודל טקסט: רגיל -> גדול -> ענק ---- */
+  (function(){
+    var STEPS=[{k:'רגיל',v:1},{k:'גדול',v:1.14},{k:'ענק',v:1.3}];
+    var i=0; try{ i=parseInt(localStorage.getItem('afcon_ts')||'0',10)||0; }catch(e){}
+    if(!(i>=0&&i<STEPS.length)) i=0;
+    function apply(){ document.documentElement.style.setProperty('--ts', STEPS[i].v); }
+    apply();
+    var b=$('tsBtn'); if(b) b.addEventListener('click',function(){
+      i=(i+1)%STEPS.length; apply();
+      try{ localStorage.setItem('afcon_ts', String(i)); }catch(e){}
+      showToast('גודל טקסט: '+STEPS[i].k);
+    });
+  })();
   function nowStr(){ return new Date().toLocaleString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}); }
   function fmtPhone(raw){ let d=(raw||'').replace(/\D/g,''); if(d.startsWith('0')) d='972'+d.slice(1); return d; }
   function buzz(){ if(navigator.vibrate) try{navigator.vibrate(40);}catch(e){} }
@@ -747,7 +830,7 @@
   // שער זהות — קופץ בכניסה ראשונה וחוסם עד שבוחרים שם
   let gateSelected='';
   function gateRow(n){ const sel=(n===gateSelected);
-    return '<button type="button" class="gate-row" data-name="'+esc(n)+'" style="width:100%;text-align:center;background:'+(sel?'#0f1f14':'#1c1917')+';border:1.5px solid '+(sel?'#22c55e':'#44403c')+';border-radius:11px;padding:13px 15px;color:'+(sel?'#34d399':'#fafaf9')+';font-size:15.5px;font-weight:600;font-family:\'Heebo\',sans-serif;cursor:pointer">'+(sel?'✓ ':'')+esc(n)+'</button>'; }
+    return '<button type="button" class="gate-row" data-name="'+esc(n)+'" style="width:100%;text-align:center;background:'+(sel?'#0f1f14':'var(--surface)')+';border:1.5px solid '+(sel?'#22c55e':'var(--line2)')+';border-radius:11px;padding:13px 15px;color:'+(sel?'#34d399':'var(--text)')+';font-size:calc(15.5px * var(--ts));font-weight:600;font-family:\'Heebo\',sans-serif;cursor:pointer">'+(sel?'✓ ':'')+esc(n)+'</button>'; }
   function renderGateList(){ const el=$('gateResults'); if(!el) return;
     if(!REPORTERS.length){ el.innerHTML='<div class="hist-empty">אין שמות זמינים — פנה למפתח.</div>'; return; }
     const q=($('gateSearch')?$('gateSearch').value:'').trim().toLowerCase();
@@ -765,11 +848,11 @@
   function renderNames(){
     const el=$('nameList'); if(!el) return;
     const arr=curNames();
-    el.innerHTML = arr.length ? arr.map((n,i)=>'<div style="display:flex;align-items:center;gap:8px;background:#0c0a09;border:1px solid #3f3f46;border-radius:10px;padding:8px 11px">'
-      +'<span style="flex:1;font-size:14px;color:#e7e5e4">'+esc(n)+'</span>'
-      +'<button class="nm-edit" data-i="'+i+'" style="background:none;border:none;color:#a8a29e;cursor:pointer;font-size:15px">✎</button>'
-      +'<button class="nm-del" data-i="'+i+'" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:15px">🗑</button>'
-      +'</div>').join('') : '<div style="color:#78716c;font-size:13px">אין שמות. הוסף למטה.</div>';
+    el.innerHTML = arr.length ? arr.map((n,i)=>'<div style="display:flex;align-items:center;gap:8px;background:var(--ink);border:1px solid var(--line2);border-radius:10px;padding:8px 11px">'
+      +'<span style="flex:1;font-size:calc(14px * var(--ts));color:var(--text)">'+esc(n)+'</span>'
+      +'<button class="nm-edit" data-i="'+i+'" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:calc(15px * var(--ts))">✎</button>'
+      +'<button class="nm-del" data-i="'+i+'" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:calc(15px * var(--ts))">🗑</button>'
+      +'</div>').join('') : '<div style="color:var(--faint);font-size:calc(13px * var(--ts))">אין שמות. הוסף למטה.</div>';
   }
   async function saveNames(){
     $('nameNote').textContent='שומר…';
@@ -778,8 +861,8 @@
     catch(e){ $('nameNote').textContent='השמירה נכשלה — בדוק חיבור.'; }
   }
   function nameTab(k){ nameKind=k;
-    $('nameTabBuyers').classList.toggle('on',k==='buyers'); $('nameTabBuyers').style.background=(k==='buyers')?'#292524':'transparent'; $('nameTabBuyers').style.color=(k==='buyers')?'#fafaf9':'#a8a29e';
-    $('nameTabReporters').classList.toggle('on',k==='reporters'); $('nameTabReporters').style.background=(k==='reporters')?'#292524':'transparent'; $('nameTabReporters').style.color=(k==='reporters')?'#fafaf9':'#a8a29e';
+    $('nameTabBuyers').classList.toggle('on',k==='buyers'); $('nameTabBuyers').style.background=(k==='buyers')?'var(--line)':'transparent'; $('nameTabBuyers').style.color=(k==='buyers')?'var(--text)':'var(--muted)';
+    $('nameTabReporters').classList.toggle('on',k==='reporters'); $('nameTabReporters').style.background=(k==='reporters')?'var(--line)':'transparent'; $('nameTabReporters').style.color=(k==='reporters')?'var(--text)':'var(--muted)';
     renderNames(); }
   $('nameTabBuyers').addEventListener('click',()=>nameTab('buyers'));
   $('nameTabReporters').addEventListener('click',()=>nameTab('reporters'));
@@ -802,9 +885,9 @@
   function paintUrg(){
     document.querySelectorAll('#urgSeg button').forEach(b=>{
       const on=b.dataset.u===urgency;
-      b.style.background=on?URG[b.dataset.u].bg:'#1c1917';
-      b.style.color=on?URG[b.dataset.u].fg:'#d6d3d1';
-      b.style.borderColor=on?'transparent':'#3f3f46';
+      b.style.background=on?URG[b.dataset.u].bg:'';
+      b.style.color=on?URG[b.dataset.u].fg:'';
+      b.style.borderColor=on?'transparent':'';
     });
   }
   document.querySelectorAll('#urgSeg button').forEach(b=>b.addEventListener('click',()=>{ urgency=b.dataset.u; paintUrg(); if(currentImg) renderComposite(); }));
@@ -814,8 +897,8 @@
   let reportType='חוסר מלאי';
   const TYPE_COLORS={'חוסר מלאי':{bg:'#3a2a12',fg:'#fbbf24'},'פריט פגום':{bg:'#3a1212',fg:'#f87171'},'אי-התאמה':{bg:'#12233a',fg:'#60a5fa'}};
   function paintType(){
-    document.querySelectorAll('#typeSeg button').forEach(b=>{ const on=b.dataset.t===reportType; const c=TYPE_COLORS[b.dataset.t]||{bg:'#1c1917',fg:'#d6d3d1'};
-      b.style.background=on?c.bg:'#1c1917'; b.style.color=on?c.fg:'#d6d3d1'; b.style.borderColor=on?'transparent':'#3f3f46'; });
+    document.querySelectorAll('#typeSeg button').forEach(b=>{ const on=b.dataset.t===reportType; const c=TYPE_COLORS[b.dataset.t]||{bg:'',fg:''};
+      b.style.background=on?c.bg:''; b.style.color=on?c.fg:''; b.style.borderColor=on?'transparent':''; });
   }
   function applyType(t){
     reportType=t; paintType();
@@ -879,7 +962,7 @@
   function renderDefPhotos(){
     const strip=$('defPhotoStrip'); if(!strip) return;
     strip.innerHTML=defPhotos.map((d,i)=>{ const kb=Math.round(dataUrlBytes(d)/1024);
-      return '<div style="position:relative"><img src="'+d+'" style="width:84px;height:84px;object-fit:cover;border-radius:10px;border:1px solid #44403c"><button type="button" data-rm="'+i+'" style="position:absolute;top:-7px;inset-inline-end:-7px;width:22px;height:22px;border-radius:50%;background:#e2231a;color:#fff;border:none;font-weight:800;cursor:pointer">✕</button><span style="position:absolute;bottom:2px;inset-inline-start:2px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;padding:1px 5px;border-radius:6px">'+kb+'KB</span></div>';
+      return '<div style="position:relative"><img src="'+d+'" style="width:84px;height:84px;object-fit:cover;border-radius:10px;border:1px solid var(--line2)"><button type="button" data-rm="'+i+'" style="position:absolute;top:-7px;inset-inline-end:-7px;width:22px;height:22px;border-radius:50%;background:#e2231a;color:#fff;border:none;font-weight:800;cursor:pointer">✕</button><span style="position:absolute;bottom:2px;inset-inline-start:2px;background:rgba(0,0,0,.6);color:#fff;font-size:calc(13px * var(--ts));padding:1px 5px;border-radius:6px">'+kb+'KB</span></div>';
     }).join('');
     const btn=$('defPhotoBtn'); if(btn) btn.style.display=(defPhotos.length>=MAX_PHOTOS)?'none':'';
   }
@@ -899,11 +982,11 @@
     const ae=document.activeElement;
     if(ae && ae.classList && ae.classList.contains('win')){ const row=ae.closest('.hist-row'); if(row){ e.preventDefault();
       try{ const d=await compressPhoto(f); pendingWhImg[row.dataset.id]=d; const pv=row.querySelector('.wpending');
-        if(pv) pv.innerHTML='<span style="font-size:12.5px;color:#34d399;font-weight:700">📎 תמונה הודבקה <button class="wpx" type="button" style="background:none;border:none;color:#e2231a;font-weight:800;cursor:pointer">✕</button></span><img src="'+d+'" style="height:46px;border-radius:8px;border:1px solid #44403c;margin-inline-start:8px">';
+        if(pv) pv.innerHTML='<span style="font-size:calc(13px * var(--ts));color:#34d399;font-weight:700">📎 תמונה הודבקה <button class="wpx" type="button" style="background:none;border:none;color:#e2231a;font-weight:800;cursor:pointer">✕</button></span><img src="'+d+'" style="height:46px;border-radius:8px;border:1px solid var(--line2);margin-inline-start:8px">';
       }catch(_){ setStatus('בעיה בעיבוד התמונה'); } } return; }
     if(whNewsActive || (ae && ae.closest && ae.closest('#ncForm'))){ e.preventDefault(); if(!$('ncForm').classList.contains('open')) $('ncForm').classList.add('open');
       try{ pendingNewsImgWh=await compressPhoto(f);
-        $('ncPending').innerHTML='<span style="font-size:12.5px;color:#34d399;font-weight:700">📎 תמונה הודבקה <button id="ncPx" type="button" style="background:none;border:none;color:#e2231a;font-weight:800;cursor:pointer">✕</button></span><img src="'+pendingNewsImgWh+'" style="height:48px;border-radius:8px;border:1px solid #44403c;margin-inline-start:8px">';
+        $('ncPending').innerHTML='<span style="font-size:calc(13px * var(--ts));color:#34d399;font-weight:700">📎 תמונה הודבקה <button id="ncPx" type="button" style="background:none;border:none;color:#e2231a;font-weight:800;cursor:pointer">✕</button></span><img src="'+pendingNewsImgWh+'" style="height:48px;border-radius:8px;border:1px solid var(--line2);margin-inline-start:8px">';
         const px=$('ncPx'); if(px) px.addEventListener('click',()=>{ pendingNewsImgWh=''; $('ncPending').innerHTML=''; });
       }catch(_){ setStatus('בעיה בעיבוד התמונה'); } return; }
     const fld=$('fldPhotos'); const onReport=$('opsWrap') && !$('opsWrap').classList.contains('hidden');
@@ -1251,7 +1334,7 @@
     setStatus('');
     resetForm();
     show($('sentWrap'));
-    var tkt = ticket ? ('<div style="margin:10px auto 0;display:inline-block;background:#0c2a14;border:1px solid #166534;border-radius:12px;padding:9px 18px;color:#bbf7d0;font-size:18px;font-weight:800;font-family:\'Rubik\',sans-serif">🎫 קריאה מס׳ '+esc(ticket)+'</div>') : '';
+    var tkt = ticket ? ('<div style="margin:10px auto 0;display:inline-block;background:#0c2a14;border:1px solid #166534;border-radius:12px;padding:9px 18px;color:#bbf7d0;font-size:calc(18px * var(--ts));font-weight:800;font-family:\'Rubik\',sans-serif">🎫 קריאה מס׳ '+esc(ticket)+'</div>') : '';
     $('sentInfo').innerHTML='<b>'+esc(subj.type||'דיווח')+'</b> · מק״ט <b>'+esc(subj.sku)+'</b>'+(subj.desc?(' — '+esc(subj.desc)):'')+' נשלח לקניינים ונכנס ללוח לטיפול. ✓'+tkt;
   }
 
@@ -1267,11 +1350,11 @@
       (when?('<br>🕒 '+when):'') +
       '<br>סטטוס: <b>'+esc(a.status||'')+'</b>' + (assignee?(' · מטפל: <b>'+esc(assignee)+'</b>'):' · ממתין לשיוך לקניין') + (a.qty?(' · נותרו '+esc(a.qty)):'');
     if(resp){
-      html += '<div style="margin-top:11px;padding:11px 13px;background:#0c2a14;border:1px solid #166534;border-radius:10px;color:#bbf7d0;font-size:14px;line-height:1.6">💬 <b>תשובת הקניין:</b><br>'+esc(resp)+'</div>';
+      html += '<div style="margin-top:11px;padding:11px 13px;background:#0c2a14;border:1px solid #166534;border-radius:10px;color:#bbf7d0;font-size:calc(14px * var(--ts));line-height:1.6">💬 <b>תשובת הקניין:</b><br>'+esc(resp)+'</div>';
     } else {
-      html += '<div style="margin-top:11px;padding:10px 13px;background:#0c0a09;border:1px dashed #44403c;border-radius:10px;color:#a8a29e;font-size:13px">הקניין עדיין לא הגיב על הפריט הזה.</div>';
+      html += '<div style="margin-top:11px;padding:10px 13px;background:var(--ink);border:1px dashed var(--line2);border-radius:10px;color:var(--muted);font-size:calc(13px * var(--ts))">הקניין עדיין לא הגיב על הפריט הזה.</div>';
     }
-    html += '<div style="margin-top:11px;font-size:13px;color:#fbbf24">'
+    html += '<div style="margin-top:11px;font-size:calc(13px * var(--ts));color:#fbbf24">'
       + (String(a.status||'')==='טופל'
           ? 'ℹ️ הפריט טופל לאחרונה — אין צורך לדווח שוב כרגע.'
           : 'ℹ️ אין צורך להודיע לקניין — כבר קיים דיווח פתוח על מק״ט זה.')
@@ -1371,7 +1454,7 @@
   renderContacts();
 
   // ===== הגדרות חיבור למערכת =====
-  function paintApiState(){ $('apiState').textContent = apiOn()?'מחובר ✓':'לא מחובר'; }
+  function paintApiState(){ var e=$('apiState'); if(!e) return; var on=apiOn(); e.textContent = on?'מחובר':'לא מחובר'; e.className='conn '+(on?'on':'off'); }
   $('apiUrlInp').value=apiUrl(); $('apiTokenInp').value=apiToken(); paintApiState();
   // ===== נוכחות: פעימת לב מהמחסנאי =====
   var PVIEW='דיווח חוסר', _prevPView='דיווח חוסר';
@@ -1464,11 +1547,11 @@
         return '<div class="hist-row" data-id="'+esc(x.id)+'" style="align-items:flex-start;flex-direction:column;gap:6px">'
           +'<div style="display:flex;justify-content:space-between;width:100%;align-items:center;gap:8px">'
           +'<span style="font-weight:700">'+tic+' מק״ט '+esc(x.sku||'—')+(x.desc?(' · '+esc(x.desc)):'')+(x.ticket?(' <span style="color:#34d399;font-weight:800">🎫 '+esc(x.ticket)+'</span>'):'')+'</span>'
-          +'<span style="font-size:12px;font-weight:700;color:'+pc[0]+';background:'+pc[1]+';border:1px solid '+pc[0]+';border-radius:20px;padding:3px 10px;flex-shrink:0">'+esc(st)+'</span>'
+          +'<span style="font-size:calc(13px * var(--ts));font-weight:700;color:'+pc[0]+';background:'+pc[1]+';border:1px solid '+pc[0]+';border-radius:20px;padding:3px 10px;flex-shrink:0">'+esc(st)+'</span>'
           +'</div>'
           +'<span class="hist-meta2">'+esc(ty)+'  ·  ✅ התקבל'+(when?(' · '+when):'')
             +(isMis?((x.po?(' · הזמנה '+esc(x.po)):'')+' · הוזמן '+esc(x.qty||'—')+' · התקבל '+esc(x.qtyRecv||'—')):(x.qty?(' · '+(ty==='פריט פגום'?'פגומות ':'נותרו ')+esc(x.qty)):''))+'</span>'
-          +(x.note?('<span class="hist-meta2" style="color:#d6d3d1">📝 '+esc(x.note)+'</span>'):'')
+          +(x.note?('<span class="hist-meta2" style="color:var(--text)">📝 '+esc(x.note)+'</span>'):'')
           +'<span class="hist-meta2">'+(who?('🧑‍💼 מטפל: '+esc(who)):'⏳ ממתין לשיוך קניין')+'</span>'
           +(x.response?('<span class="hist-meta2" style="color:#34d399">📋 פעולות הקניין: '+esc(x.response)+'</span>'):'')
           +(Number(x.photo)>0?('<span class="inboxPhotos" data-pid="'+esc(x.id)+'" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px"><span class="hist-meta2">📷 טוען תמונות…</span></span>'):'')
@@ -1484,7 +1567,7 @@
       fetchInboxPhotos();
       fetchChatImgsWh();
       refreshAttention(res.alerts);
-    }catch(e){ L.innerHTML='<div class="hist-empty">לא ניתן להתחבר.<br><span style="font-size:12px;opacity:.8;direction:ltr;display:inline-block;margin-top:6px">סיבה: '+esc(String((e&&e.message)||e||'לא ידוע'))+'</span></div>'; }
+    }catch(e){ L.innerHTML='<div class="hist-empty">לא ניתן להתחבר.<br><span style="font-size:calc(13px * var(--ts));opacity:.8;direction:ltr;display:inline-block;margin-top:6px">סיבה: '+esc(String((e&&e.message)||e||'לא ידוע'))+'</span></div>'; }
   }
   const whPhotoCache={};
   async function fetchInboxPhotos(){
@@ -1494,7 +1577,7 @@
       if(!photos){ try{ const r=await apiGet('photos',{id:id}); if(r&&r.ok&&Array.isArray(r.photos)){ photos=whPhotoCache[id]=r.photos; } }catch(e){ continue; } }
       if(!photos) continue;
       el.removeAttribute('data-pid');
-      el.innerHTML=photos.map(d=>'<img class="zoomable" src="'+d+'" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid #44403c">').join('');
+      el.innerHTML=photos.map(d=>'<img class="zoomable" src="'+d+'" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--line2)">').join('');
     }
   }
   $('inboxRefresh').addEventListener('click', loadInbox);
@@ -1512,20 +1595,20 @@
     const img=m.photo?('<div class="wimg" data-cphoto="'+esc(m.photo)+'"><span class="hist-meta2">📷 טוען…</span></div>'):'';
     return '<div class="wmsg'+(mine?' me':'')+'"><div class="wmeta">'+(isMgr?'💼 ':'')+esc(m.author||'—')+' · '+esc(whFmt(m.ts))+'</div>'+(m.text?('<div class="wtext">'+esc(m.text)+'</div>'):'')+img+'</div>';
   }
-  function whThreadHtml(x){ const msgs=parseMsgsWh(x.chat); if(!msgs.length) return '<div class="hist-empty" style="padding:8px;font-size:13px">אין הודעות עדיין — אפשר לכתוב לקניין/מנהל</div>'; return msgs.map(whMsgHtml).join(''); }
+  function whThreadHtml(x){ const msgs=parseMsgsWh(x.chat); if(!msgs.length) return '<div class="hist-empty" style="padding:8px;font-size:calc(13px * var(--ts))">אין הודעות עדיין — אפשר לכתוב לקניין/מנהל</div>'; return msgs.map(whMsgHtml).join(''); }
   async function fetchChatImgsWh(){
     const els=document.querySelectorAll('.wimg[data-cphoto]');
     for(const el of els){ const pid=el.getAttribute('data-cphoto'); if(!pid) continue;
       if(!whPhotoCache[pid]){ try{ const r=await apiGet('photos',{id:pid}); if(r&&r.ok&&Array.isArray(r.photos)){ whPhotoCache[pid]=r.photos; } else { continue; } }catch(e){ continue; } }
       el.removeAttribute('data-cphoto');
-      el.innerHTML=(whPhotoCache[pid]||[]).map(d=>'<img class="zoomable" src="'+d+'" style="max-width:200px;max-height:200px;border-radius:9px;border:1px solid #44403c">').join('');
+      el.innerHTML=(whPhotoCache[pid]||[]).map(d=>'<img class="zoomable" src="'+d+'" style="max-width:200px;max-height:200px;border-radius:9px;border:1px solid var(--line2)">').join('');
     }
   }
   async function onWhFile(row, id, file){
     if(!file) return;
     try{ const d=await compressPhoto(file); pendingWhImg[id]=d;
       const pv=row.querySelector('.wpending');
-      if(pv) pv.innerHTML='<span style="font-size:12.5px;color:#34d399;font-weight:700">📎 תמונה מצורפת <button class="wpx" type="button" style="background:none;border:none;color:#e2231a;font-weight:800;cursor:pointer">✕</button></span><img src="'+d+'" style="height:46px;border-radius:8px;border:1px solid #44403c;margin-inline-start:8px">';
+      if(pv) pv.innerHTML='<span style="font-size:calc(13px * var(--ts));color:#34d399;font-weight:700">📎 תמונה מצורפת <button class="wpx" type="button" style="background:none;border:none;color:#e2231a;font-weight:800;cursor:pointer">✕</button></span><img src="'+d+'" style="height:46px;border-radius:8px;border:1px solid var(--line2);margin-inline-start:8px">';
     }catch(e){ setStatus('בעיה בעיבוד התמונה'); }
   }
   async function sendWhMsg(row, id){
@@ -1579,7 +1662,7 @@
     const L=$('newsList'); if(!L) return; const meName=whMe();
     if(!NEWS_WH.length){ L.innerHTML='<div class="news-empty">📭 אין הודעות בידיעון עדיין.</div>'; return; }
     L.innerHTML=NEWS_WH.map(n=>{ const cat=String(n.cat||'general'); const isAuthor=(String(n.author||'').trim()===meName); const canPin=isAuthor||(meName==='יהודה פור'); const canDel=isAuthor;
-      const img=n.photo?('<div class="ni-img" data-cphoto="'+esc(n.photo)+'"><span style="color:#78716c;font-size:12px">📷 טוען…</span></div>'):'';
+      const img=n.photo?('<div class="ni-img" data-cphoto="'+esc(n.photo)+'"><span style="color:var(--faint);font-size:calc(13px * var(--ts))">📷 טוען…</span></div>'):'';
       return '<div class="news-item'+(n.pinned?' pinned':'')+'" data-nid="'+esc(n.id)+'">'
         +'<div class="ni-top">'+(n.pinned?'<span class="ni-pin">📌 נעוץ</span>':'')+'<span class="ni-cat '+cat+'">'+(NCATS_WH[cat]||NCATS_WH.general)+'</span></div>'
         +(n.title?('<div class="ni-title">'+esc(n.title)+'</div>'):'')
@@ -1612,7 +1695,7 @@
   $('ncSend').addEventListener('click', sendNewsWh);
   $('ncPhotoBtn').addEventListener('click',()=>$('ncFile').click());
   $('ncFile').addEventListener('change', async e=>{ const f=e.target.files&&e.target.files[0]; e.target.value=''; if(!f) return;
-    try{ pendingNewsImgWh=await compressPhoto(f); $('ncPending').innerHTML='<span style="font-size:12.5px;color:#34d399;font-weight:700">📎 תמונה מצורפת <button id="ncPx" type="button" style="background:none;border:none;color:#e2231a;font-weight:800;cursor:pointer">✕</button></span><img src="'+pendingNewsImgWh+'" style="height:48px;border-radius:8px;border:1px solid #44403c;margin-inline-start:8px">';
+    try{ pendingNewsImgWh=await compressPhoto(f); $('ncPending').innerHTML='<span style="font-size:calc(13px * var(--ts));color:#34d399;font-weight:700">📎 תמונה מצורפת <button id="ncPx" type="button" style="background:none;border:none;color:#e2231a;font-weight:800;cursor:pointer">✕</button></span><img src="'+pendingNewsImgWh+'" style="height:48px;border-radius:8px;border:1px solid var(--line2);margin-inline-start:8px">';
       $('ncPx').addEventListener('click',()=>{ pendingNewsImgWh=''; $('ncPending').innerHTML=''; }); }catch(err){ setStatus('בעיה בעיבוד התמונה'); } });
   $('newsRefresh').addEventListener('click', loadNewsWh);
   $('newsList').addEventListener('click', e=>{
@@ -1823,122 +1906,123 @@
     if(!confirm('לצאת מהאפליקציה?')) return;
     stopCamera(); closeScanner();
     try{ window.open('','_self'); window.close(); }catch(e){}
-    setTimeout(()=>{ document.documentElement.innerHTML='<body style="background:#0c0a09;color:#a8a29e;font-family:Heebo,sans-serif;height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:18px;">להתראות 👋<br><br>אפשר לסגור את החלון/הכרטיסייה.</body>'; }, 250);
+    setTimeout(()=>{ document.documentElement.innerHTML='<body style="background:var(--ink);color:var(--muted);font-family:Heebo,sans-serif;height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:calc(18px * var(--ts));">להתראות 👋<br><br>אפשר לסגור את החלון/הכרטיסייה.</body>'; }, 250);
   });
 </script>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:10px;color:#57534e;z-index:5;font-family:monospace">build 82</div>
+<div class="toast" id="toast"></div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:calc(13px * var(--ts));color:var(--faint);z-index:5;font-family:monospace">build 83</div>
 <!-- ===== כלי עזר (מודול עצמאי — זהה בשתי האפליקציות) ===== -->
 <style>
   #tkModal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;display:none;align-items:flex-start;justify-content:center}
   #tkModal.open{display:flex}
   #tkModal *{box-sizing:border-box}
-  #tkModal .tk-sheet{background:#0c0a09;width:100%;max-width:580px;height:100%;height:100dvh;display:flex;flex-direction:column;color:#fafaf9;font-family:'Heebo','Segoe UI',sans-serif}
-  #tkModal .tk-head{display:flex;align-items:center;justify-content:space-between;padding:15px 16px;border-bottom:1px solid #292524;background:#1c1917}
-  #tkModal .tk-title{font-family:'Rubik','Heebo',sans-serif;font-weight:800;font-size:19px}
-  #tkModal .tk-x{background:#292524;border:none;color:#fafaf9;width:34px;height:34px;border-radius:9px;font-size:16px;cursor:pointer}
-  #tkModal .tk-tabs{display:flex;flex-wrap:wrap;gap:5px;padding:10px;border-bottom:1px solid #292524;background:#161312}
-  #tkModal .tk-tab{flex:1 1 auto;min-width:60px;background:#1c1917;border:1px solid #292524;color:#a8a29e;border-radius:10px;padding:10px 3px;font-size:12.5px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;white-space:nowrap}
+  #tkModal .tk-sheet{background:var(--ink);width:100%;max-width:580px;height:100%;height:100dvh;display:flex;flex-direction:column;color:var(--text);font-family:'Heebo','Segoe UI',sans-serif}
+  #tkModal .tk-head{display:flex;align-items:center;justify-content:space-between;padding:15px 16px;border-bottom:1px solid var(--line);background:var(--surface)}
+  #tkModal .tk-title{font-family:'Rubik','Heebo',sans-serif;font-weight:800;font-size:calc(19px * var(--ts))}
+  #tkModal .tk-x{background:var(--line);border:none;color:var(--text);width:34px;height:34px;border-radius:9px;font-size:calc(16px * var(--ts));cursor:pointer}
+  #tkModal .tk-tabs{display:flex;flex-wrap:wrap;gap:5px;padding:10px;border-bottom:1px solid var(--line);background:var(--surface)}
+  #tkModal .tk-tab{flex:1 1 auto;min-width:60px;background:var(--surface);border:1px solid var(--line);color:var(--muted);border-radius:10px;padding:10px 3px;font-size:calc(13px * var(--ts));font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;white-space:nowrap}
   #tkModal .tk-tab.on{background:#e2231a;border-color:#e2231a;color:#fff}
   #tkModal .tk-body{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px}
   #tkModal .tk-pane[hidden]{display:none}
   #tkModal .tk-rec-lang{display:flex;gap:8px;margin-bottom:12px}
-  #tkModal .tk-rl-btn{flex:1;background:#1c1917;border:1px solid #3f3f46;color:#a8a29e;border-radius:10px;padding:11px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;font-size:14px}
+  #tkModal .tk-rl-btn{flex:1;background:var(--surface);border:1px solid var(--line2);color:var(--muted);border-radius:10px;padding:11px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;font-size:calc(14px * var(--ts))}
   #tkModal .tk-rl-btn.on{background:#2563eb;border-color:#3b82f6;color:#fff}
-  #tkModal .tk-rec-btn{width:100%;background:#e2231a;border:none;color:#fff;border-radius:13px;padding:16px;font-size:16.5px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;margin-bottom:10px}
+  #tkModal .tk-rec-btn{width:100%;background:#e2231a;border:none;color:#fff;border-radius:13px;padding:16px;font-size:calc(16.5px * var(--ts));font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;margin-bottom:10px}
   #tkModal .tk-rec-btn.rec{animation:tkpulse 1.2s infinite}
   @keyframes tkpulse{0%,100%{box-shadow:0 0 0 0 rgba(226,35,26,.55)}50%{box-shadow:0 0 0 13px rgba(226,35,26,0)}}
-  #tkModal .tk-rec-status{font-size:13px;color:#a8a29e;text-align:center;min-height:18px;margin-bottom:8px;font-weight:700}
-  #tkModal .tk-rec-text{width:100%;min-height:150px;background:#0c0a09;border:1px solid #3f3f46;border-radius:12px;padding:13px;color:#fafaf9;font-size:16px;font-family:'Heebo',sans-serif;resize:vertical;line-height:1.65}
+  #tkModal .tk-rec-status{font-size:calc(13px * var(--ts));color:var(--muted);text-align:center;min-height:18px;margin-bottom:8px;font-weight:700}
+  #tkModal .tk-rec-text{width:100%;min-height:150px;background:var(--ink);border:1px solid var(--line2);border-radius:12px;padding:13px;color:var(--text);font-size:calc(16px * var(--ts));font-family:'Heebo',sans-serif;resize:vertical;line-height:1.65}
   #tkModal .tk-rec-text:focus{outline:none;border-color:#e2231a}
   #tkModal .tk-rec-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:11px}
-  #tkModal .tk-rec-acts button{flex:1 1 calc(50% - 4px);background:#1c1917;border:1px solid #3f3f46;color:#fafaf9;border-radius:11px;padding:13px;font-weight:800;font-family:'Heebo',sans-serif;cursor:pointer;font-size:14px}
+  #tkModal .tk-rec-acts button{flex:1 1 calc(50% - 4px);background:var(--surface);border:1px solid var(--line2);color:var(--text);border-radius:11px;padding:13px;font-weight:800;font-family:'Heebo',sans-serif;cursor:pointer;font-size:calc(14px * var(--ts))}
   #tkModal #tkRecWa{border-color:#166534;color:#34d399}
-  #tkModal .tk-rec-upload{display:block;text-align:center;margin-top:12px;color:#60a5fa;font-weight:700;font-size:13.5px;cursor:pointer}
-  #tkModal .tk-rec-note{font-size:12px;color:#78716c;margin-top:10px;line-height:1.55;text-align:center}
-  #tkModal .tk-newlist{width:100%;background:#06281b;border:1px dashed #166534;color:#34d399;border-radius:13px;padding:13px;font-size:15px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;margin-bottom:14px}
-  #tkModal .tk-list{background:#1c1917;border:1px solid #292524;border-radius:14px;padding:13px;margin-bottom:13px}
+  #tkModal .tk-rec-upload{display:block;text-align:center;margin-top:12px;color:#60a5fa;font-weight:700;font-size:calc(13.5px * var(--ts));cursor:pointer}
+  #tkModal .tk-rec-note{font-size:calc(13px * var(--ts));color:var(--faint);margin-top:10px;line-height:1.55;text-align:center}
+  #tkModal .tk-newlist{width:100%;background:#06281b;border:1px dashed #166534;color:#34d399;border-radius:13px;padding:13px;font-size:calc(15px * var(--ts));font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;margin-bottom:14px}
+  #tkModal .tk-list{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:13px;margin-bottom:13px}
   #tkModal .tk-list-head{display:flex;gap:8px;align-items:center;margin-bottom:10px}
-  #tkModal .tk-list-name{flex:1;background:#0c0a09;border:1px solid #3f3f46;border-radius:10px;padding:9px 11px;color:#fafaf9;font-size:15.5px;font-weight:700;font-family:'Rubik','Heebo',sans-serif}
+  #tkModal .tk-list-name{flex:1;background:var(--ink);border:1px solid var(--line2);border-radius:10px;padding:9px 11px;color:var(--text);font-size:calc(15.5px * var(--ts));font-weight:700;font-family:'Rubik','Heebo',sans-serif}
   #tkModal .tk-list-name:focus{outline:none;border-color:#e2231a}
-  #tkModal .tk-dellist{background:none;border:none;color:#f87171;font-size:17px;cursor:pointer;padding:4px}
+  #tkModal .tk-dellist{background:none;border:none;color:#f87171;font-size:calc(17px * var(--ts));cursor:pointer;padding:4px}
   #tkModal .tk-items{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
-  #tkModal .tk-item{display:flex;align-items:center;gap:9px;background:#0c0a09;border:1px solid #292524;border-radius:9px;padding:8px 10px}
+  #tkModal .tk-item{display:flex;align-items:center;gap:9px;background:var(--ink);border:1px solid var(--line);border-radius:9px;padding:8px 10px}
   #tkModal .tk-item input[type=checkbox]{width:19px;height:19px;accent-color:#22c55e;flex:0 0 auto}
-  #tkModal .tk-itext{flex:1;font-size:14.5px;line-height:1.4;word-break:break-word;cursor:text}
-  #tkModal .tk-item.done .tk-itext{text-decoration:line-through;color:#78716c}
+  #tkModal .tk-itext{flex:1;font-size:calc(14.5px * var(--ts));line-height:1.4;word-break:break-word;cursor:text}
+  #tkModal .tk-item.done .tk-itext{text-decoration:line-through;color:var(--faint)}
   #tkModal .tk-iimg{flex:1}
-  #tkModal .tk-iimg img{max-width:100%;max-height:150px;border-radius:8px;border:1px solid #3f3f46;display:block}
+  #tkModal .tk-iimg img{max-width:100%;max-height:150px;border-radius:8px;border:1px solid var(--line2);display:block}
   #tkModal .tk-iaudio{flex:1;display:flex;align-items:center;gap:8px;min-width:0}
   #tkModal .tk-iaudio audio{flex:1;min-width:0;height:36px}
-  #tkModal .tk-aud-ic{flex:0 0 auto;font-size:16px}
-  #tkModal .tk-idel{background:none;border:none;color:#f87171;font-weight:800;cursor:pointer;font-size:14px;flex:0 0 auto}
-  #tkModal .tk-empty{color:#78716c;font-size:13.5px;text-align:center;padding:8px}
+  #tkModal .tk-aud-ic{flex:0 0 auto;font-size:calc(16px * var(--ts))}
+  #tkModal .tk-idel{background:none;border:none;color:#f87171;font-weight:800;cursor:pointer;font-size:calc(14px * var(--ts));flex:0 0 auto}
+  #tkModal .tk-empty{color:var(--faint);font-size:calc(13.5px * var(--ts));text-align:center;padding:8px}
   #tkModal .tk-additem{display:flex;gap:6px;align-items:stretch}
-  #tkModal .tk-iteminput{flex:1;background:#0c0a09;border:1px solid #3f3f46;border-radius:10px;padding:10px 11px;color:#fafaf9;font-size:14.5px;font-family:'Heebo',sans-serif}
+  #tkModal .tk-iteminput{flex:1;background:var(--ink);border:1px solid var(--line2);border-radius:10px;padding:10px 11px;color:var(--text);font-size:calc(14.5px * var(--ts));font-family:'Heebo',sans-serif}
   #tkModal .tk-iteminput:focus{outline:none;border-color:#e2231a}
-  #tkModal .tk-additem button{border:1px solid #3f3f46;background:#211e1c;color:#fafaf9;border-radius:10px;font-size:17px;cursor:pointer;padding:0 12px}
+  #tkModal .tk-additem button{border:1px solid var(--line2);background:#211e1c;color:var(--text);border-radius:10px;font-size:calc(17px * var(--ts));cursor:pointer;padding:0 12px}
   #tkModal .tk-add{background:#22c55e!important;border-color:#22c55e!important;color:#052e16!important;font-weight:800}
   #tkModal .tk-mic.rec{background:#e2231a!important;border-color:#e2231a!important;color:#fff!important;animation:tkpulse 1s infinite}
   @keyframes tkpulse{0%,100%{opacity:1}50%{opacity:.5}}
-  #tkModal .tk-conv{background:#1c1917;border:1px solid #292524;border-radius:14px;padding:16px}
+  #tkModal .tk-conv{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
   #tkModal .tk-row{display:flex;gap:10px;align-items:center;margin-bottom:12px}
-  #tkModal .tk-amt{flex:1;background:#0c0a09;border:1px solid #3f3f46;border-radius:11px;padding:13px;color:#fafaf9;font-size:20px;font-weight:800;font-family:'Rubik',sans-serif;text-align:start}
+  #tkModal .tk-amt{flex:1;background:var(--ink);border:1px solid var(--line2);border-radius:11px;padding:13px;color:var(--text);font-size:calc(20px * var(--ts));font-weight:800;font-family:'Rubik',sans-serif;text-align:start}
   #tkModal .tk-amt:focus{outline:none;border-color:#e2231a}
-  #tkModal .tk-sel{flex:1;background:#0c0a09;border:1px solid #3f3f46;border-radius:11px;padding:13px;color:#fafaf9;font-size:15px;font-family:'Heebo',sans-serif}
-  #tkModal .tk-swap{background:#211e1c;border:1px solid #3f3f46;color:#fafaf9;border-radius:11px;width:46px;font-size:18px;cursor:pointer}
+  #tkModal .tk-sel{flex:1;background:var(--ink);border:1px solid var(--line2);border-radius:11px;padding:13px;color:var(--text);font-size:calc(15px * var(--ts));font-family:'Heebo',sans-serif}
+  #tkModal .tk-swap{background:#211e1c;border:1px solid var(--line2);color:var(--text);border-radius:11px;width:46px;font-size:calc(18px * var(--ts));cursor:pointer}
   #tkModal .tk-result{background:#06281b;border:1px solid #166534;border-radius:12px;padding:16px;text-align:center;margin-top:6px}
-  #tkModal .tk-result .tk-rv{font-family:'Rubik',sans-serif;font-weight:900;font-size:30px;color:#34d399;line-height:1.1;word-break:break-word}
-  #tkModal .tk-result .tk-rl{font-size:13px;color:#a8a29e;margin-top:6px}
-  #tkModal .tk-note{font-size:12px;color:#78716c;text-align:center;margin-top:10px}
+  #tkModal .tk-result .tk-rv{font-family:'Rubik',sans-serif;font-weight:900;font-size:calc(30px * var(--ts));color:#34d399;line-height:1.1;word-break:break-word}
+  #tkModal .tk-result .tk-rl{font-size:calc(13px * var(--ts));color:var(--muted);margin-top:6px}
+  #tkModal .tk-note{font-size:calc(13px * var(--ts));color:var(--faint);text-align:center;margin-top:10px}
   /* ספר טלפונים */
   #tkModal .tk-ph-kind{display:flex;gap:8px;margin-bottom:11px}
-  #tkModal .tk-kind{flex:1;background:#211e1c;border:1px solid #3f3f46;color:#a8a29e;border-radius:11px;padding:10px 0;font-size:14.5px;font-weight:800;cursor:pointer;font-family:'Rubik','Heebo',sans-serif}
+  #tkModal .tk-kind{flex:1;background:#211e1c;border:1px solid var(--line2);color:var(--muted);border-radius:11px;padding:10px 0;font-size:calc(14.5px * var(--ts));font-weight:800;cursor:pointer;font-family:'Rubik','Heebo',sans-serif}
   #tkModal .tk-kind.on{background:#2563eb;border-color:#3b82f6;color:#fff}
   #tkModal .tk-ph-top{display:flex;gap:8px;margin-bottom:13px}
   #tkModal .tk-az{display:flex;flex-direction:column;gap:9px;margin-bottom:13px}
   #tkModal .tk-az-row{display:flex;flex-wrap:wrap;gap:6px}
-  #tkModal .tk-az-lat{padding-top:11px;border-top:1px dashed #3f3f46}
-  #tkModal .tk-azl{flex:0 0 auto;min-width:33px;padding:10px 8px;background:#1c1917;border:1px solid #292524;color:#57534e;border-radius:9px;font-size:16px;font-weight:800;cursor:pointer;text-align:center;font-family:'Rubik','Heebo',sans-serif}
-  #tkModal .tk-azl.has{color:#e7e5e4;border-color:#44403c}
+  #tkModal .tk-az-lat{padding-top:11px;border-top:1px dashed var(--line2)}
+  #tkModal .tk-azl{flex:0 0 auto;min-width:33px;padding:10px 8px;background:var(--surface);border:1px solid var(--line);color:var(--faint);border-radius:9px;font-size:calc(16px * var(--ts));font-weight:800;cursor:pointer;text-align:center;font-family:'Rubik','Heebo',sans-serif}
+  #tkModal .tk-azl.has{color:var(--text);border-color:var(--line2)}
   #tkModal .tk-azl.on{background:#2563eb;border-color:#3b82f6;color:#fff}
-  #tkModal .tk-azdiv{background:#0c0a09;color:#60a5fa;font-weight:900;font-size:15px;border-radius:8px;padding:5px 12px;margin:12px 2px 8px;border-right:3px solid #2563eb}
-  #tkModal .tk-ph-search{flex:1;background:#0c0a09;border:1px solid #3f3f46;border-radius:11px;padding:11px 13px;color:#fafaf9;font-size:14.5px;font-family:'Heebo',sans-serif}
+  #tkModal .tk-azdiv{background:var(--ink);color:#60a5fa;font-weight:900;font-size:calc(15px * var(--ts));border-radius:8px;padding:5px 12px;margin:12px 2px 8px;border-right:3px solid #2563eb}
+  #tkModal .tk-ph-search{flex:1;background:var(--ink);border:1px solid var(--line2);border-radius:11px;padding:11px 13px;color:var(--text);font-size:calc(14.5px * var(--ts));font-family:'Heebo',sans-serif}
   #tkModal .tk-ph-search:focus{outline:none;border-color:#e2231a}
-  #tkModal .tk-ph-new{background:#06281b;border:1px solid #166534;color:#34d399;border-radius:11px;padding:0 16px;font-size:14px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;white-space:nowrap}
+  #tkModal .tk-ph-new{background:#06281b;border:1px solid #166534;color:#34d399;border-radius:11px;padding:0 16px;font-size:calc(14px * var(--ts));font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;white-space:nowrap}
   #tkModal .tk-ph-form{display:none}
-  #tkModal .tk-ph-form.open{display:flex;position:fixed;inset:0;z-index:330;background:#0c0a09;flex-direction:column;gap:12px;padding:20px 18px calc(22px + env(safe-area-inset-bottom));overflow-y:auto}
+  #tkModal .tk-ph-form.open{display:flex;position:fixed;inset:0;z-index:330;background:var(--ink);flex-direction:column;gap:12px;padding:20px 18px calc(22px + env(safe-area-inset-bottom));overflow-y:auto}
   #tkModal .tk-ph-ftop{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:2px}
-  #tkModal #tkPhTitle{font-family:'Rubik','Heebo',sans-serif;font-weight:800;font-size:20px;color:#fafaf9}
-  #tkModal .tk-ph-x{background:#211e1c;border:1px solid #3f3f46;color:#fafaf9;width:42px;height:42px;border-radius:12px;font-size:17px;cursor:pointer;flex:0 0 auto}
-  #tkModal .tk-ph-form input{background:#1c1917;border:1px solid #3f3f46;border-radius:12px;padding:15px 14px;color:#fafaf9;font-size:16.5px;font-family:'Heebo',sans-serif;width:100%}
+  #tkModal #tkPhTitle{font-family:'Rubik','Heebo',sans-serif;font-weight:800;font-size:calc(20px * var(--ts));color:var(--text)}
+  #tkModal .tk-ph-x{background:#211e1c;border:1px solid var(--line2);color:var(--text);width:42px;height:42px;border-radius:12px;font-size:calc(17px * var(--ts));cursor:pointer;flex:0 0 auto}
+  #tkModal .tk-ph-form input{background:var(--surface);border:1px solid var(--line2);border-radius:12px;padding:15px 14px;color:var(--text);font-size:calc(16.5px * var(--ts));font-family:'Heebo',sans-serif;width:100%}
   #tkModal .tk-ph-form input:focus{outline:none;border-color:#e2231a}
   #tkModal .tk-ph-2{display:flex;gap:10px}
   #tkModal .tk-ph-2 input{flex:1;min-width:0}
   #tkModal .tk-ph-actions{display:flex;gap:10px;margin-top:auto;padding-top:8px}
-  #tkModal .tk-ph-save{flex:1;background:#22c55e;border:none;color:#052e16;border-radius:13px;padding:16px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;font-size:16.5px}
-  #tkModal .tk-ph-cancel{flex:1;background:#211e1c;border:1px solid #3f3f46;color:#d6d3d1;border-radius:13px;padding:16px;font-weight:800;cursor:pointer;font-size:16px;font-family:'Heebo',sans-serif}
-  #tkModal .tk-card{background:#1c1917;border:1px solid #292524;border-radius:14px;padding:14px;margin-bottom:11px}
+  #tkModal .tk-ph-save{flex:1;background:#22c55e;border:none;color:#052e16;border-radius:13px;padding:16px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;font-size:calc(16.5px * var(--ts))}
+  #tkModal .tk-ph-cancel{flex:1;background:#211e1c;border:1px solid var(--line2);color:var(--text);border-radius:13px;padding:16px;font-weight:800;cursor:pointer;font-size:calc(16px * var(--ts));font-family:'Heebo',sans-serif}
+  #tkModal .tk-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:11px}
   #tkModal .tk-card-h{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-  #tkModal .tk-card-name{flex:1;font-family:'Rubik','Heebo',sans-serif;font-weight:800;font-size:16.5px;color:#fafaf9}
-  #tkModal .tk-card-edit,#tkModal .tk-card-del{background:none;border:none;cursor:pointer;font-size:15px;padding:3px}
+  #tkModal .tk-card-name{flex:1;font-family:'Rubik','Heebo',sans-serif;font-weight:800;font-size:calc(16.5px * var(--ts));color:var(--text)}
+  #tkModal .tk-card-edit,#tkModal .tk-card-del{background:none;border:none;cursor:pointer;font-size:calc(15px * var(--ts));padding:3px}
   #tkModal .tk-card-del{color:#f87171}
-  #tkModal .tk-line{display:flex;align-items:center;gap:8px;font-size:14px;color:#d6d3d1;padding:4px 0}
+  #tkModal .tk-line{display:flex;align-items:center;gap:8px;font-size:calc(14px * var(--ts));color:var(--text);padding:4px 0}
   #tkModal .tk-line .ic{flex:0 0 auto;width:18px;text-align:center}
   #tkModal a.tk-tel{color:#34d399;font-weight:800;text-decoration:none}
   #tkModal a.tk-addr{color:#60a5fa;font-weight:700;text-decoration:none}
   #tkModal .tk-card.shared{border-color:#1e3a5f;background:#13212e}
-  #tkModal .tk-tag{display:inline-block;background:#0c2d48;color:#60a5fa;border:1px solid #1e3a5f;border-radius:7px;font-size:11px;font-weight:800;padding:2px 7px;margin-inline-start:6px;vertical-align:middle}
-  #tkModal .tk-card-share{background:none;border:none;cursor:pointer;font-size:16px;padding:3px;color:#34d399}
-  #tkModal .tk-sec{font-size:12.5px;color:#a8a29e;font-weight:800;margin:4px 2px 9px;border-bottom:1px solid #292524;padding-bottom:5px}
-  #tkModal .tk-draw-note{font-size:12px;color:#78716c}
+  #tkModal .tk-tag{display:inline-block;background:#0c2d48;color:#60a5fa;border:1px solid #1e3a5f;border-radius:7px;font-size:calc(13px * var(--ts));font-weight:800;padding:2px 7px;margin-inline-start:6px;vertical-align:middle}
+  #tkModal .tk-card-share{background:none;border:none;cursor:pointer;font-size:calc(16px * var(--ts));padding:3px;color:#34d399}
+  #tkModal .tk-sec{font-size:calc(13px * var(--ts));color:var(--muted);font-weight:800;margin:4px 2px 9px;border-bottom:1px solid var(--line);padding-bottom:5px}
+  #tkModal .tk-draw-note{font-size:calc(13px * var(--ts));color:var(--faint)}
   #tkDraw{position:fixed;inset:0;background:#0a0b0e;z-index:320;display:none;flex-direction:column;padding:0}
   #tkDraw.open{display:flex}
   #tkDraw .tk-draw-bar{display:flex;gap:8px;padding:calc(10px + env(safe-area-inset-top,0px)) 12px 10px;background:#15171c;border-bottom:1px solid #242830;align-items:center;flex:0 0 auto;flex-wrap:wrap}
-  #tkDraw .tk-draw-bar button{flex:1;border:none;border-radius:11px;padding:13px 6px;font-size:14px;font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;white-space:nowrap}
+  #tkDraw .tk-draw-bar button{flex:1;border:none;border-radius:11px;padding:13px 6px;font-size:calc(14px * var(--ts));font-weight:800;font-family:'Rubik','Heebo',sans-serif;cursor:pointer;white-space:nowrap}
   #tkDraw canvas{background:#fff;touch-action:none;display:block}
   #tkDraw .tk-dsave{background:#22c55e;color:#052e16}
   #tkDraw .tk-dwa{background:#25d366;color:#052e16}
-  #tkDraw .tk-dclear{background:#292524;color:#fafaf9}
+  #tkDraw .tk-dclear{background:var(--line);color:var(--text)}
   #tkDraw .tk-dcancel{background:#7f1d1d;color:#fff}
 </style>
 
@@ -2025,28 +2109,28 @@
       <div class="tk-pane" id="tkTodo" hidden>
         <div style="display:flex;flex-direction:column;gap:10px">
           <div class="tk-note" style="text-align:start">תזכורות אישיות. ההתראה תופיע כשמגיע הזמן והאפליקציה פתוחה.</div>
-          <input id="tkTodoText" placeholder="מה להזכיר לך?…" style="width:100%;box-sizing:border-box;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:12px;color:#f2f4f8;font-size:15px;font-family:'Heebo',sans-serif">
-          <input id="tkTodoWhen" type="datetime-local" style="width:100%;box-sizing:border-box;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:12px;color:#f2f4f8;font-size:15px;font-family:'Heebo',sans-serif">
+          <input id="tkTodoText" placeholder="מה להזכיר לך?…" style="width:100%;box-sizing:border-box;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:12px;color:#f2f4f8;font-size:calc(15px * var(--ts));font-family:'Heebo',sans-serif">
+          <input id="tkTodoWhen" type="datetime-local" style="width:100%;box-sizing:border-box;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:12px;color:#f2f4f8;font-size:calc(15px * var(--ts));font-family:'Heebo',sans-serif">
           <div style="display:flex;gap:6px;flex-wrap:wrap">
-            <button type="button" data-tdquick="1h" style="background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px 6px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;flex:1;min-width:64px">בעוד שעה</button>
-            <button type="button" data-tdquick="3h" style="background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px 6px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;flex:1;min-width:64px">בעוד 3 שע׳</button>
-            <button type="button" data-tdquick="eve" style="background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px 6px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;flex:1;min-width:64px">היום 18:00</button>
-            <button type="button" data-tdquick="tom9" style="background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px 6px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;flex:1;min-width:64px">מחר 09:00</button>
+            <button type="button" data-tdquick="1h" style="background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px 6px;font-size:calc(13px * var(--ts));font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;flex:1;min-width:64px">בעוד שעה</button>
+            <button type="button" data-tdquick="3h" style="background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px 6px;font-size:calc(13px * var(--ts));font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;flex:1;min-width:64px">בעוד 3 שע׳</button>
+            <button type="button" data-tdquick="eve" style="background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px 6px;font-size:calc(13px * var(--ts));font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;flex:1;min-width:64px">היום 18:00</button>
+            <button type="button" data-tdquick="tom9" style="background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px 6px;font-size:calc(13px * var(--ts));font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;flex:1;min-width:64px">מחר 09:00</button>
           </div>
           <div style="display:flex;gap:6px;align-items:center">
-            <span style="color:#9aa2ad;font-size:13px;flex:0 0 auto;width:58px">🔔 צלצול</span>
-            <select id="tkTodoSound" style="flex:1;min-width:0;background:#15171c;border:1px solid #343a45;border-radius:9px;padding:10px;color:#f2f4f8;font-size:14px;font-family:'Heebo',sans-serif">
+            <span style="color:#9aa2ad;font-size:calc(13px * var(--ts));flex:0 0 auto;width:58px">🔔 צלצול</span>
+            <select id="tkTodoSound" style="flex:1;min-width:0;background:#15171c;border:1px solid #343a45;border-radius:9px;padding:10px;color:#f2f4f8;font-size:calc(14px * var(--ts));font-family:'Heebo',sans-serif">
               <option value="bell">פעמון</option>
               <option value="chime">צלצול עולה</option>
               <option value="chirp">ציוץ</option>
               <option value="siren">סירנה</option>
               <option value="none">שקט (רק רטט)</option>
             </select>
-            <button type="button" id="tkTodoPlay" style="flex:0 0 auto;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:10px 13px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif">🔊 נגן</button>
+            <button type="button" id="tkTodoPlay" style="flex:0 0 auto;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:10px 13px;font-size:calc(13px * var(--ts));font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif">🔊 נגן</button>
           </div>
           <div style="display:flex;gap:6px;align-items:center">
-            <span style="color:#9aa2ad;font-size:13px;flex:0 0 auto;width:58px">⏱️ הזכר</span>
-            <select id="tkTodoLead" style="flex:1;min-width:0;background:#15171c;border:1px solid #343a45;border-radius:9px;padding:10px;color:#f2f4f8;font-size:14px;font-family:'Heebo',sans-serif">
+            <span style="color:#9aa2ad;font-size:calc(13px * var(--ts));flex:0 0 auto;width:58px">⏱️ הזכר</span>
+            <select id="tkTodoLead" style="flex:1;min-width:0;background:#15171c;border:1px solid #343a45;border-radius:9px;padding:10px;color:#f2f4f8;font-size:calc(14px * var(--ts));font-family:'Heebo',sans-serif">
               <option value="0">בזמן</option>
               <option value="10">10 דקות לפני</option>
               <option value="15">רבע שעה לפני</option>
@@ -2054,7 +2138,7 @@
               <option value="60">שעה לפני</option>
             </select>
           </div>
-          <button id="tkTodoAdd" type="button" style="background:#22c55e;color:#052e16;border:none;border-radius:11px;padding:13px;font-weight:800;cursor:pointer;font-family:'Rubik','Heebo',sans-serif;font-size:15px">➕ הוסף תזכורת</button>
+          <button id="tkTodoAdd" type="button" style="background:#22c55e;color:#052e16;border:none;border-radius:11px;padding:13px;font-weight:800;cursor:pointer;font-family:'Rubik','Heebo',sans-serif;font-size:calc(15px * var(--ts))">➕ הוסף תזכורת</button>
           <div id="tkTodoList" style="display:flex;flex-direction:column;gap:7px"></div>
           <button id="tkTodoClear" type="button" style="background:none;border:1px solid #7f1d1d;color:#f87171;border-radius:11px;padding:11px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif">🗑️ מחק הכל</button>
         </div>
@@ -2062,67 +2146,67 @@
       <div class="tk-pane" id="tkVrep" hidden>
         <p class="tk-note" style="margin-bottom:9px">אמור בחופשיות, למשל: «חסרות עשר יחידות של כבל 3 על 2.5, דחוף» — וה-AI יהפוך את זה לדיווח מוכן.</p>
         <div style="display:flex;gap:7px">
-          <button id="tkVrMic" type="button" style="flex:1;background:#e2231a;color:#fff;border:none;border-radius:12px;padding:15px;font-weight:800;cursor:pointer;font-family:'Rubik','Heebo',sans-serif;font-size:16px">🎤 התחל הקלטה</button>
-          <button id="tkVrClr" type="button" style="flex:0 0 auto;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:12px;padding:15px 16px;font-weight:800;cursor:pointer;font-family:'Heebo',sans-serif;font-size:15px">🧹 נקה</button>
+          <button id="tkVrMic" type="button" style="flex:1;background:#e2231a;color:#fff;border:none;border-radius:12px;padding:15px;font-weight:800;cursor:pointer;font-family:'Rubik','Heebo',sans-serif;font-size:calc(16px * var(--ts))">🎤 התחל הקלטה</button>
+          <button id="tkVrClr" type="button" style="flex:0 0 auto;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:12px;padding:15px 16px;font-weight:800;cursor:pointer;font-family:'Heebo',sans-serif;font-size:calc(15px * var(--ts))">🧹 נקה</button>
         </div>
-        <textarea id="tkVrText" rows="3" placeholder="התמלול יופיע כאן (אפשר גם להקליד/לערוך ידנית)…" style="width:100%;box-sizing:border-box;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px 12px;color:#f2f4f8;font-size:14.5px;font-family:'Heebo',sans-serif;margin-top:8px;resize:vertical"></textarea>
-        <button id="tkVrGo" type="button" style="width:100%;background:#6d28d9;color:#fff;border:none;border-radius:11px;padding:13px;font-weight:800;cursor:pointer;font-family:'Rubik','Heebo',sans-serif;font-size:15px;margin-top:8px">🤖 פענח לדיווח</button>
+        <textarea id="tkVrText" rows="3" placeholder="התמלול יופיע כאן (אפשר גם להקליד/לערוך ידנית)…" style="width:100%;box-sizing:border-box;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px 12px;color:#f2f4f8;font-size:calc(14.5px * var(--ts));font-family:'Heebo',sans-serif;margin-top:8px;resize:vertical"></textarea>
+        <button id="tkVrGo" type="button" style="width:100%;background:#6d28d9;color:#fff;border:none;border-radius:11px;padding:13px;font-weight:800;cursor:pointer;font-family:'Rubik','Heebo',sans-serif;font-size:calc(15px * var(--ts));margin-top:8px">🤖 פענח לדיווח</button>
         <div id="tkVrStatus" class="tk-note" style="margin-top:7px"></div>
         <div id="tkVrOut" style="display:none;margin-top:10px">
           <div style="display:flex;gap:8px;align-items:center;margin-bottom:9px">
-            <span style="color:#9aa2ad;font-size:13px;flex:0 0 auto">כמות:</span>
-            <input id="tkVrQty" inputmode="numeric" style="flex:0 0 90px;background:#15171c;border:1px solid #343a45;border-radius:9px;padding:10px;color:#f2f4f8;font-size:15px;font-family:'Heebo',sans-serif;text-align:center">
-            <span id="tkVrUrg" style="display:none;background:#7f1d1d;color:#fecaca;border-radius:8px;padding:6px 10px;font-size:12.5px;font-weight:800">🔥 דחוף</span>
+            <span style="color:#9aa2ad;font-size:calc(13px * var(--ts));flex:0 0 auto">כמות:</span>
+            <input id="tkVrQty" inputmode="numeric" style="flex:0 0 90px;background:#15171c;border:1px solid #343a45;border-radius:9px;padding:10px;color:#f2f4f8;font-size:calc(15px * var(--ts));font-family:'Heebo',sans-serif;text-align:center">
+            <span id="tkVrUrg" style="display:none;background:#7f1d1d;color:#fecaca;border-radius:8px;padding:6px 10px;font-size:calc(13px * var(--ts));font-weight:800">🔥 דחוף</span>
           </div>
-          <div style="color:#9aa2ad;font-size:12.5px;margin-bottom:5px;font-weight:700">בחר את הפריט מהקטלוג:</div>
+          <div style="color:#9aa2ad;font-size:calc(13px * var(--ts));margin-bottom:5px;font-weight:700">בחר את הפריט מהקטלוג:</div>
           <div id="tkVrMatches"></div>
-          <button id="tkVrFill" type="button" disabled style="width:100%;background:#22c55e;color:#052e16;border:none;border-radius:11px;padding:13px;font-weight:800;cursor:pointer;font-family:'Rubik','Heebo',sans-serif;font-size:15px;margin-top:10px;opacity:.5">📝 מלא בטופס הדיווח</button>
+          <button id="tkVrFill" type="button" disabled style="width:100%;background:#22c55e;color:#052e16;border:none;border-radius:11px;padding:13px;font-weight:800;cursor:pointer;font-family:'Rubik','Heebo',sans-serif;font-size:calc(15px * var(--ts));margin-top:10px;opacity:.5">📝 מלא בטופס הדיווח</button>
         </div>
       </div>
       <div class="tk-pane" id="tkLoan" hidden>
         <div style="display:flex;gap:6px;margin-bottom:10px">
-          <button type="button" id="tkLnTabNew" style="flex:1;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;background:#e2231a;border-color:#e2231a;color:#fff">➕ השאלה חדשה</button>
-          <button type="button" id="tkLnTabOpen" style="flex:1;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif">📋 פתוחות</button>
-          <button type="button" id="tkLnTabHist" style="flex:1;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif">🗂️ היסטוריה</button>
+          <button type="button" id="tkLnTabNew" style="flex:1;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px;font-size:calc(13px * var(--ts));font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;background:#e2231a;border-color:#e2231a;color:#fff">➕ השאלה חדשה</button>
+          <button type="button" id="tkLnTabOpen" style="flex:1;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px;font-size:calc(13px * var(--ts));font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif">📋 פתוחות</button>
+          <button type="button" id="tkLnTabHist" style="flex:1;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px;font-size:calc(13px * var(--ts));font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif">🗂️ היסטוריה</button>
         </div>
-        <button type="button" id="tkLnExport" style="width:100%;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;background:#14532d;border-color:#166534;color:#bbf7d0;margin-bottom:10px">📊 ייצא לאקסל</button>
+        <button type="button" id="tkLnExport" style="width:100%;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px;font-size:calc(13px * var(--ts));font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;background:#14532d;border-color:#166534;color:#bbf7d0;margin-bottom:10px">📊 ייצא לאקסל</button>
         <div id="tkLnFilter" style="display:none;flex-direction:column;gap:6px;margin-bottom:10px">
-          <input id="tkLnQ" placeholder="🔍 חיפוש — מק&quot;ט / תיאור / שם / מס׳ תעודה" style="width:100%;box-sizing:border-box;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px 12px;color:#f2f4f8;font-size:14px;font-family:'Heebo',sans-serif">
+          <input id="tkLnQ" placeholder="🔍 חיפוש — מק&quot;ט / תיאור / שם / מס׳ תעודה" style="width:100%;box-sizing:border-box;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px 12px;color:#f2f4f8;font-size:calc(14px * var(--ts));font-family:'Heebo',sans-serif">
           <div style="display:flex;gap:6px;align-items:center">
-            <span style="color:#9aa2ad;font-size:12px;flex:0 0 auto">מתאריך</span>
-            <input id="tkLnFrom" type="date" style="flex:1;min-width:0;background:#15171c;border:1px solid #343a45;border-radius:9px;padding:9px;color:#f2f4f8;font-size:13px;font-family:'Heebo',sans-serif">
-            <span style="color:#9aa2ad;font-size:12px;flex:0 0 auto">עד</span>
-            <input id="tkLnTo" type="date" style="flex:1;min-width:0;background:#15171c;border:1px solid #343a45;border-radius:9px;padding:9px;color:#f2f4f8;font-size:13px;font-family:'Heebo',sans-serif">
-            <button type="button" id="tkLnFClr" style="flex:0 0 auto;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px 11px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif">נקה</button>
+            <span style="color:#9aa2ad;font-size:calc(13px * var(--ts));flex:0 0 auto">מתאריך</span>
+            <input id="tkLnFrom" type="date" style="flex:1;min-width:0;background:#15171c;border:1px solid #343a45;border-radius:9px;padding:9px;color:#f2f4f8;font-size:calc(13px * var(--ts));font-family:'Heebo',sans-serif">
+            <span style="color:#9aa2ad;font-size:calc(13px * var(--ts));flex:0 0 auto">עד</span>
+            <input id="tkLnTo" type="date" style="flex:1;min-width:0;background:#15171c;border:1px solid #343a45;border-radius:9px;padding:9px;color:#f2f4f8;font-size:calc(13px * var(--ts));font-family:'Heebo',sans-serif">
+            <button type="button" id="tkLnFClr" style="flex:0 0 auto;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px 11px;font-size:calc(13px * var(--ts));font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif">נקה</button>
           </div>
         </div>
         <div id="tkLnNew">
           <div style="display:flex;gap:6px;margin-bottom:8px">
-            <button type="button" id="tkLnKindEmp" style="flex:1;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;background:#3b82f6;border-color:#3b82f6;color:#fff">👷 השאלה לעובד</button>
-            <button type="button" id="tkLnKindSup" style="flex:1;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif">🚚 השאלה לספק</button>
+            <button type="button" id="tkLnKindEmp" style="flex:1;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px;font-size:calc(13px * var(--ts));font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;background:#3b82f6;border-color:#3b82f6;color:#fff">👷 השאלה לעובד</button>
+            <button type="button" id="tkLnKindSup" style="flex:1;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px;font-size:calc(13px * var(--ts));font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif">🚚 השאלה לספק</button>
           </div>
           <div id="tkLnEmpFields">
             <div style="display:flex;gap:6px">
-              <input id="tkLnFirst" placeholder="שם פרטי" style="flex:1;min-width:0;width:100%;box-sizing:border-box;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px 12px;color:#f2f4f8;font-size:14.5px;font-family:'Heebo',sans-serif">
-              <input id="tkLnLast" placeholder="שם משפחה" style="flex:1;min-width:0;width:100%;box-sizing:border-box;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px 12px;color:#f2f4f8;font-size:14.5px;font-family:'Heebo',sans-serif">
+              <input id="tkLnFirst" placeholder="שם פרטי" style="flex:1;min-width:0;width:100%;box-sizing:border-box;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px 12px;color:#f2f4f8;font-size:calc(14.5px * var(--ts));font-family:'Heebo',sans-serif">
+              <input id="tkLnLast" placeholder="שם משפחה" style="flex:1;min-width:0;width:100%;box-sizing:border-box;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px 12px;color:#f2f4f8;font-size:calc(14.5px * var(--ts));font-family:'Heebo',sans-serif">
             </div>
-            <input id="tkLnEmp" placeholder="מספר עובד" inputmode="numeric" style="width:100%;box-sizing:border-box;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px 12px;color:#f2f4f8;font-size:14.5px;font-family:'Heebo',sans-serif;margin-top:7px">
+            <input id="tkLnEmp" placeholder="מספר עובד" inputmode="numeric" style="width:100%;box-sizing:border-box;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px 12px;color:#f2f4f8;font-size:calc(14.5px * var(--ts));font-family:'Heebo',sans-serif;margin-top:7px">
           </div>
           <div id="tkLnSupFields" style="display:none">
-            <input id="tkLnSupName" placeholder="שם הספק" style="width:100%;box-sizing:border-box;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px 12px;color:#f2f4f8;font-size:14.5px;font-family:'Heebo',sans-serif">
-            <input id="tkLnSupContact" placeholder="איש קשר" style="width:100%;box-sizing:border-box;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px 12px;color:#f2f4f8;font-size:14.5px;font-family:'Heebo',sans-serif;margin-top:7px">
-            <input id="tkLnSupPhone" placeholder="טלפון" inputmode="tel" style="width:100%;box-sizing:border-box;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px 12px;color:#f2f4f8;font-size:14.5px;font-family:'Heebo',sans-serif;margin-top:7px">
+            <input id="tkLnSupName" placeholder="שם הספק" style="width:100%;box-sizing:border-box;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px 12px;color:#f2f4f8;font-size:calc(14.5px * var(--ts));font-family:'Heebo',sans-serif">
+            <input id="tkLnSupContact" placeholder="איש קשר" style="width:100%;box-sizing:border-box;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px 12px;color:#f2f4f8;font-size:calc(14.5px * var(--ts));font-family:'Heebo',sans-serif;margin-top:7px">
+            <input id="tkLnSupPhone" placeholder="טלפון" inputmode="tel" style="width:100%;box-sizing:border-box;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px 12px;color:#f2f4f8;font-size:calc(14.5px * var(--ts));font-family:'Heebo',sans-serif;margin-top:7px">
           </div>
-          <div style="color:#9aa2ad;font-size:12.5px;margin:10px 0 5px;font-weight:700">פריטים להשאלה (עד 5):</div>
+          <div style="color:#9aa2ad;font-size:calc(13px * var(--ts));margin:10px 0 5px;font-weight:700">פריטים להשאלה (עד 5):</div>
           <div id="tkLnItems"></div>
-          <button type="button" id="tkLnAddItem" style="background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;width:100%;margin-top:5px">➕ הוסף פריט</button>
-          <div style="color:#9aa2ad;font-size:12.5px;margin:10px 0 5px;font-weight:700">להחזרה עד:</div>
-          <input id="tkLnDue" type="date" style="width:100%;box-sizing:border-box;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px 12px;color:#f2f4f8;font-size:14.5px;font-family:'Heebo',sans-serif">
-          <div style="color:#9aa2ad;font-size:12.5px;margin:10px 0 5px;font-weight:700">חתימת המקבל (בכתב יד):</div>
+          <button type="button" id="tkLnAddItem" style="background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px;font-size:calc(13px * var(--ts));font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;width:100%;margin-top:5px">➕ הוסף פריט</button>
+          <div style="color:#9aa2ad;font-size:calc(13px * var(--ts));margin:10px 0 5px;font-weight:700">להחזרה עד:</div>
+          <input id="tkLnDue" type="date" style="width:100%;box-sizing:border-box;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px 12px;color:#f2f4f8;font-size:calc(14.5px * var(--ts));font-family:'Heebo',sans-serif">
+          <div style="color:#9aa2ad;font-size:calc(13px * var(--ts));margin:10px 0 5px;font-weight:700">חתימת המקבל (בכתב יד):</div>
           <canvas id="tkLnSig" style="width:100%;height:110px;background:#fff;border-radius:10px;touch-action:none"></canvas>
-          <button type="button" id="tkLnSigClear" style="background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;margin-top:5px">🧹 נקה חתימה</button>
-          <button type="button" id="tkLnSave" style="width:100%;background:#22c55e;color:#052e16;border:none;border-radius:11px;padding:13px;font-weight:800;cursor:pointer;font-family:'Rubik','Heebo',sans-serif;font-size:15px;margin-top:10px">💾 שמור השאלה</button>
-          <button type="button" id="tkLnCancelEdit" style="display:none;width:100%;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:10px;padding:11px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;font-size:13.5px;margin-top:6px">✖ בטל עריכה</button>
+          <button type="button" id="tkLnSigClear" style="background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:9px;padding:9px;font-size:calc(13px * var(--ts));font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;margin-top:5px">🧹 נקה חתימה</button>
+          <button type="button" id="tkLnSave" style="width:100%;background:#22c55e;color:#052e16;border:none;border-radius:11px;padding:13px;font-weight:800;cursor:pointer;font-family:'Rubik','Heebo',sans-serif;font-size:calc(15px * var(--ts));margin-top:10px">💾 שמור השאלה</button>
+          <button type="button" id="tkLnCancelEdit" style="display:none;width:100%;background:#1f2430;border:1px solid #343a45;color:#cbd5e1;border-radius:10px;padding:11px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif;font-size:calc(13.5px * var(--ts));margin-top:6px">✖ בטל עריכה</button>
           <div id="tkLnNote" class="tk-note" style="margin-top:7px"></div>
         </div>
         <div id="tkLnOpen" style="display:none"></div>
@@ -2136,14 +2220,14 @@
             <img id="tkDcImg" style="width:100%;border-radius:10px;border:1px solid #343a45;display:block">
             <div id="tkDcSel" style="position:absolute;border:2.5px solid #f59e0b;background:rgba(245,158,11,.18);display:none;pointer-events:none;border-radius:3px"></div>
           </div>
-          <button id="tkDcAi" type="button" style="display:none;background:#6d28d9;color:#fff;border:none;border-radius:11px;padding:14px;font-weight:800;cursor:pointer;font-family:'Rubik','Heebo',sans-serif;font-size:15px">🤖 קרא את כל המספרים (AI)</button>
+          <button id="tkDcAi" type="button" style="display:none;background:#6d28d9;color:#fff;border:none;border-radius:11px;padding:14px;font-weight:800;cursor:pointer;font-family:'Rubik','Heebo',sans-serif;font-size:calc(15px * var(--ts))">🤖 קרא את כל המספרים (AI)</button>
           <div id="tkDcBtns" style="display:none;gap:7px">
             <button id="tkDcRead" type="button" style="flex:1;background:#f59e0b;color:#0a0b0e;border:none;border-radius:11px;padding:13px;font-weight:800;cursor:pointer;font-family:'Rubik','Heebo',sans-serif">🔎 קרא אזור מסומן</button>
             <button id="tkDcZoomBtn" type="button" style="background:#242830;border:1.5px solid #343a45;color:#f2f4f8;border-radius:11px;padding:13px 16px;font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif">🔍 גדול</button>
           </div>
-          <div id="tkDcProg" style="display:none;font-size:13.5px;color:#fbbf24;font-weight:700"></div>
+          <div id="tkDcProg" style="display:none;font-size:calc(13.5px * var(--ts));color:#fbbf24;font-weight:700"></div>
           <div style="display:flex;gap:7px">
-            <input id="tkDcManual" placeholder="המספר שנקרא — בדוק/תקן והוסף…" style="flex:1;min-width:0;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px;color:#f2f4f8;font-family:'Heebo',sans-serif;font-size:15px">
+            <input id="tkDcManual" placeholder="המספר שנקרא — בדוק/תקן והוסף…" style="flex:1;min-width:0;background:#15171c;border:1px solid #343a45;border-radius:10px;padding:11px;color:#f2f4f8;font-family:'Heebo',sans-serif;font-size:calc(15px * var(--ts))">
             <button id="tkDcAdd" type="button" style="background:#22c55e;color:#052e16;border:none;border-radius:11px;padding:11px 15px;font-weight:800;cursor:pointer">➕</button>
           </div>
           <div id="tkDcChosen"></div>
