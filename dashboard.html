@@ -484,6 +484,26 @@
     font-size:calc(13px * var(--ts));font-weight:700}
   .msg-fail button{background:#7f1d1d;color:#fee2e2;border:0;border-radius:8px;padding:4px 12px;
     font-family:'Heebo',sans-serif;font-weight:800;font-size:calc(13px * var(--ts));cursor:pointer;min-height:32px}
+
+  /* ================= שעון ותאריך ================= */
+  .clockbar{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:0 10px;
+    padding:9px 16px;border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,rgba(217,181,107,.07),rgba(217,181,107,0));
+    font-family:'Heebo',sans-serif;line-height:1.6;text-align:center}
+  .clockbar .clk-time{font-family:'Rubik',sans-serif;font-weight:900;color:var(--gold2);
+    font-size:calc(19px * var(--ts));letter-spacing:.5px;font-variant-numeric:tabular-nums}
+  .clockbar .clk-sep{width:1px;height:17px;background:var(--line2);display:inline-block}
+  .clockbar .clk-day{font-weight:800;color:var(--text);font-size:calc(14.5px * var(--ts))}
+  .clockbar .clk-greg{color:var(--muted);font-weight:700;font-size:calc(14px * var(--ts));
+    font-variant-numeric:tabular-nums}
+  .clockbar .clk-heb{color:var(--gold);font-weight:700;font-size:calc(14px * var(--ts))}
+  .clockbar .clk-heb::before{content:'·';color:var(--line2);margin-inline-end:9px;font-weight:400}
+  html[data-standalone="1"] .clockbar{padding-top:9px}
+  @media (max-width:420px){
+    .clockbar{gap:0 8px;padding:8px 12px}
+    .clockbar .clk-time{font-size:calc(17px * var(--ts))}
+  }
+  @media print{ .clockbar{display:none !important} }
 </style>
 </head>
 <body>
@@ -506,6 +526,7 @@
   <button id="gateDev" style="background:none;border:none;color:var(--faint);font-size:calc(13px * var(--ts));cursor:pointer;text-decoration:underline">מפתח</button>
 </div>
 <div class="wrap">
+  <div class="clockbar" id="clockBar" aria-live="off"></div>
   <div class="top">
     <div class="top-in">
       <div class="badge"><img src="icon.png" alt="אפקון" onerror="this.outerHTML='<span style=\'font-family:Rubik;font-weight:900;color:#e2231a;font-size:22px\'>A</span>'"></div>
@@ -1329,6 +1350,77 @@
     });
     setTimeout(window.paintFilterCount, 60);
   })();
+
+/* ===== שעון וזמן — תאריך לועזי, תאריך עברי ויום בשבוע =====
+   התאריך העברי מתחלף בשקיעה ולא בחצות, ולכן מחושבת שקיעה אמיתית
+   לפי קו הרוחב והאורך (ברירת מחדל: מרכז הארץ). אחרי השקיעה מוצג
+   התאריך העברי של היום הבא, כנהוג. */
+(function () {
+  var LAT = 31.9, LON = 34.8;          // מרכז הארץ
+  var el = document.getElementById('clockBar');
+  if (!el) return;
+
+  /* --- חישוב שקיעה (NOAA, מדויק לדקה) --- */
+  function sunsetOn(date, lat, lon) {
+    var rad = Math.PI / 180, deg = 180 / Math.PI;
+    var start = Date.UTC(1970, 0, 1);
+    var day = Math.floor((Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - start) / 86400000);
+    var jDate = day + 2440587.5;
+    var n = Math.round(jDate - 2451545.0 + 0.0008 - (-lon / 360));
+    var jStar = n + 0.0009 + (-lon / 360);
+    var M = (357.5291 + 0.98560028 * jStar) % 360;
+    var C = 1.9148 * Math.sin(M * rad) + 0.02 * Math.sin(2 * M * rad) + 0.0003 * Math.sin(3 * M * rad);
+    var lam = (M + C + 180 + 102.9372) % 360;
+    var jTransit = 2451545.0 + jStar + 0.0053 * Math.sin(M * rad) - 0.0069 * Math.sin(2 * lam * rad);
+    var decl = Math.asin(Math.sin(lam * rad) * Math.sin(23.44 * rad));
+    var cosH = (Math.sin(-0.833 * rad) - Math.sin(lat * rad) * Math.sin(decl)) /
+               (Math.cos(lat * rad) * Math.cos(decl));
+    if (cosH > 1 || cosH < -1) return null;             // אין שקיעה (קווי רוחב קיצוניים)
+    var H = Math.acos(cosH) * deg;
+    var jSet = jTransit + H / 360;
+    return new Date((jSet - 2440587.5) * 86400000);
+  }
+
+  /* --- התאריך העברי הנכון לרגע הזה --- */
+  function hebrewDateFor(now) {
+    var d = new Date(now.getTime());
+    var ss = sunsetOn(now, LAT, LON);
+    if (ss && now.getTime() >= ss.getTime()) d.setDate(d.getDate() + 1);   // אחרי השקיעה — יום עברי חדש
+    try {
+      return new Intl.DateTimeFormat('he-u-ca-hebrew',
+        { day: 'numeric', month: 'long', year: 'numeric' }).format(d);
+    } catch (e) { return ''; }
+  }
+
+  var fWeek, fDate, fTime;
+  try {
+    fWeek = new Intl.DateTimeFormat('he-IL', { weekday: 'long' });
+    fDate = new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    fTime = new Intl.DateTimeFormat('he-IL', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+  } catch (e) { return; }
+
+  var lastDay = null, heb = '';
+  function paint() {
+    var now = new Date();
+    var key = now.toDateString() + '|' + (now.getHours() >= 16 ? 'pm' : 'am');
+    if (key !== lastDay) { heb = hebrewDateFor(now); lastDay = key; }   // חישוב כבד — פעם ביום
+    var wd = fWeek.format(now).replace(/^יום\s+/, '');
+    el.innerHTML =
+      '<span class="clk-time">' + fTime.format(now) + '</span>' +
+      '<span class="clk-sep"></span>' +
+      '<span class="clk-day">יום ' + wd + '</span>' +
+      '<span class="clk-greg">' + fDate.format(now) + '</span>' +
+      (heb ? '<span class="clk-heb">' + heb + '</span>' : '');
+  }
+
+  paint();
+  var t = setInterval(function () {
+    if (document.visibilityState !== 'hidden') paint();   // כל מצב שאינו מוסתר
+  }, 1000);
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') paint();
+  });
+})();
 
   /* ================= נגישות: מקלדת וקוראי מסך ================= */
   (function(){
