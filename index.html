@@ -2,7 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>שרשרת האספקה — מחסן</title>
 <meta name="theme-color" content="#e22d24">
@@ -11,6 +11,37 @@
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjogIlx1MDVlOVx1MDVlOFx1MDVlOVx1MDVlOFx1MDVlYSBcdTA1ZDRcdTA1ZDBcdTA1ZTFcdTA1ZTRcdTA1ZTdcdTA1ZDQiLCAic2hvcnRfbmFtZSI6ICJcdTA1ZTlcdTA1ZThcdTA1ZTlcdTA1ZThcdTA1ZWEgXHUwNWQ0XHUwNWQwXHUwNWUxXHUwNWU0XHUwNWU3XHUwNWQ0IiwgInN0YXJ0X3VybCI6ICJodHRwczovL2F2aWVvdG9rLmdpdGh1Yi5pby9taW51cy1tbGF5LyIsICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLCAiYmFja2dyb3VuZF9jb2xvciI6ICIjMGMwYTA5IiwgInRoZW1lX2NvbG9yIjogIiNlMjIzMWEiLCAiaWNvbnMiOiBbeyJzcmMiOiAiaHR0cHM6Ly9hdmllb3Rvay5naXRodWIuaW8vbWludXMtbWxheS9pY29uLnBuZyIsICJzaXplcyI6ICI1MTJ4NTEyIiwgInR5cGUiOiAiaW1hZ2UvcG5nIiwgInB1cnBvc2UiOiAiYW55IG1hc2thYmxlIn1dfQ==">
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Rubik:wght@700;900&display=swap" rel="stylesheet">
+<script>
+/* ===== זיהוי מכשיר אוטומטי — רץ לפני הרינדור כדי שלא תהיה הבהוב =====
+   מסמן על <html>:  data-os  data-device  data-input  data-standalone
+   וחושף את window.PLATFORM לשאר הקוד. */
+(function(){
+  var d=document.documentElement, ua=navigator.userAgent||'', mt=navigator.maxTouchPoints||0;
+  var ios=/iPad|iPhone|iPod/.test(ua) || (/Mac/.test(ua) && mt>1);   /* iPadOS 13+ מתחזה ל-Mac */
+  var android=/Android/i.test(ua);
+  var os = ios?'ios' : android?'android'
+         : /Win/i.test(ua)?'windows' : /Mac/i.test(ua)?'mac' : /Linux|X11/i.test(ua)?'linux' : 'other';
+  var coarse=false; try{ coarse=matchMedia('(pointer:coarse)').matches; }catch(e){}
+  var touch = coarse || mt>0;
+  var minSide = Math.min(screen.width||9999, screen.height||9999);
+  var device;
+  if(ios || android){ device = (minSide>=600) ? 'tablet' : 'phone'; }
+  else if(touch && coarse){ device = (minSide>=600) ? 'tablet' : 'phone'; }
+  else { device='desktop'; }
+  var standalone=false;
+  try{ standalone = matchMedia('(display-mode: standalone)').matches
+                 || matchMedia('(display-mode: fullscreen)').matches
+                 || navigator.standalone===true; }catch(e){}
+  d.setAttribute('data-os', os);
+  d.setAttribute('data-device', device);
+  d.setAttribute('data-input', touch?'touch':'mouse');
+  if(standalone) d.setAttribute('data-standalone','1');
+  window.PLATFORM={os:os, device:device, touch:touch, standalone:standalone,
+    label:(device==='desktop'?'מחשב':device==='tablet'?'טאבלט':'טלפון')
+          +' · '+(os==='ios'?'iPhone/iPad':os==='android'?'Android':os==='windows'?'Windows':os==='mac'?'macOS':os)
+          +(standalone?' · מותקן':'')};
+})();
+</script>
 <style>
   /* ===== טוקנים משותפים — זהים ללוח הקניינים (dashboard.html) ===== */
   :root{
@@ -265,6 +296,45 @@
   @media (prefers-reduced-motion: reduce){
     *,*::before,*::after{ animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
   }
+
+  /* ================= התאמה אוטומטית למכשיר ================= */
+  html{ -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+
+  /* --- מגע (iPhone / Android) --- */
+  html[data-input="touch"] *{ -webkit-tap-highlight-color:transparent; }
+  html[data-input="touch"] button, html[data-input="touch"] .chip, html[data-input="touch"] .tab{ -webkit-touch-callout:none; }
+  html[data-os="ios"] body{ overscroll-behavior-y:none; }
+  html[data-device="phone"] body{ overscroll-behavior-y:contain; }
+
+  /* --- עכבר: מצבי ריחוף שאין להם משמעות במגע --- */
+  html[data-input="mouse"] button{ transition:filter .13s, border-color .13s, background .13s; }
+  html[data-input="mouse"] button:hover{ filter:brightness(1.09); }
+
+  /* --- אפליקציה מותקנת: לא להיכנס מתחת לשעון/מצלמה --- */
+  html[data-standalone="1"] .header{ padding-top:calc(16px + env(safe-area-inset-top,0px)); }
+
+  /* --- מחשב: רוחב נוח, כפתור שליחה חוזר לזרימה הרגילה --- */
+  html[data-device="desktop"] .header,
+  html[data-device="desktop"] main{ max-width:640px; }
+  html[data-device="desktop"] #opsWrap{ padding-bottom:0; }
+  html[data-device="desktop"] #textMode > .send,
+  html[data-device="desktop"] #photoMode > .send{
+    position:static; transform:none; width:100%; max-width:none;
+    box-shadow:0 10px 26px -14px rgba(34,197,94,.6);
+  }
+  html[data-device="desktop"] #textMode > .send:active,
+  html[data-device="desktop"] #photoMode > .send:active{ transform:scale(.99); }
+  html[data-input="mouse"] .panel-head:hover{ background:rgba(255,255,255,.035); }
+  html[data-input="mouse"] .hist-row:hover{ border-color:rgba(217,181,107,.32); }
+
+  /* --- טאבלט: שתי עמודות למקלדת המק״ט --- */
+  html[data-device="tablet"] .header,
+  html[data-device="tablet"] main{ max-width:600px; }
+
+  /* --- טלפון: שטח נגיעה גדול יותר --- */
+  html[data-device="phone"] .tab{ min-height:50px; }
+  html[data-device="phone"] .send{ min-height:58px; }
+  html[data-device="phone"] .seg button{ min-height:50px; }
 </style>
 </head>
 <body>
@@ -766,6 +836,8 @@
     return '';
   }
   function setStatus(t){ $('status').textContent=t; if(t) showToast(t, toastKind(t)); }
+
+  try{ var _pt=document.getElementById('platTag'); if(_pt&&window.PLATFORM) _pt.textContent=window.PLATFORM.label; }catch(e){}
 
   /* ---- גודל טקסט: רגיל -> גדול -> ענק ---- */
   (function(){
@@ -1910,7 +1982,8 @@
   });
 </script>
 <div class="toast" id="toast"></div>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:calc(13px * var(--ts));color:var(--faint);z-index:5;font-family:monospace">build 83</div>
+<div id="platTag" style="position:fixed;bottom:5px;right:7px;font-size:10px;color:var(--faint);z-index:5;font-family:monospace;opacity:.55"></div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:calc(13px * var(--ts));color:var(--faint);z-index:5;font-family:monospace">build 84</div>
 <!-- ===== כלי עזר (מודול עצמאי — זהה בשתי האפליקציות) ===== -->
 <style>
   #tkModal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;display:none;align-items:flex-start;justify-content:center}

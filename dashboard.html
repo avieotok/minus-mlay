@@ -2,7 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>שרשרת האספקה — קניינים</title>
 <meta name="theme-color" content="#3aa0db">
@@ -11,6 +11,37 @@
 <link rel="apple-touch-icon" href="icon-dash.png">
 <link rel="icon" type="image/png" href="icon-dash.png">
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Rubik:wght@600;700;900&display=swap" rel="stylesheet">
+<script>
+/* ===== זיהוי מכשיר אוטומטי — רץ לפני הרינדור כדי שלא תהיה הבהוב =====
+   מסמן על <html>:  data-os  data-device  data-input  data-standalone
+   וחושף את window.PLATFORM לשאר הקוד. */
+(function(){
+  var d=document.documentElement, ua=navigator.userAgent||'', mt=navigator.maxTouchPoints||0;
+  var ios=/iPad|iPhone|iPod/.test(ua) || (/Mac/.test(ua) && mt>1);   /* iPadOS 13+ מתחזה ל-Mac */
+  var android=/Android/i.test(ua);
+  var os = ios?'ios' : android?'android'
+         : /Win/i.test(ua)?'windows' : /Mac/i.test(ua)?'mac' : /Linux|X11/i.test(ua)?'linux' : 'other';
+  var coarse=false; try{ coarse=matchMedia('(pointer:coarse)').matches; }catch(e){}
+  var touch = coarse || mt>0;
+  var minSide = Math.min(screen.width||9999, screen.height||9999);
+  var device;
+  if(ios || android){ device = (minSide>=600) ? 'tablet' : 'phone'; }
+  else if(touch && coarse){ device = (minSide>=600) ? 'tablet' : 'phone'; }
+  else { device='desktop'; }
+  var standalone=false;
+  try{ standalone = matchMedia('(display-mode: standalone)').matches
+                 || matchMedia('(display-mode: fullscreen)').matches
+                 || navigator.standalone===true; }catch(e){}
+  d.setAttribute('data-os', os);
+  d.setAttribute('data-device', device);
+  d.setAttribute('data-input', touch?'touch':'mouse');
+  if(standalone) d.setAttribute('data-standalone','1');
+  window.PLATFORM={os:os, device:device, touch:touch, standalone:standalone,
+    label:(device==='desktop'?'מחשב':device==='tablet'?'טאבלט':'טלפון')
+          +' · '+(os==='ios'?'iPhone/iPad':os==='android'?'Android':os==='windows'?'Windows':os==='mac'?'macOS':os)
+          +(standalone?' · מותקן':'')};
+})();
+</script>
 <style>
   :root{
     --ink:#0a0b0e; --surface:#15171c; --surface2:#1c1f26; --line:#242830; --line2:#343a45;
@@ -364,6 +395,51 @@
   @media (prefers-reduced-motion: reduce){
     *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
   }
+
+  /* ================= התאמה אוטומטית למכשיר ================= */
+  html{ -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+
+  /* --- מגע (iPhone / Android) --- */
+  html[data-input="touch"] *{ -webkit-tap-highlight-color:transparent; }
+  html[data-input="touch"] button, html[data-input="touch"] .chip, html[data-input="touch"] .tab{ -webkit-touch-callout:none; }
+  html[data-os="ios"] body{ overscroll-behavior-y:none; }
+  html[data-device="phone"] body{ overscroll-behavior-y:contain; }
+
+  /* --- עכבר: מצבי ריחוף שאין להם משמעות במגע --- */
+  html[data-input="mouse"] button{ transition:filter .13s, border-color .13s, background .13s; }
+  html[data-input="mouse"] button:hover{ filter:brightness(1.09); }
+
+  /* --- אפליקציה מותקנת --- */
+  html[data-standalone="1"] .top-in{ padding-top:calc(14px + env(safe-area-inset-top,0px)); }
+
+  /* --- מחשב: ניצול המסך הרחב, חלונית ממורכזת במקום מגירה מלמטה --- */
+  html[data-device="desktop"] .modal{ align-items:center; padding:24px 0; }
+  html[data-device="desktop"] .sheet{ border-radius:22px; max-height:88vh; border:1px solid rgba(217,181,107,.28); }
+  html[data-input="mouse"] .card:hover{ border-color:rgba(217,181,107,.32); }
+  html[data-input="mouse"] .chip:hover{ filter:brightness(1.12); }
+
+  @media (min-width:1100px){
+    html[data-device="desktop"] .wrap,
+    html[data-device="desktop"] .top-in{ max-width:1180px; }
+    html[data-device="desktop"] .list{ display:grid; grid-template-columns:repeat(2,1fr); gap:12px; align-items:start; }
+    html[data-device="desktop"] .list > .empty{ grid-column:1 / -1; }
+    html[data-device="desktop"] .filters{ flex-direction:row; flex-wrap:wrap; align-items:center; gap:8px 12px; }
+    html[data-device="desktop"] .filt-toggle{ display:none; }
+    html[data-device="desktop"] .filters.collapsed .chips,
+    html[data-device="desktop"] .filters.collapsed .histwrap{ display:flex; }
+    html[data-device="desktop"] .chips{ overflow:visible; flex:0 0 auto; }
+    html[data-device="desktop"] .histwrap{ flex:0 0 auto; }
+    html[data-device="desktop"] .search{ flex:1 1 260px; width:auto; }
+  }
+  @media (min-width:1700px){
+    html[data-device="desktop"] .wrap,
+    html[data-device="desktop"] .top-in{ max-width:1560px; }
+    html[data-device="desktop"] .list{ grid-template-columns:repeat(3,1fr); }
+  }
+
+  /* --- טלפון --- */
+  html[data-device="phone"] .vtab{ min-height:48px; }
+  html[data-device="phone"] .chip{ min-height:46px; }
 </style>
 </head>
 <body>
@@ -1091,7 +1167,9 @@
   (function(){
     var box=document.getElementById('filters'), btn=document.getElementById('filtToggle');
     if(!box||!btn) return;
-    try{ if(localStorage.getItem('afcon_filters_open')==='1') box.classList.remove('collapsed'); }catch(e){}
+    var pref=null; try{ pref=localStorage.getItem('afcon_filters_open'); }catch(e){}
+    var deskt = (window.PLATFORM&&window.PLATFORM.device==='desktop');
+    if(pref==='1' || (pref===null && deskt)) box.classList.remove('collapsed');
     btn.setAttribute('aria-expanded', box.classList.contains('collapsed')?'false':'true');
     btn.addEventListener('click', function(){
       var open = box.classList.toggle('collapsed') === false;
