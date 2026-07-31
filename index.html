@@ -335,6 +335,27 @@
   html[data-device="phone"] .tab{ min-height:50px; }
   html[data-device="phone"] .send{ min-height:58px; }
   html[data-device="phone"] .seg button{ min-height:50px; }
+
+  /* ================= תור שליחה אופליין ================= */
+  .obx{display:flex;align-items:center;gap:10px;justify-content:space-between;
+    background:linear-gradient(180deg,rgba(245,158,11,.17),rgba(245,158,11,.07));
+    border:1px solid rgba(245,158,11,.42);border-radius:13px;padding:11px 14px;margin-bottom:12px;
+    font-size:calc(14px * var(--ts));font-weight:700;color:var(--amber2);line-height:1.45}
+  .obx button{background:var(--amber);color:#171309;border:0;border-radius:9px;padding:8px 14px;
+    font-weight:800;font-family:'Heebo',sans-serif;font-size:calc(13.5px * var(--ts));cursor:pointer;flex:0 0 auto;min-height:40px}
+  .obx.sending button{opacity:.45;pointer-events:none}
+  .obx.hidden{display:none}
+
+  /* ================= רמז "מה עוד חסר" ================= */
+  .send-hint{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.34);border-radius:11px;
+    padding:9px 13px;margin-bottom:9px;color:var(--amber2);font-size:calc(13.5px * var(--ts));font-weight:700;line-height:1.55}
+  .invalid{border-color:var(--red) !important;box-shadow:0 0 0 2px rgba(226,35,26,.15) !important}
+  .hist-pend{color:var(--amber2);font-weight:800;white-space:nowrap;font-size:calc(13px * var(--ts))}
+  .hist-dup{color:#f87171;font-weight:800;white-space:nowrap;font-size:calc(13px * var(--ts))}
+
+  /* ================= נגישות מקלדת ================= */
+  :focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .panel-head[role="button"]{cursor:pointer}
 </style>
 </head>
 <body>
@@ -369,6 +390,10 @@
     </div>
     <div id="soundBar" onclick="">🔔 הקש להפעלת צלילי התראה ‹ כדי לשמוע כשנכנסת הודעה</div>
     <div id="opsWrap">
+      <div id="obxBar" class="obx hidden" role="status" aria-live="polite">
+        <span id="obxTxt"></span>
+        <button type="button" id="obxNow">נסה עכשיו</button>
+      </div>
 
     <div class="urg-label">סוג דיווח</div>
     <div class="seg" id="typeSeg">
@@ -450,6 +475,7 @@
         <button type="button" class="scan-btn" id="defPhotoBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fafaf9" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> צלם / צרף / הדבק תמונה</button>
         <div id="defPhotoStrip" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"></div>
       </div>
+      <div id="sendHint" class="send-hint hidden" role="status" aria-live="polite"></div>
       <button class="send" id="sendText">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="#052e16"><path d="M.057 24l1.687-6.163a11.867 11.867 0 0 1-1.587-5.946C.16 5.335 5.495 0 12.05 0a11.82 11.82 0 0 1 8.413 3.488 11.82 11.82 0 0 1 3.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 0 1-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884a9.86 9.86 0 0 0 1.511 5.26l-.999 3.648 3.477-.711z"/></svg>
         שלח לקניין
@@ -457,7 +483,7 @@
       <button class="ghost-btn" id="copyText" style="display:none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fafaf9" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> העתק הודעה</button>
     </div>
 
-    <p class="status" id="status"></p>
+    <p class="status" id="status" role="status" aria-live="polite"></p>
 
     <!-- Contacts -->
     <div class="panel" style="display:none">
@@ -498,6 +524,7 @@
     <div class="panel">
       <div class="panel-head" id="histHead"><span>📋 היסטוריית דיווחים &nbsp;·&nbsp; נשלחו היום: <span id="todayCount" class="badge-count">0</span></span><span style="color:var(--faint)">▾</span></div>
       <div class="panel-body hidden" id="histBody">
+        <input id="histSearch" class="input" placeholder="🔍 חפש מק״ט או תיאור" aria-label="חיפוש בהיסטוריית הדיווחים" style="margin-bottom:10px">
         <div id="histList"></div>
         <button class="ghost-btn" id="exportHist"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fafaf9" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> ייצא דוח לאקסל</button>
         <button class="ghost-btn" id="clearHist">נקה היסטוריה</button>
@@ -647,7 +674,7 @@
 
   <div class="recip-overlay hidden" id="sentWrap">
     <div class="recip-card">
-      <div class="recip-title">✅ הדיווח נשלח</div>
+      <div class="recip-title" id="sentTitle">✅ הדיווח נשלח</div>
       <div id="sentInfo" style="background:var(--ink);border:1px solid #166534;border-radius:12px;padding:16px;font-size:calc(14.5px * var(--ts));color:var(--text);line-height:1.7;margin-bottom:12px;text-align:center"></div>
       <button class="send" id="sentOk">סגור</button>
     </div>
@@ -838,6 +865,43 @@
   function setStatus(t){ $('status').textContent=t; if(t) showToast(t, toastKind(t)); }
 
   try{ var _pt=document.getElementById('platTag'); if(_pt&&window.PLATFORM) _pt.textContent=window.PLATFORM.label; }catch(e){}
+
+  /* ================= נגישות: מקלדת וקוראי מסך ================= */
+  (function(){
+    // כותרות פאנל מתקפלות — נגישות למקלדת ומדווחות מצב
+    document.querySelectorAll('.panel-head').forEach(function(h){
+      if(h.getAttribute('role')) return;
+      h.setAttribute('role','button');
+      h.setAttribute('tabindex','0');
+      function sync(){ const b=h.nextElementSibling;
+        h.setAttribute('aria-expanded', (b && b.classList && !b.classList.contains('hidden'))?'true':'false'); }
+      h.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); h.click(); } });
+      h.addEventListener('click', function(){ setTimeout(sync,0); });
+      sync();
+    });
+    // לכידת פוקוס בתוך חלונות — Tab לא בורח לרקע
+    function trap(root){
+      if(!root) return;
+      root.addEventListener('keydown', function(e){
+        if(e.key!=='Tab') return;
+        const all=root.querySelectorAll('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])');
+        const vis=[].filter.call(all, function(el){ return el.offsetParent!==null && !el.disabled; });
+        if(!vis.length) return;
+        const first=vis[0], last=vis[vis.length-1];
+        if(e.shiftKey && document.activeElement===first){ e.preventDefault(); last.focus(); }
+        else if(!e.shiftKey && document.activeElement===last){ e.preventDefault(); first.focus(); }
+      });
+    }
+    ['tkModal','sentWrap','dupWrap','recipWrap','idGate'].forEach(function(id){ trap(document.getElementById(id)); });
+    // Esc סוגר את מסכי האישור
+    document.addEventListener('keydown', function(e){
+      if(e.key!=='Escape') return;
+      ['sentWrap','dupWrap'].forEach(function(id){
+        const el=document.getElementById(id);
+        if(el && !el.classList.contains('hidden')) el.classList.add('hidden');
+      });
+    });
+  })();
 
   /* ---- גודל טקסט: רגיל -> גדול -> ענק ---- */
   (function(){
@@ -1164,14 +1228,26 @@
   // history
   function loadHist(){ try{return JSON.parse(localStorage.getItem(K.hist)||'[]');}catch(e){return[];} }
   function saveHist(h){ localStorage.setItem(K.hist, JSON.stringify(h.slice(0,40))); }
-  function addHist(txt){ const h=loadHist(); h.unshift({t:Date.now(),u:URG[urgency].label,txt:txt}); saveHist(h); renderHist(); }
-  function renderHist(){ const h=loadHist(), today=new Date().toDateString();
-    $('todayCount').textContent=h.filter(e=>new Date(e.t).toDateString()===today).length;
-    const L=$('histList');
-    if(!h.length){ L.innerHTML='<div class="hist-empty">אין דיווחים עדיין</div>'; return; }
-    L.innerHTML=h.slice(0,15).map(e=>{ const d=new Date(e.t).toLocaleString('he-IL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
-      return '<div class="hist-row"><span class="hist-txt">'+esc(e.txt||'—')+'<span class="hist-meta2">'+esc(e.u)+' · '+d+'</span></span><span class="hist-sent">✓ נשלח</span></div>'; }).join('');
+  function addHist(txt, id, pending, ticket){ const h=loadHist();
+    h.unshift({t:Date.now(),u:URG[urgency].label,txt:txt,id:id||'',q:pending?1:0,tk:ticket||''}); saveHist(h); renderHist(); }
+  function histMark(id, ticket, dup){
+    const h=loadHist(); let ch=false;
+    for(let i=0;i<h.length;i++){ if(h[i].id && String(h[i].id)===String(id)){ h[i].q=0; if(dup) h[i].dup=1; if(ticket) h[i].tk=ticket; ch=true; break; } }
+    if(ch) saveHist(h);
   }
+  function renderHist(){ const all=loadHist(), today=new Date().toDateString();
+    $('todayCount').textContent=all.filter(e=>new Date(e.t).toDateString()===today).length;
+    const L=$('histList');
+    const qi=$('histSearch'), term=((qi&&qi.value)||'').trim().toLowerCase();
+    const h = term ? all.filter(e=>String(e.txt||'').toLowerCase().indexOf(term)>=0 || String(e.tk||'').toLowerCase().indexOf(term)>=0) : all;
+    if(!h.length){ L.innerHTML='<div class="hist-empty">'+(term?'לא נמצאו דיווחים תואמים':'אין דיווחים עדיין')+'</div>'; return; }
+    L.innerHTML=h.slice(0, term?40:15).map(e=>{ const d=new Date(e.t).toLocaleString('he-IL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+      const badge = e.q ? '<span class="hist-pend">⏳ ממתין</span>'
+                  : e.dup ? '<span class="hist-dup">⚠️ כפול</span>'
+                  : '<span class="hist-sent">✓ נשלח'+(e.tk?(' · '+esc(e.tk)):'')+'</span>';
+      return '<div class="hist-row"><span class="hist-txt">'+esc(e.txt||'—')+'<span class="hist-meta2">'+esc(e.u)+' · '+d+'</span></span>'+badge+'</div>'; }).join('');
+  }
+  (function(){ const hs=$('histSearch'); if(hs) hs.addEventListener('input', renderHist); })();
   $('clearHist').addEventListener('click',()=>{ if(confirm('למחוק את כל ההיסטוריה?')){ localStorage.removeItem(K.hist); renderHist(); } });
   renderHist();
 
@@ -1326,6 +1402,7 @@
   // שליחה ללא וואטסאפ — רושם את הדיווח במערכת, והוא מופיע מיד בלוח הקניינים
   async function submitReport(kind){
     const subj=subjectFor(kind);
+    vArmed=true; vHard=true; try{ paintValidity(); }catch(e){}
     if(!subj.sku){ setStatus('נא למלא מק״ט.'); return; }
     if(subj.type==='פריט פגום'){
       if(!subj.note){ setStatus('נא לפרט מה הבעיה בפריט.'); try{$('noteText').focus();}catch(e){} return; }
@@ -1337,20 +1414,127 @@
     }
     if(!apiOn()){ setStatus('אין חיבור למערכת — לא ניתן לשלוח. פנה למפתח.'); return; }
     currentAlertId=newAlertId();
+    const payload={ id:currentAlertId, type:subj.type, sku:subj.sku, desc:subj.desc, qty:subj.qty,
+      po:subj.po||'', qtyRecv:subj.qtyRecv||'', descRecv:subj.descRecv||'', note:subj.note||'',
+      urgency:(subj.type==='חוסר מלאי'?URG[urgency].label:''), reporter:(localStorage.getItem(K.reporter)||''),
+      reporterPhone:(localStorage.getItem('afcon_reporter_phone')||''), recipients:'כל הצוות', assignee:'' };
+    const label=(subj.type||'דיווח')+' · מק״ט '+subj.sku;
+    // אין רשת — ישר לתור, בלי להמתין לכישלון של 20 שניות
+    if(navigator.onLine===false){ queueReport(payload, label, subj); return; }
     setStatus('שולח לקניינים…');
     try{
-      const r=await apiSend({ id:currentAlertId, type:subj.type, sku:subj.sku, desc:subj.desc, qty:subj.qty,
-        po:subj.po||'', qtyRecv:subj.qtyRecv||'', descRecv:subj.descRecv||'', note:subj.note||'',
-        urgency:(subj.type==='חוסר מלאי'?URG[urgency].label:''), reporter:(localStorage.getItem(K.reporter)||''),
-        reporterPhone:(localStorage.getItem('afcon_reporter_phone')||''), recipients:'כל הצוות', assignee:'' });
+      const r=await apiSend(payload);
       if(r && r.duplicate){ setStatus(''); dupExisting=r.alert||null; showDup(r.alert || {sku:subj.sku, status:'', reporter:'', response:'', assignee:''}); resetForm(); return; }
       if(r && r.ok){
         if(defPhotos.length){ setStatus('מעלה תמונות…'); try{ await uploadPhotos(currentAlertId, defPhotos); }catch(_){ } }
-        addHist((subj.type||'דיווח')+' · מק״ט '+subj.sku); reportDone(subj, r.ticket||''); return;
+        addHist(label, currentAlertId, false, r.ticket||''); reportDone(subj, r.ticket||''); return;
       }
-      setStatus('לא ניתן היה לשלוח כרגע — נסה שוב בעוד רגע.');
-    }catch(e){ setStatus('לא ניתן היה לשלוח כרגע — נסה שוב בעוד רגע.'); }
+      queueReport(payload, label, subj);
+    }catch(e){ queueReport(payload, label, subj); }
   }
+
+  /* ================= תור שליחה אופליין =================
+     דיווח שלא הצליח להישלח נשמר במכשיר ונשלח אוטומטית כשהרשת חוזרת.
+     במחסן — מדפי מתכת, חדרי קירור ומרתפים — זה ההבדל בין דיווח שקיים לדיווח שנעלם. */
+  const OBX_KEY='afcon_outbox';
+  function obxLoad(){ try{ return JSON.parse(localStorage.getItem(OBX_KEY)||'[]'); }catch(e){ return []; } }
+  function obxSave(q){
+    try{ localStorage.setItem(OBX_KEY, JSON.stringify(q)); return true; }catch(e){}
+    // חריגה ממכסת האחסון — משחררים תמונות, הטקסט חשוב יותר
+    for(let i=0;i<q.length;i++){
+      if(q[i].photos && q[i].photos.length){ q[i].photos=[]; q[i].photosDropped=1;
+        try{ localStorage.setItem(OBX_KEY, JSON.stringify(q)); return true; }catch(_){}
+      }
+    }
+    return false;
+  }
+  function obxPaint(){
+    const q=obxLoad(), bar=$('obxBar'); if(!bar) return;
+    if(!q.length){ bar.classList.add('hidden'); return; }
+    bar.classList.remove('hidden');
+    const drop=q.some(x=>x.photosDropped)?' (תמונות לא נשמרו)':'';
+    $('obxTxt').textContent=(q.length===1?'⏳ דיווח אחד ממתין לשליחה':'⏳ '+q.length+' דיווחים ממתינים לשליחה')+drop;
+  }
+  function queueReport(payload, label, subj){
+    const photos=(typeof defPhotos!=='undefined' && defPhotos.length)?defPhotos.slice():[];
+    const q=obxLoad();
+    q.push({ id:payload.id, payload:payload, photos:photos, t:Date.now(), tries:0, label:label });
+    const ok=obxSave(q);
+    obxPaint();
+    addHist(label, payload.id, true, '');
+    resetForm();
+    if(!ok){ setStatus('אין מקום לשמור את הדיווח במכשיר — נסה שוב כשתחזור הרשת.'); return; }
+    setStatus('');
+    show($('sentWrap'));
+    const t=$('sentTitle'); if(t) t.textContent='⏳ הדיווח נשמר';
+    $('sentInfo').innerHTML='<b>'+esc(subj.type||'דיווח')+'</b> · מק״ט <b>'+esc(subj.sku)+'</b>'+(subj.desc?(' — '+esc(subj.desc)):'')
+      +'<div style="margin:10px auto 0;display:inline-block;background:#2a1f06;border:1px solid #92700e;border-radius:12px;padding:9px 18px;color:#fde68a;font-size:calc(16px * var(--ts));font-weight:800;line-height:1.5">אין חיבור כרגע — הדיווח שמור במכשיר<br>ויישלח אוטומטית כשהרשת תחזור</div>';
+    showToast('אין חיבור — הדיווח נשמר ויישלח אוטומטית ⏳');
+  }
+  let obxBusy=false;
+  async function obxFlush(manual){
+    if(obxBusy || !apiOn()) return;
+    let q=obxLoad(); if(!q.length) return;
+    if(navigator.onLine===false){ if(manual) showToast('עדיין אין חיבור — הדיווחים שמורים ⏳'); return; }
+    obxBusy=true;
+    const bar=$('obxBar'); if(bar) bar.classList.add('sending');
+    let sent=0, dups=0, stop=false;
+    while(q.length && !stop){
+      const it=q[0];
+      try{
+        const r=await apiSend(it.payload);
+        if(r && r.duplicate){ histMark(it.id,'',true); q.shift(); dups++; obxSave(q); }
+        else if(r && r.ok){
+          if(it.photos && it.photos.length){ try{ await uploadPhotos(it.id, it.photos); }catch(_){} }
+          histMark(it.id, r.ticket||'', false); q.shift(); sent++; obxSave(q);
+        }
+        else { it.tries=(it.tries||0)+1; obxSave(q); stop=true; }
+      }catch(e){ it.tries=(it.tries||0)+1; obxSave(q); stop=true; }
+    }
+    obxBusy=false;
+    if(bar) bar.classList.remove('sending');
+    obxPaint(); renderHist();
+    if(sent) showToast(sent===1?'הדיווח הממתין נשלח ✓':sent+' דיווחים ממתינים נשלחו ✓','good');
+    else if(dups) showToast('הדיווח הממתין כבר קיים במערכת','bad');
+    else if(manual) showToast('עדיין אין חיבור — הדיווחים שמורים ⏳','bad');
+  }
+  window.addEventListener('online', function(){ obxFlush(false); });
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible') obxFlush(false); });
+  setInterval(function(){ obxFlush(false); }, 45000);
+  (function(){ const b=$('obxNow'); if(b) b.addEventListener('click', function(){ obxFlush(true); }); })();
+  obxPaint(); setTimeout(function(){ obxFlush(false); }, 2500);
+
+  /* ================= "מה עוד חסר" — בדיקה חיה במקום הפתעה בסוף ================= */
+  let vArmed=false, vHard=false;
+  function missingBits(){
+    const out=[], t=reportType;
+    if(!(($('txtSku')&&$('txtSku').value)||'').trim()) out.push({el:'txtSku', why:'מק״ט'});
+    if(t==='פריט פגום'){
+      if(!(($('noteText')&&$('noteText').value)||'').trim()) out.push({el:'noteText', why:'תיאור התקלה'});
+      const pd=poDigits().length; if(pd>0 && pd!==9) out.push({el:'', why:'9 ספרות בהזמנה (או להשאיר ריק)'});
+    }
+    if(t==='אי-התאמה'){
+      const pd=poDigits().length; if(pd!==9) out.push({el:'', why:'9 ספרות בהזמנה'+(pd?(' — יש '+pd):'')});
+      if(!(($('ordText')&&$('ordText').value)||'').trim()) out.push({el:'ordText', why:'כמה הוזמן'});
+      if(!(($('recvText')&&$('recvText').value)||'').trim()) out.push({el:'recvText', why:'כמה התקבל'});
+    }
+    return out;
+  }
+  function paintValidity(){
+    const hint=$('sendHint'); if(!hint) return;
+    ['txtSku','noteText','ordText','recvText'].forEach(function(id){ const e=$(id); if(e) e.classList.remove('invalid'); });
+    const miss=missingBits();
+    if(!miss.length || !vArmed){ hint.classList.add('hidden'); hint.textContent=''; return; }
+    if(vHard) miss.forEach(function(m){ if(m.el){ const e=$(m.el); if(e) e.classList.add('invalid'); } });
+    hint.classList.remove('hidden');
+    hint.textContent='עוד חסר: '+miss.map(function(m){ return m.why; }).join(' · ');
+  }
+  document.addEventListener('input', function(e){
+    if(e.target && e.target.closest && e.target.closest('#opsWrap')){ vArmed=true; paintValidity(); }
+  });
+  document.addEventListener('click', function(e){
+    if(e.target && e.target.closest && e.target.closest('#opsWrap')) setTimeout(paintValidity, 30);
+  });
 
   // אם השליחה לא הצליחה — נבדוק ישירות מול השרת אם המק״ט כבר קיים, ונציג הודעה נכונה
   function normSkuMatch(s){ return String(s==null?'':s).trim().replace(/^0+/,''); }
@@ -1398,12 +1582,14 @@
     if(typeof kpVal!=='undefined') kpVal='';
     if($('descText')) $('descText').textContent='';
     urgency='low'; try{ paintUrg(); }catch(e){}
+    vArmed=false; vHard=false; try{ paintValidity(); }catch(e){}
     try{ applyType('חוסר מלאי'); }catch(e){}
     try{ refreshDesc(); }catch(e){}
     if(typeof currentImg!=='undefined'){ currentImg=null; hide($('previewWrap')); if($('sendPhoto')) $('sendPhoto').disabled=true; }
   }
   function reportDone(subj, ticket){
     setStatus('');
+    try{ const t=$('sentTitle'); if(t) t.textContent='✅ הדיווח נשלח'; }catch(e){}
     resetForm();
     show($('sentWrap'));
     var tkt = ticket ? ('<div style="margin:10px auto 0;display:inline-block;background:#0c2a14;border:1px solid #166534;border-radius:12px;padding:9px 18px;color:#bbf7d0;font-size:calc(18px * var(--ts));font-weight:800;font-family:\'Rubik\',sans-serif">🎫 קריאה מס׳ '+esc(ticket)+'</div>') : '';
@@ -1981,9 +2167,9 @@
     setTimeout(()=>{ document.documentElement.innerHTML='<body style="background:var(--ink);color:var(--muted);font-family:Heebo,sans-serif;height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:calc(18px * var(--ts));">להתראות 👋<br><br>אפשר לסגור את החלון/הכרטיסייה.</body>'; }, 250);
   });
 </script>
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div id="platTag" style="position:fixed;bottom:5px;right:7px;font-size:10px;color:var(--faint);z-index:5;font-family:monospace;opacity:.55"></div>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:calc(13px * var(--ts));color:var(--faint);z-index:5;font-family:monospace">build 84</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:calc(13px * var(--ts));color:var(--faint);z-index:5;font-family:monospace">build 85</div>
 <!-- ===== כלי עזר (מודול עצמאי — זהה בשתי האפליקציות) ===== -->
 <style>
   #tkModal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;display:none;align-items:flex-start;justify-content:center}

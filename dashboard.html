@@ -440,6 +440,16 @@
   /* --- טלפון --- */
   html[data-device="phone"] .vtab{ min-height:48px; }
   html[data-device="phone"] .chip{ min-height:46px; }
+
+  /* ================= טוסט עם ביטול ================= */
+  .toast.act{pointer-events:auto;display:inline-flex;align-items:center;gap:14px;justify-content:center}
+  .toast .undo{background:#171309;color:#f6efdf;border:0;border-radius:999px;padding:7px 16px;
+    font-family:'Heebo',sans-serif;font-weight:800;font-size:calc(13.5px * var(--ts));cursor:pointer;flex:0 0 auto;min-height:36px}
+  .toast .undo:hover{background:#2a2311}
+
+  /* ================= נגישות מקלדת ================= */
+  :focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .kpi[role="button"]{cursor:pointer}
 </style>
 </head>
 <body>
@@ -764,7 +774,7 @@
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -1193,6 +1203,33 @@
     setTimeout(window.paintFilterCount, 60);
   })();
 
+  /* ================= נגישות: מקלדת וקוראי מסך ================= */
+  (function(){
+    // כרטיסי המחוונים הם מסננים — צריכים להיות נגישים למקלדת
+    document.querySelectorAll('.kpi').forEach(function(k){
+      if(k.getAttribute('role')) return;
+      k.setAttribute('role','button');
+      k.setAttribute('tabindex','0');
+      const lbl=k.querySelector('.lbl');
+      if(lbl) k.setAttribute('aria-label','סנן לפי '+lbl.textContent);
+      k.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); k.click(); } });
+    });
+    // לכידת פוקוס בחלונות
+    function trap(root){
+      if(!root) return;
+      root.addEventListener('keydown', function(e){
+        if(e.key!=='Tab') return;
+        const all=root.querySelectorAll('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])');
+        const vis=[].filter.call(all, function(el){ return el.offsetParent!==null && !el.disabled; });
+        if(!vis.length) return;
+        const first=vis[0], last=vis[vis.length-1];
+        if(e.shiftKey && document.activeElement===first){ e.preventDefault(); last.focus(); }
+        else if(!e.shiftKey && document.activeElement===last){ e.preventDefault(); first.focus(); }
+      });
+    }
+    ['modal','presModal','aboutModal','tkModal','idGate'].forEach(function(id){ trap(document.getElementById(id)); });
+  })();
+
   /* ---- גודל טקסט: רגיל -> גדול -> ענק ---- */
   (function(){
     var STEPS=[{k:'רגיל',v:1},{k:'גדול',v:1.14},{k:'ענק',v:1.3}];
@@ -1402,6 +1439,7 @@
 
   // actions — each maps to one backend call
   async function reopenAlert(id){
+    const _snap=snapOf(id);
     const a=ALERTS.find(x=>String(x.id)===String(id));
     if(a){ a.status='בטיפול'; a.updated=new Date().toISOString(); }
     // אחרי החזרה לטיפול — לצאת ממסך ההיסטוריה ולהציג "בטיפול", ולנקות סינון סוג,
@@ -1411,26 +1449,28 @@
       fType='all'; document.querySelectorAll('#typeChips .chip').forEach(x=>x.classList.toggle('on', x.dataset.t==='all'));
     }
     render();
-    try{ await apiPost('status',{id:id, status:'בטיפול'}); toast('הוחזר לטיפול ✓'); setTimeout(load,400); }
+    try{ await apiPost('status',{id:id, status:'בטיפול'}); toastUndo('הוחזר לטיפול ✓', _snap); setTimeout(load,400); }
     catch(e){ toast('הפעולה נכשלה — נסה שוב'); }
   }
   async function assignTo(id, assignee, status, resp){
     resp=(resp||'').trim();
+    const _snap=snapOf(id);
     const a=ALERTS.find(x=>String(x.id)===String(id));
     if(a){ a.assignee=assignee; if(status) a.status=status; if(resp){ a.response=resp; a.ackBy=me(); } a.updated=new Date().toISOString(); }
     render();
     try{
       await apiPost('assign',{id:id, assignee:assignee, status:status});
       if(resp){ await apiPost('ack',{id:id, ackBy:me(), response:resp, status:(status||(a&&a.status)||'בטיפול')}); }
-      toast('עודכן ✓'); setTimeout(load,400);
+      toastUndo('עודכן ✓', resp?null:_snap); setTimeout(load,400);
     }
     catch(e){ toast('העדכון נכשל — רענן ונסה שוב'); }
   }
   async function backToPending(id){
+    const _snap=snapOf(id);
     const a=ALERTS.find(x=>String(x.id)===String(id));
     if(a){ a.status='ממתין'; a.assignee=''; a.updated=new Date().toISOString(); }
     render();
-    try{ await apiPost('assign',{id:id, assignee:'', status:'ממתין'}); toast('הוחזר לממתין ✓'); setTimeout(load,400); }
+    try{ await apiPost('assign',{id:id, assignee:'', status:'ממתין'}); toastUndo('הוחזר לממתין ✓', _snap); setTimeout(load,400); }
     catch(e){ toast('הפעולה נכשלה — נסה שוב'); }
   }
   async function saveResp(id, text){
@@ -1876,7 +1916,33 @@
 
   // toast
   let tT=null;
-  function toast(t){ const el=$('toast'); el.textContent=t; el.classList.add('show'); if(tT)clearTimeout(tT); tT=setTimeout(()=>el.classList.remove('show'),1900); }
+  function toast(t){ const el=$('toast'); el.textContent=t; el.className='toast show'; if(tT)clearTimeout(tT); tT=setTimeout(()=>el.className='toast',1900); }
+
+  /* ===== טוסט עם "בטל" — שינוי סטטוס/שיוך הוא הפיך, ואפשר להחזיר אותו לאחור ===== */
+  function snapOf(id){
+    const a=ALERTS.find(x=>String(x.id)===String(id));
+    return a ? {id:String(id), status:a.status||'', assignee:a.assignee||''} : null;
+  }
+  async function undoSnap(snap){
+    if(!snap) return;
+    const a=ALERTS.find(x=>String(x.id)===String(snap.id));
+    if(a){ a.status=snap.status; a.assignee=snap.assignee; }
+    render();
+    try{ await apiPost('assign',{id:snap.id, assignee:snap.assignee, status:snap.status}); toast('בוטל ✓'); setTimeout(load,400); }
+    catch(e){ toast('הביטול נכשל — רענן ונסה שוב'); }
+  }
+  function toastUndo(msg, snap){
+    if(!snap){ toast(msg); return; }
+    const el=$('toast');
+    el.textContent='';
+    const sp=document.createElement('span'); sp.textContent=msg;
+    const b=document.createElement('button'); b.className='undo'; b.type='button'; b.textContent='בטל';
+    b.addEventListener('click', function(){ el.className='toast'; if(tT)clearTimeout(tT); undoSnap(snap); });
+    el.appendChild(sp); el.appendChild(b);
+    el.className='toast show act';
+    if(tT)clearTimeout(tT);
+    tT=setTimeout(()=>{ el.className='toast'; }, 6000);
+  }
 
   // init
   setConn(); startAuto();
