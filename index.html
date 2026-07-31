@@ -373,6 +373,13 @@
     .hist-row{ border:1px solid #999 !important; background:#fff !important;
       break-inside:avoid; page-break-inside:avoid; margin-bottom:2mm; }
   }
+
+  /* ================= הודעת צ'אט שלא נשלחה ================= */
+  .wmsg.unsent{border-color:rgba(226,35,26,.55) !important;background:rgba(226,35,26,.08) !important}
+  .msg-fail{display:flex;align-items:center;gap:8px;margin-top:6px;color:#fca5a5;
+    font-size:calc(13px * var(--ts));font-weight:700}
+  .msg-fail button{background:#7f1d1d;color:#fee2e2;border:0;border-radius:8px;padding:5px 13px;
+    font-family:'Heebo',sans-serif;font-weight:800;font-size:calc(13px * var(--ts));cursor:pointer;min-height:34px}
 </style>
 </head>
 <body>
@@ -1674,11 +1681,28 @@
       const nonGroup=selected.filter(s=>!s.group);
       const assignee=(nonGroup.length===1)?nonGroup[0].name:'';
       $('recipMsg').textContent='רושם במערכת…';
-      try{ await apiPost('create',{ id:currentAlertId, sku:subj.sku, desc:subj.desc, qty:subj.qty,
+      // המסלול הזה בלע קודם כל כישלון — המחסנאי שלח בוואטסאפ ובטח שדיווח,
+      // בזמן שהפנייה כלל לא נכנסה ללוח. עכשיו היא נכנסת לתור כמו כל דיווח אחר.
+      const waPayload={ id:currentAlertId, type:subj.type||'חוסר מלאי', sku:subj.sku, desc:subj.desc, qty:subj.qty,
+        po:subj.po||'', qtyRecv:subj.qtyRecv||'', descRecv:subj.descRecv||'', note:subj.note||'',
         urgency:URG[urgency].label, reporter:(localStorage.getItem(K.reporter)||''),
-        reporterPhone:(localStorage.getItem('afcon_reporter_phone')||''), recipients:recips, assignee:assignee }); }
-      catch(e){ /* גם אם הרישום נכשל — ממשיכים לשלוח בוואטסאפ */ }
-      $('recipMsg').textContent='';
+        reporterPhone:(localStorage.getItem('afcon_reporter_phone')||''), recipients:recips, assignee:assignee };
+      const waLabel=(subj.type||'דיווח')+' · מק״ט '+subj.sku;
+      let waOk=false;
+      if(navigator.onLine!==false){
+        try{ const r=await apiPost('create', waPayload); waOk=!!(r && r.ok); }catch(e){ waOk=false; }
+      }
+      if(waOk){
+        addHist(waLabel, currentAlertId, false, '');
+        $('recipMsg').textContent='';
+      } else {
+        const q=obxLoad();
+        q.push({ id:currentAlertId, payload:waPayload, photos:[], t:Date.now(), tries:0, label:waLabel });
+        obxSave(q); obxPaint();
+        addHist(waLabel, currentAlertId, true, '');
+        $('recipMsg').textContent='⏳ אין חיבור — הדיווח נשמר ויישלח אוטומטית';
+        showToast('הדיווח לא נרשם עדיין — שמור ויישלח כשהחיבור יחזור','bad');
+      }
     }
     if(pendingKind==='photo'){ sharePhotoTo(selected); }
     else { queue=selected.slice(); sentNames=[]; $('recipPicker').classList.add('hidden'); $('recipProgress').classList.remove('hidden'); sendNextText(); }
@@ -1872,7 +1896,7 @@
     const mine=(String(m.author||'').trim()===whMe());
     const isMgr=(String(m.author||'').trim()===MGR_WH);
     const img=m.photo?('<div class="wimg" data-cphoto="'+esc(m.photo)+'"><span class="hist-meta2">📷 טוען…</span></div>'):'';
-    return '<div class="wmsg'+(mine?' me':'')+'"><div class="wmeta">'+(isMgr?'💼 ':'')+esc(m.author||'—')+' · '+esc(whFmt(m.ts))+'</div>'+(m.text?('<div class="wtext">'+esc(m.text)+'</div>'):'')+img+'</div>';
+    return '<div class="wmsg'+(mine?' me':'')+'"'+(m.mid?(' data-mid="'+esc(m.mid)+'"'):'')+'><div class="wmeta">'+(isMgr?'💼 ':'')+esc(m.author||'—')+' · '+esc(whFmt(m.ts))+'</div>'+(m.text?('<div class="wtext">'+esc(m.text)+'</div>'):'')+img+'</div>';
   }
   function whThreadHtml(x){ const msgs=parseMsgsWh(x.chat); if(!msgs.length) return '<div class="hist-empty" style="padding:8px;font-size:calc(13px * var(--ts))">אין הודעות עדיין — אפשר לכתוב לקניין/מנהל</div>'; return msgs.map(whMsgHtml).join(''); }
   async function fetchChatImgsWh(){
@@ -1890,18 +1914,73 @@
       if(pv) pv.innerHTML='<span style="font-size:calc(13px * var(--ts));color:#34d399;font-weight:700">📎 תמונה מצורפת <button class="wpx" type="button" style="background:none;border:none;color:#e2231a;font-weight:800;cursor:pointer">✕</button></span><img src="'+d+'" style="height:46px;border-radius:8px;border:1px solid var(--line2);margin-inline-start:8px">';
     }catch(e){ setStatus('בעיה בעיבוד התמונה'); }
   }
+  /* ===== תור הודעות צ'אט =====
+     במחסן, קליטה חלשה היא הכלל ולא היוצא מן הכלל. הודעה שלא נכתבה
+     בשרת חייבת להיראות שונה — קודם היא נשארה בשרשור כאילו נשלחה. */
+  const MQ_KEY='afcon_wh_msgq';
+  function mqLoad(){ try{ return JSON.parse(localStorage.getItem(MQ_KEY)||'[]'); }catch(e){ return []; } }
+  function mqSave(q){ try{ localStorage.setItem(MQ_KEY, JSON.stringify(q)); }catch(e){} }
+  function mqAdd(item){ const q=mqLoad(); q.push(item); mqSave(q); }
+  function markMsgFailed(mid){
+    const el=document.querySelector('[data-mid="'+mid+'"]');
+    if(!el || el.querySelector('.msg-fail')) return;
+    el.classList.add('unsent');
+    const d=document.createElement('div'); d.className='msg-fail';
+    d.innerHTML='<span>⚠️ לא נשלח</span>';
+    const b=document.createElement('button'); b.type='button'; b.textContent='נסה שוב';
+    b.addEventListener('click', function(ev){ ev.stopPropagation(); mqFlush(true); });
+    d.appendChild(b); el.appendChild(d);
+  }
+  function clearMsgFailed(mid){
+    const el=document.querySelector('[data-mid="'+mid+'"]');
+    if(!el) return;
+    el.classList.remove('unsent');
+    const f=el.querySelector('.msg-fail'); if(f) f.remove();
+  }
+  let mqBusy=false;
+  async function mqFlush(manual){
+    if(mqBusy || !apiOn()) return;
+    let q=mqLoad(); if(!q.length) return;
+    if(navigator.onLine===false){ if(manual) showToast('אין חיבור — ההודעה שמורה ⏳'); return; }
+    mqBusy=true;
+    let sent=0;
+    while(q.length){
+      const it=q[0];
+      try{
+        const r=await apiPost('msgAdd',{id:it.id, author:it.author, text:it.text, photo:it.photo||''});
+        if(r && r.ok===false) throw new Error('rejected');
+        clearMsgFailed(it.mid); q.shift(); mqSave(q); sent++;
+      }catch(e){ markMsgFailed(it.mid); break; }
+    }
+    mqBusy=false;
+    if(sent) showToast(sent===1?'ההודעה נשלחה ✓':sent+' הודעות נשלחו ✓','good');
+    else if(manual) showToast('עדיין לא מצליח לשלוח — בדוק חיבור','bad');
+  }
+  window.addEventListener('online', function(){ mqFlush(false); });
+  setInterval(function(){ if(document.visibilityState==='visible') mqFlush(false); }, 20000);
+
   async function sendWhMsg(row, id){
     const me=whMe(); if(!me){ setStatus('בחר קודם את שמך'); return; }
     const inp=row.querySelector('.win'); const text=(inp?inp.value:'').trim();
     const img=pendingWhImg[id]||''; if(!text && !img) return;
     const ts=new Date().toISOString(); let photoId='';
-    if(img){ photoId='C'+Date.now()+Math.floor(Math.random()*1000); await uploadPhotos(photoId,[img]); whPhotoCache[photoId]=[img]; }
+    if(img){ photoId='C'+Date.now()+Math.floor(Math.random()*1000); try{ await uploadPhotos(photoId,[img]); }catch(e){} whPhotoCache[photoId]=[img]; }
+    const mid='M'+Date.now()+Math.floor(Math.random()*10000);
     const thread=row.querySelector('.wthread');
-    if(thread){ const em=thread.querySelector('.hist-empty'); if(em) thread.innerHTML=''; thread.insertAdjacentHTML('beforeend', whMsgHtml({author:me,ts:ts,text:text,photo:photoId})); thread.scrollTop=thread.scrollHeight; }
+    if(thread){ const em=thread.querySelector('.hist-empty'); if(em) thread.innerHTML='';
+      thread.insertAdjacentHTML('beforeend', whMsgHtml({author:me,ts:ts,text:text,photo:photoId,mid:mid}));
+      thread.scrollTop=thread.scrollHeight; }
     if(inp) inp.value=''; delete pendingWhImg[id]; const pv=row.querySelector('.wpending'); if(pv) pv.innerHTML='';
-    markWhSeen(id, row.querySelectorAll('.wmsg').length);
     fetchChatImgsWh();
-    try{ await apiPost('msgAdd',{id:id, author:me, text:text, photo:photoId}); }catch(e){ setStatus('שליחה נכשלה — נסה שוב'); }
+    try{
+      const r=await apiPost('msgAdd',{id:id, author:me, text:text, photo:photoId});
+      if(r && r.ok===false) throw new Error('rejected');
+      markWhSeen(id, row.querySelectorAll('.wmsg').length);   // רק אחרי שהכתיבה עברה
+    }catch(e){
+      mqAdd({mid:mid, id:id, author:me, text:text, photo:photoId, t:Date.now()});
+      markMsgFailed(mid);
+      showToast('ההודעה לא נשלחה — תישלח כשהחיבור יחזור','bad');
+    }
   }
   function whChatTyping(){ const el=document.activeElement; return !!(el && el.closest && el.closest('#inboxList') && /TEXTAREA|INPUT/.test(el.tagName)); }
   $('inboxList').addEventListener('click', e=>{
@@ -2190,7 +2269,7 @@
 </script>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div id="platTag" style="position:fixed;bottom:5px;right:7px;font-size:10px;color:var(--faint);z-index:5;font-family:monospace;opacity:.55"></div>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:calc(13px * var(--ts));color:var(--faint);z-index:5;font-family:monospace">build 86</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:calc(13px * var(--ts));color:var(--faint);z-index:5;font-family:monospace">build 87</div>
 <!-- ===== כלי עזר (מודול עצמאי — זהה בשתי האפליקציות) ===== -->
 <style>
   #tkModal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;display:none;align-items:flex-start;justify-content:center}

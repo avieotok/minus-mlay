@@ -477,6 +477,13 @@
     .dcmp,.dcmp td,.dcmp th{ border-color:#999 !important; }
     a[href]:after{ content:'' !important; }
   }
+
+  /* ================= הודעת צ'אט שלא נשלחה ================= */
+  .gmsg.unsent{border-color:rgba(226,35,26,.55);background:rgba(226,35,26,.08)}
+  .msg-fail{display:flex;align-items:center;gap:8px;margin-top:6px;color:#fca5a5;
+    font-size:calc(13px * var(--ts));font-weight:700}
+  .msg-fail button{background:#7f1d1d;color:#fee2e2;border:0;border-radius:8px;padding:4px 12px;
+    font-family:'Heebo',sans-serif;font-weight:800;font-size:calc(13px * var(--ts));cursor:pointer;min-height:32px}
 </style>
 </head>
 <body>
@@ -1135,7 +1142,7 @@
     const mine=(String(m.author||'').trim()===me());
     const isMgr=(String(m.author||'').trim()===MGR);
     const img=m.photo?('<div class="gimg" data-cphoto="'+esc(m.photo)+'"><span style="color:var(--muted);font-size:calc(13px * var(--ts))">📷 טוען…</span></div>'):'';
-    return '<div class="gmsg'+(mine?' me':'')+'"><div class="gmeta">'+(isMgr?'💼 ':'')+esc(m.author||'—')+' · '+esc(fmt(m.ts))+'</div>'
+    return '<div class="gmsg'+(mine?' me':'')+'"'+(m.mid?(' data-mid="'+esc(m.mid)+'"'):'')+'><div class="gmeta">'+(isMgr?'💼 ':'')+esc(m.author||'—')+' · '+esc(fmt(m.ts))+'</div>'
       +(m.text?('<div class="gtext">'+esc(m.text)+'</div>'):'')+img+'</div>';
   }
   function genThreadHtml(a){ const msgs=parseMsgs(a.chat); if(!msgs.length) return '<div class="cempty">אין הודעות עדיין — פתח/י שיחה</div>';
@@ -1159,22 +1166,78 @@
       el.innerHTML=(photoCache[pid]||[]).map(d=>'<img class="zoomable" src="'+d+'">').join('');
     }
   }
+  /* ===== תור הודעות צ'אט =====
+     הודעה שלא נכתבה בשרת חייבת להיראות שונה מהודעה שנכתבה.
+     קודם היא נשארה בשרשור כאילו נשלחה, ונעלמה בשקט ברענון הבא. */
+  const MQ_KEY='afcon_msgq';
+  function mqLoad(){ try{ return JSON.parse(localStorage.getItem(MQ_KEY)||'[]'); }catch(e){ return []; } }
+  function mqSave(q){ try{ localStorage.setItem(MQ_KEY, JSON.stringify(q)); }catch(e){} }
+  function mqAdd(item){ const q=mqLoad(); q.push(item); mqSave(q); }
+  function mqDrop(mid){ mqSave(mqLoad().filter(x=>x.mid!==mid)); }
+  function markMsgFailed(mid){
+    const el=document.querySelector('[data-mid="'+mid+'"]');
+    if(!el || el.querySelector('.msg-fail')) return;
+    el.classList.add('unsent');
+    const d=document.createElement('div'); d.className='msg-fail';
+    d.innerHTML='<span>⚠️ לא נשלח</span>';
+    const b=document.createElement('button'); b.type='button'; b.textContent='נסה שוב';
+    b.addEventListener('click', function(){ mqFlush(true); });
+    d.appendChild(b); el.appendChild(d);
+  }
+  function clearMsgFailed(mid){
+    const el=document.querySelector('[data-mid="'+mid+'"]');
+    if(!el) return;
+    el.classList.remove('unsent');
+    const f=el.querySelector('.msg-fail'); if(f) f.remove();
+  }
+  let mqBusy=false;
+  async function mqFlush(manual){
+    if(mqBusy || !apiOn()) return;
+    let q=mqLoad(); if(!q.length) return;
+    if(navigator.onLine===false){ if(manual) toast('אין חיבור — ההודעה שמורה'); return; }
+    mqBusy=true;
+    let sent=0;
+    while(q.length){
+      const it=q[0];
+      try{
+        const r=await apiPost('msgAdd',{id:it.id, author:it.author, text:it.text, photo:it.photo||''});
+        if(r && r.ok===false) throw new Error('rejected');
+        clearMsgFailed(it.mid); q.shift(); mqSave(q); sent++;
+      }catch(e){ markMsgFailed(it.mid); break; }
+    }
+    mqBusy=false;
+    if(sent) toast(sent===1?'ההודעה נשלחה ✓':sent+' הודעות נשלחו ✓');
+    else if(manual) toast('עדיין לא מצליח לשלוח — בדוק חיבור');
+  }
+  window.addEventListener('online', function(){ mqFlush(false); });
+  setInterval(function(){ if(document.visibilityState==='visible') mqFlush(false); }, 20000);
+
   async function sendGenMsg(card, id){
     if(needMe()) return;
     const inp=card.querySelector('.gin'); const text=(inp?inp.value:'').trim();
     const img=pendingChatImg[id]||'';
     if(!text && !img) return;
     const ts=new Date().toISOString(); let photoId='';
-    if(img){ photoId='C'+Date.now()+Math.floor(Math.random()*1000); await uploadPhotos(photoId,[img]); }
+    if(img){ photoId='C'+Date.now()+Math.floor(Math.random()*1000); try{ await uploadPhotos(photoId,[img]); }catch(e){} }
+    const mid='M'+Date.now()+Math.floor(Math.random()*10000);
     const a=ALERTS.find(x=>String(x.id)===String(id)); const entry=me()+'\u0001'+ts+'\u0001'+text+'\u0001'+photoId;
     if(a){ a.chat = a.chat?(a.chat+'\u0002'+entry):entry; }
     if(photoId) photoCache[photoId]=[img];
     const thread=card.querySelector('.gthread');
-    if(thread){ const em=thread.querySelector('.cempty'); if(em) thread.innerHTML=''; thread.insertAdjacentHTML('beforeend', genMsgHtml({author:me(),ts:ts,text:text,photo:photoId})); thread.scrollTop=thread.scrollHeight; }
+    if(thread){ const em=thread.querySelector('.cempty'); if(em) thread.innerHTML='';
+      thread.insertAdjacentHTML('beforeend', genMsgHtml({author:me(),ts:ts,text:text,photo:photoId,mid:mid}));
+      thread.scrollTop=thread.scrollHeight; }
     if(inp) inp.value=''; delete pendingChatImg[id]; const pv=card.querySelector('.gpending'); if(pv) pv.innerHTML='';
-    markChatSeen(id);
     fetchChatPhotos();
-    try{ await apiPost('msgAdd',{id:id, author:me(), text:text, photo:photoId}); }catch(e){ toast('השליחה נכשלה — נסה שוב'); }
+    try{
+      const r=await apiPost('msgAdd',{id:id, author:me(), text:text, photo:photoId});
+      if(r && r.ok===false) throw new Error('rejected');
+      markChatSeen(id);   // רק אחרי שהכתיבה עברה
+    }catch(e){
+      mqAdd({mid:mid, id:id, author:me(), text:text, photo:photoId, t:Date.now()});
+      markMsgFailed(mid);
+      toast('ההודעה לא נשלחה — תישלח כשהחיבור יחזור');
+    }
   }
   async function onChatFile(card, id, file){
     if(!file) return;
@@ -1502,31 +1565,71 @@
       fType='all'; document.querySelectorAll('#typeChips .chip').forEach(x=>x.classList.toggle('on', x.dataset.t==='all'));
     }
     render();
-    try{ await apiPost('status',{id:id, status:'בטיפול'}); toastUndo('הוחזר לטיפול ✓', _snap); setTimeout(load,400); }
-    catch(e){ toast('הפעולה נכשלה — נסה שוב'); }
+    try{ const r=await apiPost('status',{id:id, status:'בטיפול'});
+      if(r && r.ok===false) throw new Error('rejected');
+      toastUndo('הוחזר לטיפול ✓', _snap); setTimeout(load,400); }
+    catch(e){ rollback(_snap); toast('הפעולה נכשלה — המסך הוחזר למצב הקודם'); }
   }
+  /* ===== בדיקת רעננות לפני נטילת בעלות =====
+     הלוח מרענן כל 30 שניות, כך שקניין יכול ללחוץ "קח" על פנייה
+     שכבר נלקחה. אי אפשר לסגור את זה לגמרי בלי כתיבה מותנית בשרת,
+     אבל אפשר לצמצם את החלון מ-30 שניות לשנייה. */
+  async function claimGuard(id, assignee){
+    if(!assignee || assignee!==me()) return true;           // רק נטילה עצמית
+    const local=ALERTS.find(x=>String(x.id)===String(id));
+    if(local && String(local.assignee||'').trim()) return true;  // כבר משויך — ההעברה מודעת
+    try{
+      const r=await apiGet('all');
+      if(!r || !r.ok || !Array.isArray(r.alerts)) return true;    // אין מידע — לא חוסמים
+      ALERTS=r.alerts;
+      const fresh=r.alerts.find(x=>String(x.id)===String(id));
+      if(!fresh){ render(); toast('הפנייה כבר לא קיימת — רוענן'); return false; }
+      const who=String(fresh.assignee||'').trim();
+      if(who && who!==me()){
+        render();
+        toast('⚠️ '+who+' כבר לקח/ה את הפנייה');
+        return false;
+      }
+    }catch(e){}
+    return true;
+  }
+
   async function assignTo(id, assignee, status, resp){
     resp=(resp||'').trim();
+    if(!(await claimGuard(id, assignee))) return;
     const _snap=snapOf(id);
     const a=ALERTS.find(x=>String(x.id)===String(id));
     if(a){ a.assignee=assignee; if(status) a.status=status; if(resp){ a.response=resp; a.ackBy=me(); } a.updated=new Date().toISOString(); }
     render();
     try{
-      await apiPost('assign',{id:id, assignee:assignee, status:status});
-      if(resp){ await apiPost('ack',{id:id, ackBy:me(), response:resp, status:(status||(a&&a.status)||'בטיפול')}); }
+      const r1=await apiPost('assign',{id:id, assignee:assignee, status:status});
+      if(r1 && r1.ok===false) throw new Error('rejected');
+      if(resp){ const r2=await apiPost('ack',{id:id, ackBy:me(), response:resp, status:(status||(a&&a.status)||'בטיפול')});
+        if(r2 && r2.ok===false) throw new Error('rejected'); }
       toastUndo('עודכן ✓', resp?null:_snap); setTimeout(load,400);
     }
-    catch(e){ toast('העדכון נכשל — רענן ונסה שוב'); }
+    catch(e){ rollback(_snap); toast('העדכון נכשל — המסך הוחזר למצב הקודם'); }
+  }
+
+  /* ===== החזרה לאחור: אם השרת לא קיבל, המסך לא ישקר ===== */
+  function rollback(snap){
+    if(!snap) return;
+    const a=ALERTS.find(x=>String(x.id)===String(snap.id));
+    if(a){ a.status=snap.status; a.assignee=snap.assignee; }
+    render();
   }
   async function backToPending(id){
     const _snap=snapOf(id);
     const a=ALERTS.find(x=>String(x.id)===String(id));
     if(a){ a.status='ממתין'; a.assignee=''; a.updated=new Date().toISOString(); }
     render();
-    try{ await apiPost('assign',{id:id, assignee:'', status:'ממתין'}); toastUndo('הוחזר לממתין ✓', _snap); setTimeout(load,400); }
-    catch(e){ toast('הפעולה נכשלה — נסה שוב'); }
+    try{ const r=await apiPost('assign',{id:id, assignee:'', status:'ממתין'});
+      if(r && r.ok===false) throw new Error('rejected');
+      toastUndo('הוחזר לממתין ✓', _snap); setTimeout(load,400); }
+    catch(e){ rollback(_snap); toast('הפעולה נכשלה — המסך הוחזר למצב הקודם'); }
   }
   async function saveResp(id, text){
+    const _snap=snapOf(id);
     const a=ALERTS.find(x=>String(x.id)===String(id));
     const status=(a&&a.status==='טופל')?'טופל':'בטיפול';
     const needAssign=(a && !String(a.assignee||'').trim() && status!=='טופל');
@@ -1537,7 +1640,7 @@
       await apiPost('ack',{id:id, ackBy:me(), response:text, status:status});
       toast('נשמר ✓'); setTimeout(load,600);
     }
-    catch(e){ toast('השמירה נכשלה — רענן ונסה שוב'); }
+    catch(e){ rollback(_snap); toast('השמירה נכשלה — המסך הוחזר למצב הקודם'); }
   }
   function needMe(){ if(!me()){ toast('בחר את שמך בהגדרות ⚙️'); openModal(); return true; } return false; }
   const pendingDone={};
