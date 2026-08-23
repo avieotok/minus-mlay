@@ -374,6 +374,23 @@
       break-inside:avoid; page-break-inside:avoid; margin-bottom:2mm; }
   }
 
+  /* ================= תגובת הקניין — שהמחסנאי לא יפספס =================
+     תגובה שהמחסנאי עוד לא ראה נצבעת אדום ומקבלת תג "חדש"; אחרי שנראתה
+     היא חוזרת לירוק הרגיל. הפופ-אפ קופץ גם כשהמחסנאי בטאב אחר. */
+  .newpill{display:inline-block;background:#e2231a;color:#fff;border-radius:999px;
+    font-size:calc(12.5px * var(--ts));font-weight:800;padding:2px 9px;margin-inline-start:6px;
+    font-family:'Rubik',sans-serif;animation:upulse 1.4s ease-in-out infinite}
+  .respbox{display:block;width:100%;box-sizing:border-box;background:rgba(34,197,94,.08);
+    border:1px solid #166534;border-radius:10px;padding:9px 11px;margin-top:5px;color:#d1fae5;
+    font-size:calc(14px * var(--ts));line-height:1.65}
+  .respbox.fresh{background:rgba(226,35,26,.10);border-color:#e2231a;color:#fecaca}
+  #respWrap .recip-card{max-height:82vh;overflow-y:auto}
+  .rn-item{background:var(--ink);border:1px solid var(--line2);border-radius:12px;
+    padding:11px 13px;margin-bottom:9px;text-align:start}
+  .rn-sku{font-weight:800;font-size:calc(14.5px * var(--ts));color:var(--text)}
+  .rn-txt{color:#34d399;font-size:calc(14px * var(--ts));line-height:1.65;margin-top:5px}
+  .rn-meta{color:var(--faint);font-size:calc(13px * var(--ts));margin-top:4px}
+
   /* ================= הודעת צ'אט שלא נשלחה ================= */
   .wmsg.unsent{border-color:rgba(226,35,26,.55) !important;background:rgba(226,35,26,.08) !important}
   .msg-fail{display:flex;align-items:center;gap:8px;margin-top:6px;color:#fca5a5;
@@ -722,6 +739,16 @@
       <div class="recip-title" id="sentTitle">✅ הדיווח נשלח</div>
       <div id="sentInfo" style="background:var(--ink);border:1px solid #166534;border-radius:12px;padding:16px;font-size:calc(14.5px * var(--ts));color:var(--text);line-height:1.7;margin-bottom:12px;text-align:center"></div>
       <button class="send" id="sentOk">סגור</button>
+    </div>
+  </div>
+
+  <!-- פופ-אפ "תגובה חדשה מהקניין" — קופץ בכל טאב, כדי שהמחסנאי יראה את התגובה מיד -->
+  <div class="recip-overlay hidden" id="respWrap">
+    <div class="recip-card">
+      <div class="recip-title" id="respTitle">📬 תגובה חדשה מהקניין</div>
+      <div id="respBody"></div>
+      <button class="send" id="respGo">פתח את הדיווחים שלי</button>
+      <button class="recip-cancel" id="respClose">סגור</button>
     </div>
   </div>
 
@@ -1974,7 +2001,9 @@
       const res=await apiGet('all');
       if(!res || !res.ok){ L.innerHTML='<div class="hist-empty">שגיאה בטעינה (בדוק טוקן).</div>'; return; }
       const mine=(res.alerts||[]).filter(x=>String(x.reporter||'').trim()===meName);
-      saveSeen(feedbackKeys(res.alerts));
+      /* ⚠️ לא מסמנים "נראה" כאן — רק אחרי שהשורות באמת מוצגות על המסך (בסוף הפונקציה),
+         אחרת התג נכבה עוד לפני שהמחסנאי הספיק לראות את התגובה. */
+      refreshAttention(res.alerts);
       if(!mine.length){ L.innerHTML='<div class="hist-empty">עדיין לא שלחת דיווחים.</div>'; return; }
       const PILL={'ממתין':['#fbbf24','#3a2f0b'],'בטיפול':['#60a5fa','#0b2239'],'טופל':['#34d399','#06281b']};
       const TICON={'חוסר מלאי':'🟠','פריט פגום':'🔴','אי-התאמה':'🔵'};
@@ -1984,19 +2013,22 @@
         const who=(x.assignee||'').trim();
         const ty=String(x.type||'חוסר מלאי'); const tic=TICON[ty]||'•';
         const isMis=(ty==='אי-התאמה');
-        return '<div class="hist-row" data-id="'+esc(x.id)+'" style="align-items:flex-start;flex-direction:column;gap:6px">'
+        const rNew=respIsNew(x);                 // הקניין הגיב/עדכן מאז הפעם האחרונה שנצפה
+        const cUnread=whUnreadFor(x);            // הודעות צ'אט שטרם נקראו
+        return '<div class="hist-row" data-id="'+esc(x.id)+'" style="align-items:flex-start;flex-direction:column;gap:6px'+((rNew||cUnread)?';border-color:#e2231a':'')+'">'
           +'<div style="display:flex;justify-content:space-between;width:100%;align-items:center;gap:8px">'
-          +'<span style="font-weight:700">'+tic+' מק״ט '+esc(x.sku||'—')+(x.desc?(' · '+esc(x.desc)):'')+(x.ticket?(' <span style="color:#34d399;font-weight:800">🎫 '+esc(x.ticket)+'</span>'):'')+'</span>'
+          +'<span style="font-weight:700">'+tic+' מק״ט '+esc(x.sku||'—')+(x.desc?(' · '+esc(x.desc)):'')+(x.ticket?(' <span style="color:#34d399;font-weight:800">🎫 '+esc(x.ticket)+'</span>'):'')+((rNew||cUnread)?'<span class="newpill">🆕 חדש</span>':'')+'</span>'
           +'<span style="font-size:calc(13px * var(--ts));font-weight:700;color:'+pc[0]+';background:'+pc[1]+';border:1px solid '+pc[0]+';border-radius:20px;padding:3px 10px;flex-shrink:0">'+esc(st)+'</span>'
           +'</div>'
           +'<span class="hist-meta2">'+esc(ty)+'  ·  ✅ התקבל'+(when?(' · '+when):'')
             +(isMis?((x.po?(' · הזמנה '+esc(x.po)):'')+' · הוזמן '+esc(x.qty||'—')+' · התקבל '+esc(x.qtyRecv||'—')):(x.qty?(' · '+(ty==='פריט פגום'?'פגומות ':'נותרו ')+esc(x.qty)):''))+'</span>'
           +(x.note?('<span class="hist-meta2" style="color:var(--text)">📝 '+esc(x.note)+'</span>'):'')
           +'<span class="hist-meta2">'+(who?('🧑‍💼 מטפל: '+esc(who)):'⏳ ממתין לשיוך קניין')+'</span>'
-          +(x.response?('<span class="hist-meta2" style="color:#34d399">📋 פעולות הקניין: '+esc(x.response)+'</span>'):'')
+          +(x.response?('<span class="respbox'+(rNew?' fresh':'')+'"><b>📋 תגובת הקניין:</b> '+esc(x.response)+'</span>')
+                      :(rNew?('<span class="respbox fresh"><b>📋 הקניין עדכן:</b> סטטוס '+esc(st)+(who?(' · מטפל: '+esc(who)):'')+'</span>'):''))
           +(Number(x.photo)>0?('<span class="inboxPhotos" data-pid="'+esc(x.id)+'" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px"><span class="hist-meta2">📷 טוען תמונות…</span></span>'):'')
           +'<button class="gchatbtn'+(whUnreadFor(x)>0?' unread':'')+'" data-gchat="1">💬 צ׳אט הפנייה'+(whUnreadFor(x)>0?(' <span class="ubadge">'+whUnreadFor(x)+'</span>'):(whCount(x)?(' ('+whCount(x)+')'):''))+'</button>'
-          +'<div class="whchat"><div class="wthread">'+whThreadHtml(x)+'</div>'
+          +'<div class="whchat'+(cUnread?' open':'')+'"><div class="wthread">'+whThreadHtml(x)+'</div>'
             +'<div class="wpending"></div>'
             +'<div class="winrow"><button class="wphoto" type="button" title="צרף או הדבק תמונה (Ctrl+V)">📷</button>'
             +'<input type="file" class="wfile" accept="image/*" style="display:none">'
@@ -2006,7 +2038,18 @@
       }).join('');
       fetchInboxPhotos();
       fetchChatImgsWh();
+      /* השורות כבר על המסך — עכשיו אפשר לסמן שנצפו. תג ה"חדש" האדום נשאר
+         גלוי בשורה עצמה, אבל הנקודה על הטאב והצליל נכבים. */
+      mine.forEach(x=>{
+        markRespSeen(x);
+        if(whUnreadFor(x)>0){ WCSEEN[String(x.id)]=whCount(x); }   // צ'אט שנפתח אוטומטית = נקרא
+      });
+      rsSave(); wcSave();
+      saveSeen(feedbackKeys(res.alerts));
       refreshAttention(res.alerts);
+      /* גוללים לדיווח הראשון שיש בו חדש, כדי שלא יצטרך לחפש */
+      const firstNew=L.querySelector('.newpill');
+      if(firstNew){ try{ firstNew.closest('.hist-row').scrollIntoView({block:'center',behavior:'smooth'}); }catch(e){} }
     }catch(e){ L.innerHTML='<div class="hist-empty">לא ניתן להתחבר.<br><span style="font-size:calc(13px * var(--ts));opacity:.8;direction:ltr;display:inline-block;margin-top:6px">סיבה: '+esc(String((e&&e.message)||e||'לא ידוע'))+'</span></div>'; }
   }
   const whPhotoCache={};
@@ -2227,8 +2270,22 @@
   function saveSeen(arr){ try{ localStorage.setItem(K.seen, JSON.stringify(arr||[])); }catch(e){} }
 
   // ===== "אל תפספס": הודעות צ'אט שלא נקראו + צליל + כותרת =====
-  let WCSEEN={}; try{ WCSEEN=JSON.parse(localStorage.getItem('afcon_wh_chat_seen')||'{}')||{}; }catch(e){ WCSEEN={}; }
+  let WCSEEN={}, WC_INIT=false;
+  try{ const _wraw=localStorage.getItem('afcon_wh_chat_seen'); if(_wraw){ WCSEEN=JSON.parse(_wraw)||{}; WC_INIT=true; } }catch(e){ WCSEEN={}; }
   function wcSave(){ try{ localStorage.setItem('afcon_wh_chat_seen', JSON.stringify(WCSEEN)); }catch(e){} }
+
+  /* ===== מעקב אחרי תגובת הקניין לכל דיווח =====
+     שומרים "חתימה" (סטטוס|מטפל|תגובה) של מה שהמחסנאי כבר ראה.
+     כל שינוי בחתימה = הקניין הגיב, וזה נשאר מסומן כחדש עד שהדיווח נצפה בפועל.
+     ⚠️ בניגוד ל-afcon_seen_feedback הישן, כאן הסימון הוא לכל דיווח בנפרד,
+     כך שפתיחת הטאב לא מוחקת התראה על דיווח אחר שעדיין לא נקרא. */
+  const RSEEN_KEY='afcon_wh_resp_seen', VIRGIN_SIG='ממתין||';
+  let RSEEN={}, RSEEN_INIT=false;
+  try{ const _rraw=localStorage.getItem(RSEEN_KEY); if(_rraw){ RSEEN=JSON.parse(_rraw)||{}; RSEEN_INIT=true; } }catch(e){ RSEEN={}; }
+  function rsSave(){ try{ localStorage.setItem(RSEEN_KEY, JSON.stringify(RSEEN)); }catch(e){} }
+  function respSig(x){ return String(x.status||'ממתין')+'|'+String(x.assignee||'').trim()+'|'+String(x.response||'').trim(); }
+  function respIsNew(x){ const s=RSEEN[String(x.id)]; return s!==undefined && s!==respSig(x); }
+  function markRespSeen(x){ RSEEN[String(x.id)]=respSig(x); }
   function whUnreadFor(x){ const s=WCSEEN[String(x.id)]; if(s===undefined) return 0; return Math.max(0, whCount(x)-s); }
   function markWhSeen(id, count){ WCSEEN[String(id)]=count; wcSave(); refreshAttention(WH_LAST); }
   const BASE_TITLE_WH='שרשרת האספקה — מחסן';
@@ -2247,19 +2304,68 @@
   let WH_LAST=[], whPrevAtt=0, whReconciled=false;
   function refreshAttention(alerts){
     WH_LAST=alerts||WH_LAST;
-    const me=(localStorage.getItem(K.reporter)||'').trim(); if(!me){ updateTitleWh(0); return {freshFb:0,chatUnread:0,inboxOpen:false,keys:[]}; }
+    const me=(localStorage.getItem(K.reporter)||'').trim();
+    if(!me){ updateTitleWh(0); return {freshFb:0,chatUnread:0,inboxOpen:false,keys:[],fresh:[]}; }
     const mine=(WH_LAST||[]).filter(x=>String(x.reporter||'').trim()===me);
-    let chatUnread=0;
-    mine.forEach(x=>{ const id=String(x.id); if(WCSEEN[id]===undefined){ WCSEEN[id]=whCount(x); } chatUnread+=Math.max(0,whCount(x)-WCSEEN[id]); });
-    wcSave();
-    const keys=feedbackKeys(WH_LAST); const seen=loadSeen(); const freshFb=keys.filter(k=>seen.indexOf(k)===-1).length;
+    let chatUnread=0; const fresh=[];
+    mine.forEach(x=>{
+      const id=String(x.id);
+      /* התקנה ראשונה: מאמצים את המצב הקיים כדי לא להציף. אחר כך — כל דיווח
+         חדש שנכנס לרשימה מתחיל "נקי", כך שתגובה של קניין תמיד תיספר כחדשה. */
+      if(WCSEEN[id]===undefined){ WCSEEN[id] = WC_INIT ? 0 : whCount(x); }
+      if(RSEEN[id]===undefined){ RSEEN[id] = RSEEN_INIT ? VIRGIN_SIG : respSig(x); }
+      const cu=Math.max(0, whCount(x)-WCSEEN[id]); chatUnread+=cu;
+      const rNew=(RSEEN[id]!==respSig(x));
+      if(rNew || cu>0) fresh.push({a:x, resp:rNew, chat:cu});
+    });
+    WC_INIT=true; RSEEN_INIT=true; wcSave(); rsSave();
+    const freshFb=fresh.filter(f=>f.resp).length;
     const inboxOpen=$('inboxMode') && !$('inboxMode').classList.contains('hidden');
-    const att=(inboxOpen?0:freshFb)+chatUnread;
+    /* התג לא מתאפס רק בגלל שהטאב פתוח — הוא נכבה כשהדיווח באמת נצפה */
+    const att=freshFb+chatUnread;
     setInboxBadge(att);
-    if(whReconciled && att>whPrevAtt){ beep(); }
+    if(whReconciled && att>whPrevAtt){ beep(); notifyResponses(fresh, inboxOpen); }
     whPrevAtt=att; whReconciled=true; updateTitleWh(att);
-    return {freshFb, chatUnread, inboxOpen, keys};
+    return {freshFb, chatUnread, inboxOpen, keys:feedbackKeys(WH_LAST), fresh};
   }
+
+  /* ===== התראה גלויה: פופ-אפ + התראת מערכת, בכל טאב שהמחסנאי נמצא בו ===== */
+  function notifyOSWh(title, body){
+    try{
+      if(!('Notification' in window) || Notification.permission!=='granted') return;
+      const opts={ body:body, tag:'afcon-wh-resp', renotify:true, icon:'icon.png', badge:'icon.png', data:{ url: location.href } };
+      if(navigator.serviceWorker && navigator.serviceWorker.ready){
+        navigator.serviceWorker.ready.then(function(r){ try{ r.showNotification(title, opts); }catch(e){ try{ new Notification(title, opts); }catch(_){} } });
+        return;
+      }
+      const nn=new Notification(title, opts); nn.onclick=function(){ try{ window.focus(); }catch(e){} nn.close(); };
+    }catch(e){}
+  }
+  function notifyResponses(fresh, inboxOpen){
+    if(!fresh || !fresh.length) return;
+    /* אם המחסנאי כבר בטאב "הדיווחים שלי" — הרשימה תתרענן ותסמן לבד, בלי פופ-אפ מיותר */
+    if(inboxOpen) return;
+    const TICON={'חוסר מלאי':'🟠','פריט פגום':'🔴','אי-התאמה':'🔵'};
+    const body=$('respBody'); if(!body) return;
+    body.innerHTML=fresh.slice(0,6).map(function(f){
+      const x=f.a, tic=TICON[String(x.type||'חוסר מלאי')]||'•';
+      const who=String(x.assignee||'').trim();
+      const resp=String(x.response||'').trim();
+      let line='';
+      if(f.resp && resp) line='<div class="rn-txt">📋 '+esc(resp)+'</div>';
+      else if(f.resp) line='<div class="rn-txt">הסטטוס עודכן ל־'+esc(String(x.status||'ממתין'))+'</div>';
+      if(f.chat>0) line+='<div class="rn-txt">💬 '+f.chat+' הודעות חדשות בצ׳אט הפנייה</div>';
+      return '<div class="rn-item"><div class="rn-sku">'+tic+' מק״ט '+esc(x.sku||'—')+(x.desc?(' · '+esc(x.desc)):'')+'</div>'
+        +line
+        +'<div class="rn-meta">'+(who?('🧑‍💼 '+esc(who)):'הקניין')+'  ·  סטטוס: '+esc(String(x.status||'ממתין'))+'</div></div>';
+    }).join('')+(fresh.length>6?('<div class="rn-meta" style="text-align:center">ועוד '+(fresh.length-6)+' דיווחים…</div>'):'');
+    $('respTitle').textContent = fresh.length>1 ? ('📬 '+fresh.length+' תגובות חדשות מהקניינים') : '📬 תגובה חדשה מהקניין';
+    show($('respWrap'));
+    const f0=fresh[0].a;
+    notifyOSWh('📬 תגובה מהקניין', 'מק״ט '+String(f0.sku||'')+' — '+(String(f0.response||'').trim()||String(f0.status||'')));
+  }
+  if($('respClose')) $('respClose').addEventListener('click', ()=>hide($('respWrap')));
+  if($('respGo')) $('respGo').addEventListener('click', ()=>{ hide($('respWrap')); switchTab('inbox'); });
   function setInboxBadge(n){
     const b=$('inboxBadge'); if(!b) return;
     if(n>0){ b.textContent=n>9?'9+':String(n); b.style.display='inline-block'; }
@@ -2274,14 +2380,19 @@
       const res=await apiGet('all');
       if(!res || !res.ok) return;
       const info=refreshAttention(res.alerts);
-      const inboxOpen = info.inboxOpen;
-      if(inboxOpen){ if(info.freshFb && !whChatTyping()){ loadInbox(); } else if(!info.freshFb){ saveSeen(info.keys); } }
+      /* הטאב פתוח — מרעננים כדי שהתגובה/ההודעה תופיע מיד, אלא אם המחסנאי באמצע הקלדה */
+      if(info.inboxOpen && (info.freshFb || info.chatUnread) && !whChatTyping()) loadInbox();
     }catch(e){}
   }
   // כשנכנסים לטאב — מסמנים הכל כנראה ומכבים את הנקודה
   async function markInboxSeen(){
     if(!apiOn()) return;
-    try{ const res=await apiGet('all'); if(res&&res.ok){ saveSeen(feedbackKeys(res.alerts)); refreshAttention(res.alerts); } }catch(e){}
+    const me=(localStorage.getItem(K.reporter)||'').trim();
+    try{ const res=await apiGet('all');
+      if(res&&res.ok){
+        (res.alerts||[]).forEach(x=>{ if(String(x.reporter||'').trim()===me){ markRespSeen(x); WCSEEN[String(x.id)]=whCount(x); } });
+        rsSave(); wcSave(); saveSeen(feedbackKeys(res.alerts)); refreshAttention(res.alerts);
+      } }catch(e){}
   }
 
   // copy text
@@ -2413,7 +2524,7 @@
 </script>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div id="platTag" style="position:fixed;bottom:5px;right:7px;font-size:10px;color:var(--faint);z-index:5;font-family:monospace;opacity:.55"></div>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:calc(13px * var(--ts));color:var(--faint);z-index:5;font-family:monospace">build 91</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:calc(13px * var(--ts));color:var(--faint);z-index:5;font-family:monospace">build 92</div>
 <!-- ===== כלי עזר (מודול עצמאי — זהה בשתי האפליקציות) ===== -->
 <style>
   #tkModal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;display:none;align-items:flex-start;justify-content:center}
