@@ -263,6 +263,19 @@
   .transfer select{flex:1;background:var(--ink);border:1px solid var(--line2);border-radius:11px;padding:11px 12px;color:var(--text);font-size:calc(14.5px * var(--ts));font-family:'Heebo',sans-serif}
   .transfer .tgo{flex:0 0 auto;background:var(--amber);border:none;color:var(--ink);border-radius:11px;padding:11px 16px;font-size:calc(14px * var(--ts));font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer}
   .mine-tag{color:var(--green2);font-weight:700}
+  /* ===== ימי אספקה ===== */
+  .supply{margin-top:10px;display:none;flex-direction:column;gap:8px;background:var(--ink);border:1px solid var(--line2);border-radius:12px;padding:12px}
+  .supply.open{display:flex}
+  .supply .shead{font-size:calc(13px * var(--ts));color:var(--muted);font-weight:700}
+  .supply .srow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .supply .sdays{width:110px;background:var(--surface);border:1px solid var(--line2);border-radius:11px;padding:11px 12px;color:var(--text);font-size:calc(16px * var(--ts));font-family:'Heebo',sans-serif;text-align:center}
+  .supply .squick{background:var(--surface2);border:1px solid var(--line2);color:var(--text);border-radius:9px;padding:8px 11px;font-size:calc(13px * var(--ts));font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif}
+  .supply .snote{flex:1;min-width:160px;background:var(--surface);border:1px solid var(--line2);border-radius:11px;padding:11px 12px;color:var(--text);font-size:calc(14px * var(--ts));font-family:'Heebo',sans-serif}
+  .supply .sgo{background:#3aa0db;border:none;color:#04121c;border-radius:11px;padding:12px 16px;font-size:calc(14px * var(--ts));font-weight:800;font-family:'Rubik',sans-serif;cursor:pointer}
+  .supply .seta{font-size:calc(13px * var(--ts));color:#93c5fd;min-height:16px}
+  .sbadge{display:inline-flex;align-items:center;gap:6px;border:1px solid #3aa0db;color:#93c5fd;background:rgba(58,160,219,.1);border-radius:999px;padding:4px 11px;font-size:calc(13px * var(--ts));font-weight:800}
+  .sbadge.late{border-color:#f59e0b;color:#fde68a;background:rgba(245,158,11,.1)}
+  .sbadge.arrived{border-color:#22c55e;color:#86efac;background:rgba(34,197,94,.1)}
   .devrow{margin-top:11px;border-top:1px dashed var(--line2);padding-top:11px}
   .del{background:transparent;border:1.5px solid #7f1d1d;color:#f87171;border-radius:10px;padding:9px 13px;font-size:calc(13px * var(--ts));font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif}
   .del:active{transform:scale(.98)}
@@ -1178,6 +1191,46 @@
     return s.split(' | ').map(function(part){ var m=part.match(/^(.*?)\s*\((.*)\)\s*$/);
       return m ? (m[1].trim()+' ('+fmt(m[2])+')') : part.trim(); }).join('  ;  '); }
   function isOpen(a){ return String(a.status)!=='טופל'; }
+  /* ===== ימי אספקה =====
+     הקניין מכריז שהזמין את הפריט ותוך כמה ימים הוא צפוי להגיע. הנתון נשמר בתוך
+     תשובת הקניין (response) בתבנית קבועה, כך שאין צורך בשינוי בשרת:
+       🚚 הוזמן · ימי אספקה: 120 · מתאריך 04.10.2026 · <הערה>
+     אפליקציית המחסנאים קוראת את אותה תבנית בדיוק — לשנות רק בשני הקבצים יחד. */
+  function sdPad(n){ return ('0'+n).slice(-2); }
+  function sdDate(d){ return sdPad(d.getDate())+'.'+sdPad(d.getMonth()+1)+'.'+d.getFullYear(); }
+  function supplyInfo(a){
+    const s=String((a&&a.response)||'');
+    const m=/ימי אספקה:\s*(\d{1,4})\s*·\s*מתאריך\s*(\d{1,2})\.(\d{1,2})\.(\d{4})/.exec(s);
+    if(!m) return null;
+    const days=+m[1], start=new Date(+m[4], +m[3]-1, +m[2]);
+    const end=new Date(start.getFullYear(), start.getMonth(), start.getDate()+days);
+    const t=new Date(); const today=new Date(t.getFullYear(), t.getMonth(), t.getDate());
+    const left=Math.round((end-today)/86400000);
+    const arrived=/✅ הגיע/.test(s);
+    return {days:days, start:start, end:end, left:left, arrived:arrived, active:(!arrived && left>0)};
+  }
+  function supplyText(days, note){
+    return '🚚 הוזמן · ימי אספקה: '+days+' · מתאריך '+sdDate(new Date())+(note?(' · '+note):'');
+  }
+  function supplyBadge(a){
+    const si=supplyInfo(a); if(!si) return '';
+    if(si.arrived) return '<span class="sbadge arrived">📦 הפריט הגיע</span>';
+    if(si.left>0) return '<span class="sbadge" title="אספקה משוערת">🚚 הוזמן · עוד '+si.left+' ימים לאספקה ('+sdDate(si.end)+')</span>';
+    return '<span class="sbadge late">⚠️ מועד האספקה עבר ('+sdDate(si.end)+') — הפריט לא סומן כהגיע</span>';
+  }
+  function supplyPanel(a){
+    return '<div class="supply"><div class="shead">🚚 ימי אספקה — הפריט הוזמן. הפנייה תעבור להיסטוריה, והמחסנאים לא יוכלו לדווח על המק״ט עד מועד האספקה.</div>'
+      +'<div class="srow"><input class="sdays" type="text" inputmode="numeric" maxlength="3" placeholder="ימים">'
+      +[30,60,90,120].map(n=>'<button type="button" class="squick" data-sq="'+n+'">'+n+'</button>').join('')+'</div>'
+      +'<div class="seta"></div>'
+      +'<div class="srow"><input class="snote" maxlength="80" placeholder="הערה (לא חובה) — לדוגמה: ספק X, הזמנה 4501234"><button type="button" class="sgo">✅ הוזמן — העבר להיסטוריה</button></div></div>';
+  }
+  function supplyEta(card){
+    const inp=card.querySelector('.sdays'), out=card.querySelector('.seta'); if(!inp||!out) return;
+    const n=parseInt((inp.value||'').replace(/\D/g,''),10);
+    if(!n){ out.textContent=''; return; }
+    const t=new Date(); out.textContent='📅 אספקה משוערת: '+sdDate(new Date(t.getFullYear(), t.getMonth(), t.getDate()+n));
+  }
   // ===== צ'אט מנהל / הנחיות לקניין =====
   const MGR='יהודה פור';
   // לוח המחוונים — רק למנהל (יהודה פור) או במצב מנהל
@@ -1630,16 +1683,20 @@
     const _act=document.activeElement;
     let _focus=null;
     list.querySelectorAll('.card').forEach(c=>{ const cid=c.dataset.id; const o=[];
-      if(c.querySelector('.editor.open'))o.push('editor'); if(c.querySelector('.transfer.open'))o.push('transfer'); if(c.querySelector('.genchat.open'))o.push('genchat');
+      if(c.querySelector('.editor.open'))o.push('editor'); if(c.querySelector('.transfer.open'))o.push('transfer'); if(c.querySelector('.genchat.open'))o.push('genchat'); if(c.querySelector('.supply.open'))o.push('supply');
       const _op=c.querySelector('.order.open'); if(_op){ o.push('order'); orderDraft[cid]={ msg:(_op.querySelector('.omsg')||{}).value||'', ph:(_op.querySelector('.osel')||{}).value||'' }; }
       if(o.length)openState[cid]=o;
       const gi=c.querySelector('.gin'), ed=c.querySelector('.editor textarea');
       const d={};
       if(gi && gi.value) d.gin=gi.value;
       if(ed && ed.value) d.ed=ed.value;
-      if(d.gin||d.ed) textDraft[cid]=d;
+      const sdI=c.querySelector('.sdays'), snI=c.querySelector('.snote');
+      if(sdI && sdI.value) d.sd=sdI.value;
+      if(snI && snI.value) d.sn=snI.value;
+      if(d.gin||d.ed||d.sd||d.sn) textDraft[cid]=d;
       if(_act && c.contains(_act)){
-        _focus={cid:cid, sel:(_act.classList&&_act.classList.contains('gin'))?'.gin':(_act.matches&&_act.matches('.editor textarea'))?'.editor textarea':null,
+        _focus={cid:cid, sel:(_act.classList&&_act.classList.contains('gin'))?'.gin':(_act.matches&&_act.matches('.editor textarea'))?'.editor textarea'
+                 :(_act.classList&&_act.classList.contains('sdays'))?'.sdays':(_act.classList&&_act.classList.contains('snote'))?'.snote':null,
                 pos:(typeof _act.selectionStart==='number')?_act.selectionStart:null};
       }
     });
@@ -1669,6 +1726,7 @@
         +'<span><b>דווח:</b> '+esc(a.reporter||'—')+'</span>'
         +(a.created?('<span>🕒 '+fmt(a.created)+'</span>'):'')
         +(function(){ const g=ageInfo(a); return g?('<span class="age '+g.lvl+'" title="זמן שחלף מאז הדיווח">⏳ יושבת '+g.txt+'</span>'):''; })()
+        +supplyBadge(a)
         +'</div>'
         +(isMis?('<table class="dcmp"><tr><th></th><th>הוזמן</th><th>התקבל</th></tr>'
             +'<tr><td>תיאור</td><td>'+esc(a.desc||'—')+'</td><td>'+esc(a.descRecv||'—')+'</td></tr>'
@@ -1679,15 +1737,19 @@
         +photoBlock(a)
         +(boss ? '' : (
           (String(a.status)==='טופל')
-          ? ('<div class="acts"><button class="btn prog" data-act="reopen">↩️ החזר לטיפול</button>'+genBtn(a)+'</div>'+genPanel(a))
+          ? ('<div class="acts"><button class="btn prog" data-act="reopen">↩️ החזר לטיפול</button>'
+             +((function(){ const si=supplyInfo(a); return (si && !si.arrived); })()?'<button class="btn done" data-act="arrived">📦 הפריט הגיע</button>':'')
+             +genBtn(a)+'</div>'+genPanel(a))
           : ('<div class="acts">'
           +'<button class="btn prog'+(a.status==='בטיפול'?' on':'')+'" data-act="בטיפול">'+((String(a.status)==='בטיפול'&&String(a.assignee||'')===me())?'↩️ החזר לממתין':'🟠 קח לטיפול')+'</button>'
           +'<button class="btn done'+(a.status==='טופל'?' on':'')+'" data-act="טופל">✅ טופל</button>'
           +'<button class="btn reply" data-act="transfer">↪️ העבר</button>'
+          +(ty==='חוסר מלאי'?'<button class="btn reply" data-act="supply">🚚 ימי אספקה</button>':'')
           +'<button class="btn reply" data-act="reply">📋</button>'
           +genBtn(a)
           +'</div>'
           +'<div class="transfer"><select class="tsel">'+buyerOptions()+'</select><button class="tgo">העבר</button></div>'
+          +(ty==='חוסר מלאי'?supplyPanel(a):'')
           +'<div class="editor'+(pendingDone[a.id]?' open':'')+'"><div style="font-size:calc(13px * var(--ts));color:var(--muted);margin-bottom:5px;font-weight:700">📋 פעולות לטיפול בפנייה (חובה לסגירת הפנייה)</div><textarea placeholder="מה בוצע? לדוגמה: הוזמן מספק X · מספר הזמנה 123 · מגיע יום ג׳">'+esc(a.response||'')+'</textarea>'
           +'<button class="save">'+(pendingDone[a.id]?'✅ שמור וסגור — טופל':'שמור פעולות ועדכן')+'</button></div>'
           +genPanel(a))
@@ -1705,6 +1767,8 @@
       const d=textDraft[cid];
       if(d.gin){ const gi=c.querySelector('.gin'); if(gi) gi.value=d.gin; }
       if(d.ed){ const ed=c.querySelector('.editor textarea'); if(ed) ed.value=d.ed; }
+      if(d.sd){ const x=c.querySelector('.sdays'); if(x){ x.value=d.sd; supplyEta(c); } }
+      if(d.sn){ const x=c.querySelector('.snote'); if(x) x.value=d.sn; }
     });
     if(_focus && _focus.sel){
       const c=list.querySelector('.card[data-id="'+_focus.cid+'"]');
@@ -1825,6 +1889,12 @@
   function needMe(){ if(!me()){ toast('בחר את שמך בהגדרות ⚙️'); openModal(); return true; } return false; }
   const pendingDone={};
 
+  $('list').addEventListener('input', e=>{
+    if(e.target.classList && e.target.classList.contains('sdays')){
+      e.target.value=e.target.value.replace(/\D/g,'').slice(0,3);
+      const card=e.target.closest('.card'); if(card) supplyEta(card);
+    }
+  });
   $('list').addEventListener('change', e=>{
     const cb=e.target;
     if(cb.classList && cb.classList.contains('gfile')){ const card=cb.closest('.card'); if(card){ onChatFile(card, card.dataset.id, cb.files&&cb.files[0]); cb.value=''; } return; }
@@ -2002,6 +2072,12 @@
       if(a==='reply'){ card.querySelector('.editor').classList.toggle('open'); return; }
       if(a==='gchat'){ const panel=card.querySelector('.genchat'); panel.classList.toggle('open'); if(panel.classList.contains('open')){ markChatSeen(id); render(); } return; }
       if(a==='transfer'){ card.querySelector('.transfer').classList.toggle('open'); return; }
+      if(a==='supply'){ const sp=card.querySelector('.supply'); if(!sp) return; sp.classList.toggle('open');
+        if(sp.classList.contains('open')){ const x=sp.querySelector('.sdays'); if(x) try{ x.focus(); }catch(_){} } return; }
+      if(a==='arrived'){ if(needMe()) return;
+        const al=ALERTS.find(x=>String(x.id)===String(id)); if(!al) return;
+        if(!confirm('לסמן שהפריט הגיע? מעכשיו המחסנאים יוכלו לדווח שוב על המק״ט (אחרי 14 יום).')) return;
+        saveResp(id, String(al.response||'').trim()+' · ✅ הגיע '+sdDate(new Date())); return; }
       if(a==='order'){ openOrderPanel(card, id); return; }
       if(a==='reopen'){ reopenAlert(id); return; }
       if(a==='בטיפול'){ if(needMe()) return; delete pendingDone[id];
@@ -2030,6 +2106,16 @@
       window.open('https://wa.me/'+ph+'?text='+encodeURIComponent(msg), '_blank');
       return;
     }
+    if(e.target.closest('.squick')){ const x=card.querySelector('.sdays'); if(x){ x.value=e.target.closest('.squick').dataset.sq; supplyEta(card); } return; }
+    if(e.target.closest('.sgo')){
+      if(needMe()) return;
+      const n=parseInt(((card.querySelector('.sdays')||{}).value||'').replace(/\D/g,''),10);
+      if(!n || n<1 || n>999){ toast('הזן מספר ימי אספקה (1–999)'); const x=card.querySelector('.sdays'); if(x) x.focus(); return; }
+      const note=String(((card.querySelector('.snote')||{}).value||'')).replace(/\s+/g,' ').trim();
+      delete pendingDone[id];
+      assignTo(id, me(), 'טופל', supplyText(n, note));
+      return;
+    }
     if(e.target.closest('.tgo')){
       const to=card.querySelector('.tsel').value;
       if(!to){ toast('בחר קניין להעברה'); return; }
@@ -2055,7 +2141,7 @@
       return;
     }
     // לחיצה על אזור "נייטרלי" של הרשומה (לא על כפתור/שדה) → פתיחה במסך מלא
-    if(e.target.closest('button,a,input,textarea,select,label,[data-act],img.zoomable,.acts,.editor,.transfer,.genchat,.order')) return;
+    if(e.target.closest('button,a,input,textarea,select,label,[data-act],img.zoomable,.acts,.editor,.transfer,.supply,.genchat,.order')) return;
     openFullCard(id);
   });
 
