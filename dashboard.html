@@ -556,36 +556,39 @@
 <script>document.documentElement.classList.add('theme-light');</script>
 <style id="themeLight">
 html.theme-light{
-  --ink:#f3f6fa; --surface:#ffffff; --surface2:#f7f9fc; --line:#dfe5ee; --line2:#c8d2df;
+  --ink:#cfd8e4; --surface:#eef2f7; --surface2:#e6ebf2; --line:#cbd4e0; --line2:#b4c0cf;
   --text:#132033; --muted:#46566b; --faint:#66768b;
   --amber2:#b45309; --green2:#047857; --blue2:#1d6fb8; --gold:#c9a24e; --gold2:#8a6414;
   color-scheme:light;
+  /* נשלטים מסקלת הבהירות (ראו brightctl למטה); אלה ערכי ברירת המחדל */
+  --bgdim:0; --cardbg:rgba(240,243,248,.93); --cardsolid:#eef2f7; --btnbg:#f6f8fb; --fieldbg:#f8fafc;
+  --subbg:#e4e9f0; --topbg:rgba(232,237,244,.88); --topbg2:rgba(225,231,239,.8);
 }
 /* ---- רקע: לוגו החברה בצבעי מים ---- */
-html.theme-light body{ background:#f3f6fa url(bg-watercolor.jpg) repeat fixed !important; background-size:820px !important; color:var(--text); }
-@media (max-width:600px){ html.theme-light body{ background-size:560px !important; } }
+html.theme-light body{ background:linear-gradient(rgba(10,18,32,var(--bgdim)),rgba(10,18,32,var(--bgdim))) fixed, #cfd8e4 url(bg-watercolor.jpg) repeat fixed !important; background-size:auto, 820px !important; color:var(--text); }
+@media (max-width:600px){ html.theme-light body{ background-size:auto, 560px !important; } }
 
 /* ---- סרגל עליון ושעון ---- */
-html.theme-light .top{ background:rgba(255,255,255,.80) !important; backdrop-filter:blur(14px) saturate(140%); -webkit-backdrop-filter:blur(14px) saturate(140%);
-  border-bottom:1px solid #dfe5ee !important; box-shadow:0 4px 18px -12px rgba(19,32,51,.25) !important; }
-html.theme-light .clockbar{ background:rgba(255,255,255,.62) !important; border-bottom:1px solid #e5eaf1 !important; color:var(--text); }
+html.theme-light .top{ background:var(--topbg) !important; backdrop-filter:blur(14px) saturate(140%); -webkit-backdrop-filter:blur(14px) saturate(140%);
+  border-bottom:1px solid #c3cddb !important; box-shadow:0 4px 18px -12px rgba(19,32,51,.25) !important; }
+html.theme-light .clockbar{ background:var(--topbg2) !important; border-bottom:1px solid #c9d2de !important; color:var(--text); }
 html.theme-light .clockbar .clk-time{ color:#1a6db5 !important; }
 html.theme-light .badge{ box-shadow:0 3px 10px -4px rgba(19,32,51,.35), 0 0 0 1px #dfe5ee !important; }
 
 /* ---- משטחים: כרטיסים, מונים, חלונות ---- */
-html.theme-light .card, html.theme-light .kpi{ background:rgba(255,255,255,.88) !important; border:1px solid #dfe5ee !important;
+html.theme-light .card, html.theme-light .kpi{ background:var(--cardbg) !important; border:1px solid #c6d0dd !important;
   box-shadow:0 1px 2px rgba(19,32,51,.05), 0 10px 26px -14px rgba(19,32,51,.22) !important; }
 html.theme-light .card:hover, html.theme-light .kpi:hover{ border-color:#b9c6d6 !important; box-shadow:0 2px 4px rgba(19,32,51,.06), 0 14px 32px -14px rgba(19,32,51,.28) !important; }
 html.theme-light .kpi.sel{ border-color:#3aa0db !important; box-shadow:0 0 0 2px rgba(58,160,219,.25), 0 10px 26px -14px rgba(19,32,51,.22) !important; }
-html.theme-light .sheet{ background:#fff !important; border-top:1px solid #dfe5ee !important; box-shadow:0 -18px 50px -20px rgba(19,32,51,.35) !important; }
+html.theme-light .sheet{ background:var(--cardsolid) !important; border-top:1px solid #c6d0dd !important; box-shadow:0 -18px 50px -20px rgba(19,32,51,.35) !important; }
 html.theme-light .modal{ background:rgba(19,32,51,.35) !important; }
-html.theme-light .resp, html.theme-light .genchat, html.theme-light .supply, html.theme-light .editor{ background:#f4f7fb !important; border-color:#dfe5ee !important; }
+html.theme-light .resp, html.theme-light .genchat, html.theme-light .supply, html.theme-light .editor{ background:var(--subbg) !important; border-color:#c6d0dd !important; }
 html.theme-light .order{ background:#ecfdf5 !important; border-color:#86efac !important; }
 
 /* ---- לחצנים וצ'יפים ---- */
 html.theme-light .btn, html.theme-light .chip, html.theme-light .ico, html.theme-light .histchip, html.theme-light .vtab:not(.on),
 html.theme-light .filt-toggle, html.theme-light .ghost, html.theme-light .foot button, html.theme-light .squick, html.theme-light .sback, html.theme-light .tplchip{
-  background:#fff !important; color:#24364d !important; border-color:#c8d2df !important; box-shadow:0 1px 2px rgba(19,32,51,.06) !important; }
+  background:var(--btnbg) !important; color:#24364d !important; border-color:#b9c4d2 !important; box-shadow:0 1px 2px rgba(19,32,51,.08) !important; }
 html.theme-light .btn:hover, html.theme-light .chip:hover, html.theme-light .ico:hover, html.theme-light .histchip:hover{ border-color:#3aa0db !important; }
 html.theme-light .chip.on, html.theme-light .histchip.on{ background:#132033 !important; color:#fff !important; border-color:#132033 !important; box-shadow:0 6px 14px -8px rgba(19,32,51,.5) !important; }
 html.theme-light .btn.prog.on{ background:#e8f1fd !important; border-color:#3b82f6 !important; color:#1d4ed8 !important; }
@@ -595,7 +598,7 @@ html.theme-light .tplchip{ color:#8a6414 !important; border-color:#e5c98a !impor
 html.theme-light .toast .undo{ background:#132033; color:#fff; }
 
 /* ---- שדות ---- */
-html.theme-light input, html.theme-light textarea, html.theme-light select{ background:#fff !important; color:#132033 !important; border-color:#c8d2df !important; }
+html.theme-light input, html.theme-light textarea, html.theme-light select{ background:var(--fieldbg) !important; color:#132033 !important; border-color:#b9c4d2 !important; }
 html.theme-light input::placeholder, html.theme-light textarea::placeholder{ color:#8a97a8 !important; }
 
 /* ---- תגיות וצבעי טקסט שהיו בהירים (נועדו לרקע כהה) ---- */
@@ -616,12 +619,12 @@ html.theme-light .pill[style^="color:#60a5fa"]{ color:#1d4ed8 !important; border
 html.theme-light .pill[style^="color:#34d399"]{ color:#047857 !important; border-color:#34d399 !important; }
 html.theme-light .pill[style^="color:#f87171"]{ color:#c81e1e !important; border-color:#f87171 !important; }
 html.theme-light .pill[style^="color:#93c5fd"]{ color:#1a5d93 !important; background:#e8f3fb !important; border-color:#3aa0db !important; }
-html.theme-light .pill{ background:#fff !important; }
+html.theme-light .pill{ background:var(--btnbg) !important; }
 
 /* ---- צבעים שנכתבו ישירות על אלמנטים (style="...") ---- */
 html.theme-light [style*="background:#15171c"], html.theme-light [style*="background:#1f2430"], html.theme-light [style*="background:#1c1f26"],
-html.theme-light [style*="background:#242830"], html.theme-light [style*="background:#0a0b0e"], html.theme-light [style*="background:var(--ink)"]{ background:#f7f9fc !important; }
-html.theme-light [style*="background:#0f1115"]{ background:#f7f9fc !important; }
+html.theme-light [style*="background:#242830"], html.theme-light [style*="background:#0a0b0e"], html.theme-light [style*="background:var(--ink)"]{ background:var(--subbg) !important; }
+html.theme-light [style*="background:#0f1115"]{ background:var(--subbg) !important; }
 html.theme-light [style*="background:#0f1f14"]{ background:#ecfdf5 !important; }
 html.theme-light [style*="background:#0b2239"]{ background:#e8f3fb !important; }
 html.theme-light [style*="background:#06281b"], html.theme-light [style*="background:#14532d"], html.theme-light [style*="background:#0c2a14"]{ background:#ecfdf5 !important; }
@@ -638,7 +641,7 @@ html.theme-light [style*=";color:#60a5fa"], html.theme-light [style^="color:#60a
 html.theme-light #tkModal{ background:rgba(19,32,51,.35) !important; }
 html.theme-light #tkModal .tk-newlist, html.theme-light #tkModal .tk-result, html.theme-light #tkModal .tk-ph-new{ background:#ecfdf5 !important; border-color:#86efac !important; }
 html.theme-light #tkModal .tk-additem button, html.theme-light #tkModal .tk-swap, html.theme-light #tkModal .tk-kind,
-html.theme-light #tkModal .tk-ph-x, html.theme-light #tkModal .tk-ph-cancel{ background:#fff !important; color:#24364d !important; border-color:#c8d2df !important; }
+html.theme-light #tkModal .tk-ph-x, html.theme-light #tkModal .tk-ph-cancel{ background:var(--btnbg) !important; color:#24364d !important; border-color:#c8d2df !important; }
 html.theme-light #tkModal .tk-card.shared{ background:#eef6fc !important; border-color:#bcdcf2 !important; }
 html.theme-light #tkModal .tk-tag{ background:#e8f3fb !important; }
 html.theme-light #tkModal .tk-tel, html.theme-light #tkModal .tk-newlist, html.theme-light #tkModal .tk-ph-new,
@@ -649,7 +652,61 @@ html.theme-light #tkModal .tk-dellist, html.theme-light #tkModal .tk-idel, html.
 /* ---- הסבר בריחוף: נשאר כהה, בולט על רקע בהיר ---- */
 html.theme-light #tipBox{ background:#132033 !important; color:#eef3f9 !important; border-color:#3aa0db !important; }
 html.theme-light #tipBox b{ color:#93c5fd !important; }
+
+/* ---- סקלת בהירות בכותרת: 🌙 כהה ←→ בהיר ☀️ ---- */
+html.theme-light .brightctl{ display:flex; align-items:center; gap:7px; margin-inline-start:auto; padding:6px 11px; border-radius:999px;
+  background:var(--btnbg); border:1px solid #b9c4d2; box-shadow:0 1px 2px rgba(19,32,51,.08); font-size:calc(15px * var(--ts)); line-height:1; flex:0 0 auto; }
+html.theme-light .top-in > .top-actions{ margin-inline-start:12px; }
+html.theme-light .brightctl input[type=range]{ -webkit-appearance:none; appearance:none; width:130px; height:6px; border-radius:99px; margin:0; cursor:pointer;
+  background:linear-gradient(90deg,#f6f8fb,#8495ab,#1d2a3c); border:1px solid #b9c4d2 !important; padding:0 !important; }
+html.theme-light .brightctl input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:20px; height:20px; border-radius:50%;
+  background:#3aa0db; border:3px solid #fff; box-shadow:0 1px 4px rgba(19,32,51,.45); }
+html.theme-light .brightctl input[type=range]::-moz-range-thumb{ width:16px; height:16px; border-radius:50%; background:#3aa0db; border:3px solid #fff; box-shadow:0 1px 4px rgba(19,32,51,.45); }
+@media (max-width:560px){
+  html.theme-light .brightctl{ order:5; width:100%; margin-inline-start:0; justify-content:center; padding:7px 14px; }
+  html.theme-light .brightctl input[type=range]{ flex:1; width:auto; }
+  html.theme-light .top-in > .top-actions{ margin-inline-start:0; }
+}
 </style>
+<script>
+/* סקלת בהירות — כל משתמש קובע לעצמו, נשמר במכשיר (afcon_dash_bright).
+   0 = הכי כהה · 100 = הכי בהיר · 60 = ברירת המחדל (המראה הרגיל). הטקסט נשאר כהה וקריא בכל נקודה. */
+(function(){
+  var KEY='afcon_dash_bright', DEF=60, root=document.documentElement;
+  function mix(a,b,t){ return [0,1,2].map(function(i){ return Math.round(a[i]+(b[i]-a[i])*t); }); }
+  function rgb(c,al){ return al==null?('rgb('+c.join(',')+')'):('rgba('+c.join(',')+','+al+')'); }
+  /* שלוש נקודות עוגן לכל צבע: כהה (0) · רגיל (60) · בהיר (100) */
+  var P={ card:[[176,188,204],[240,243,248],[252,253,255]], btn:[[190,200,213],[246,248,251],[255,255,255]],
+          field:[[198,207,219],[248,250,252],[255,255,255]], sub:[[166,178,195],[228,233,240],[244,247,251]],
+          top:[[160,173,191],[232,237,244],[250,251,253]], top2:[[150,164,183],[225,231,239],[246,248,251]] };
+  function pick(a,v){ return v<=DEF ? mix(a[0],a[1],v/DEF) : mix(a[1],a[2],(v-DEF)/(100-DEF)); }
+  function apply(v){
+    v=Math.max(0,Math.min(100,Number(v)));
+    var s=root.style;
+    s.setProperty('--bgdim', (v<=DEF ? (1-v/DEF)*0.62 : 0).toFixed(3));
+    s.setProperty('--cardbg', rgb(pick(P.card,v),.94)); s.setProperty('--cardsolid', rgb(pick(P.card,v)));
+    s.setProperty('--btnbg', rgb(pick(P.btn,v))); s.setProperty('--fieldbg', rgb(pick(P.field,v)));
+    s.setProperty('--subbg', rgb(pick(P.sub,v)));
+    s.setProperty('--topbg', rgb(pick(P.top,v),.9)); s.setProperty('--topbg2', rgb(pick(P.top2,v),.85));
+    s.setProperty('--surface', rgb(pick(P.card,v))); s.setProperty('--surface2', rgb(pick(P.sub,v)));
+  }
+  var saved=DEF; try{ var x=localStorage.getItem(KEY); if(x!==null && x!=='' && !isNaN(+x)) saved=+x; }catch(e){}
+  apply(saved);
+  function mount(){
+    var top=document.querySelector('.top-in'), acts=top&&top.querySelector('.top-actions');
+    if(!top || document.getElementById('brightRange')) return;
+    var w=document.createElement('div'); w.className='brightctl';
+    w.innerHTML='<span aria-hidden="true">🌙</span><input type="range" id="brightRange" min="0" max="100" step="1" aria-label="בהירות המסך"><span aria-hidden="true">☀️</span>';
+    top.insertBefore(w, acts||null);
+    var r=w.querySelector('input'); r.value=saved;
+    r.addEventListener('input', function(){ apply(r.value); });
+    r.addEventListener('change', function(){ try{ localStorage.setItem(KEY, String(r.value)); }catch(e){} });
+    r.addEventListener('dblclick', function(){ r.value=DEF; apply(DEF); try{ localStorage.setItem(KEY, String(DEF)); }catch(e){} });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', mount); else mount();
+  window.__setBright=function(v){ apply(v); var r=document.getElementById('brightRange'); if(r) r.value=v; };
+})();
+</script>
 <!-- ═══════════════════ סוף ערכת העיצוב הבהירה ═══════════════════ -->
 </head>
 <body>
@@ -3116,6 +3173,7 @@ html.theme-light #tipBox b{ color:#93c5fd !important; }
   /* [בורר, כותרת, הסבר]  — ההסבר יכול להיות פונקציה שמקבלת את הלחצן */
   var TIPS=[
     /* ---- כותרת עליונה ---- */
+    ['.brightctl','בהירות המסך','גוררים ימינה ושמאלה: 🌙 כהה יותר ←→ ☀️ בהיר יותר. ההגדרה אישית ונשמרת במכשיר שלך בלבד. לחיצה כפולה מחזירה לברירת המחדל.'],
     ['#tsBtn','גודל טקסט','מגדיל את כל הכתב בלוח בשלוש דרגות: רגיל · גדול · ענק. כל לחיצה עוברת לדרגה הבאה. נשמר במכשיר הזה בלבד.'],
     ['#tkOpen','כלי עזר','רשימות (הקלדה, הקלטה וכתב יד), ספר טלפונים של ספקים ולקוחות, ממיר מטבעות, ממיר שטחים ותזכורות.'],
     ['#refreshBtn','רענן','טוען עכשיו מחדש את כל הפניות מהשרת. הלוח מתרענן גם לבד כל 10–30 שניות.'],
