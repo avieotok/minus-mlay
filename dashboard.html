@@ -553,7 +553,7 @@
      כל הכללים כאן תחת html.theme-light, כך שכלי העזר המשותף (tools.js)
      לא מושפע באפליקציית המחסנאים.
      ════════════════════════════════════════════════════════════════════ -->
-<script>document.documentElement.classList.add('theme-light');</script>
+<script>(function(){var g=80;try{var x=localStorage.getItem('afcon_dash_bg');if(x!==null&&x!==''&&!isNaN(+x))g=+x;}catch(e){}if(g>=50)document.documentElement.classList.add('theme-light');})();</script>
 <style id="themeLight">
 html.theme-light{
   --ink:#cfd8e4; --surface:#eef2f7; --surface2:#e6ebf2; --line:#cbd4e0; --line2:#b4c0cf;
@@ -561,12 +561,12 @@ html.theme-light{
   --amber2:#b45309; --green2:#047857; --blue2:#1d6fb8; --gold:#c9a24e; --gold2:#8a6414;
   color-scheme:light;
   /* נשלטים מסקלת הבהירות (ראו brightctl למטה); אלה ערכי ברירת המחדל */
-  --bgdim:0; --cardbg:rgba(240,243,248,.93); --cardsolid:#eef2f7; --btnbg:#f6f8fb; --fieldbg:#f8fafc;
+  --bgdim:0; --bgwhite:0; --cardbg:rgba(240,243,248,.93); --cardsolid:#eef2f7; --btnbg:#f6f8fb; --fieldbg:#f8fafc;
   --subbg:#e4e9f0; --topbg:rgba(232,237,244,.88); --topbg2:rgba(225,231,239,.8);
 }
 /* ---- רקע: לוגו החברה בצבעי מים ---- */
-html.theme-light body{ background:linear-gradient(rgba(10,18,32,var(--bgdim)),rgba(10,18,32,var(--bgdim))) fixed, #cfd8e4 url(bg-watercolor.jpg) repeat fixed !important; background-size:auto, 820px !important; color:var(--text); }
-@media (max-width:600px){ html.theme-light body{ background-size:auto, 560px !important; } }
+html.theme-light body{ background:linear-gradient(rgba(10,18,32,var(--bgdim)),rgba(10,18,32,var(--bgdim))) fixed, linear-gradient(rgba(255,255,255,var(--bgwhite)),rgba(255,255,255,var(--bgwhite))) fixed, #cfd8e4 url(bg-watercolor.jpg) repeat fixed !important; background-size:auto, auto, 820px !important; color:var(--text); }
+@media (max-width:600px){ html.theme-light body{ background-size:auto, auto, 560px !important; } }
 
 /* ---- סרגל עליון ושעון ---- */
 html.theme-light .top{ background:var(--topbg) !important; backdrop-filter:blur(14px) saturate(140%); -webkit-backdrop-filter:blur(14px) saturate(140%);
@@ -653,58 +653,95 @@ html.theme-light #tkModal .tk-dellist, html.theme-light #tkModal .tk-idel, html.
 html.theme-light #tipBox{ background:#132033 !important; color:#eef3f9 !important; border-color:#3aa0db !important; }
 html.theme-light #tipBox b{ color:#93c5fd !important; }
 
-/* ---- סקלת בהירות בכותרת: 🌙 כהה ←→ בהיר ☀️ ---- */
-html.theme-light .brightctl{ display:flex; align-items:center; gap:7px; margin-inline-start:auto; padding:6px 11px; border-radius:999px;
-  background:var(--btnbg); border:1px solid #b9c4d2; box-shadow:0 1px 2px rgba(19,32,51,.08); font-size:calc(15px * var(--ts)); line-height:1; flex:0 0 auto; }
-html.theme-light .top-in > .top-actions{ margin-inline-start:12px; }
-html.theme-light .brightctl input[type=range]{ -webkit-appearance:none; appearance:none; width:130px; height:6px; border-radius:99px; margin:0; cursor:pointer;
-  background:linear-gradient(90deg,#f6f8fb,#8495ab,#1d2a3c); border:1px solid #b9c4d2 !important; padding:0 !important; }
-html.theme-light .brightctl input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:20px; height:20px; border-radius:50%;
-  background:#3aa0db; border:3px solid #fff; box-shadow:0 1px 4px rgba(19,32,51,.45); }
-html.theme-light .brightctl input[type=range]::-moz-range-thumb{ width:16px; height:16px; border-radius:50%; background:#3aa0db; border:3px solid #fff; box-shadow:0 1px 4px rgba(19,32,51,.45); }
+/* ---- שתי סקלות בכותרת: ⬛ רקע ⬜  ·  🌙 כרטיסים ☀️ ---- */
+.brightctl{ display:flex; align-items:center; gap:12px; margin-inline-start:auto; padding:6px 12px; border-radius:999px;
+  background:var(--surface2); border:1px solid var(--line2); font-size:calc(14px * var(--ts)); line-height:1; flex:0 0 auto; }
+.brightctl .bc{ display:flex; align-items:center; gap:6px; }
+.brightctl .bc-sep{ width:1px; height:20px; background:var(--line2); }
+.top-in > .top-actions{ margin-inline-start:12px; }
+/* רקע כהה שהובהר מהשחור — הכותרת והשעון מתאימים את עצמם לגוון */
+html.tone-adj:not(.theme-light) .top{ background:linear-gradient(180deg, rgba(var(--inkrgb),.95), rgba(var(--inkrgb),.84)) !important; }
+html.tone-adj:not(.theme-light) .clockbar{ background:rgba(var(--inkrgb),.9) !important; }
+.brightctl input[type=range]{ -webkit-appearance:none; appearance:none; width:110px; height:6px; border-radius:99px; margin:0; cursor:pointer; padding:0 !important;
+  border:1px solid var(--line2) !important; }
+#bgRange{ background:linear-gradient(90deg,#ffffff,#9aa8ba,#0a0b0e) !important; }
+#brightRange{ background:linear-gradient(90deg,#fff6d6,#8495ab,#1d2a3c) !important; }
+.brightctl input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:20px; height:20px; border-radius:50%;
+  background:#3aa0db; border:3px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.45); }
+.brightctl input[type=range]::-moz-range-thumb{ width:16px; height:16px; border-radius:50%; background:#3aa0db; border:3px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.45); }
 @media (max-width:560px){
-  html.theme-light .brightctl{ order:5; width:100%; margin-inline-start:0; justify-content:center; padding:7px 14px; }
-  html.theme-light .brightctl input[type=range]{ flex:1; width:auto; }
-  html.theme-light .top-in > .top-actions{ margin-inline-start:0; }
+  .brightctl{ order:5; width:100%; margin-inline-start:0; justify-content:space-between; padding:7px 12px; gap:10px; }
+  .brightctl .bc{ flex:1; min-width:0; }
+  .brightctl input[type=range]{ flex:1; width:auto; min-width:0; }
+  .top-in > .top-actions{ margin-inline-start:0; }
 }
 </style>
 <script>
-/* סקלת בהירות — כל משתמש קובע לעצמו, נשמר במכשיר (afcon_dash_bright).
-   0 = הכי כהה · 100 = הכי בהיר · 60 = ברירת המחדל (המראה הרגיל). הטקסט נשאר כהה וקריא בכל נקודה. */
+/* שתי סקלות — כל משתמש קובע לעצמו, נשמר במכשיר.
+   ⬛→⬜ רקע (afcon_dash_bg):  0 = השחור המקורי · 50 ומעלה = עיצוב בהיר · 80 = ברירת מחדל · 100 = לבן.
+   🌙→☀️ כרטיסים (afcon_dash_bright): בהירות הכרטיסים, הלחצנים והשדות · 60 = ברירת מחדל.
+   מתחת ל-50 ברקע — הטקסט בהיר על רקע כהה; מ-50 ומעלה — טקסט כהה על רקע בהיר. תמיד קריא. */
 (function(){
-  var KEY='afcon_dash_bright', DEF=60, root=document.documentElement;
+  var KB='afcon_dash_bright', KG='afcon_dash_bg', DEFB=60, DEFG=80, root=document.documentElement;
   function mix(a,b,t){ return [0,1,2].map(function(i){ return Math.round(a[i]+(b[i]-a[i])*t); }); }
+  function lerp(a,b,t){ return a+(b-a)*t; }
   function rgb(c,al){ return al==null?('rgb('+c.join(',')+')'):('rgba('+c.join(',')+','+al+')'); }
-  /* שלוש נקודות עוגן לכל צבע: כהה (0) · רגיל (60) · בהיר (100) */
+  var W=[255,255,255];
+  /* עיצוב בהיר — שלוש נקודות עוגן לכל צבע: עמום (0) · רגיל (60) · בהיר (100) */
   var P={ card:[[176,188,204],[240,243,248],[252,253,255]], btn:[[190,200,213],[246,248,251],[255,255,255]],
           field:[[198,207,219],[248,250,252],[255,255,255]], sub:[[166,178,195],[228,233,240],[244,247,251]],
           top:[[160,173,191],[232,237,244],[250,251,253]], top2:[[150,164,183],[225,231,239],[246,248,251]] };
-  function pick(a,v){ return v<=DEF ? mix(a[0],a[1],v/DEF) : mix(a[1],a[2],(v-DEF)/(100-DEF)); }
-  function apply(v){
-    v=Math.max(0,Math.min(100,Number(v)));
-    var s=root.style;
-    s.setProperty('--bgdim', (v<=DEF ? (1-v/DEF)*0.62 : 0).toFixed(3));
-    s.setProperty('--cardbg', rgb(pick(P.card,v),.94)); s.setProperty('--cardsolid', rgb(pick(P.card,v)));
-    s.setProperty('--btnbg', rgb(pick(P.btn,v))); s.setProperty('--fieldbg', rgb(pick(P.field,v)));
-    s.setProperty('--subbg', rgb(pick(P.sub,v)));
-    s.setProperty('--topbg', rgb(pick(P.top,v),.9)); s.setProperty('--topbg2', rgb(pick(P.top2,v),.85));
-    s.setProperty('--surface', rgb(pick(P.card,v))); s.setProperty('--surface2', rgb(pick(P.sub,v)));
+  function pick(a,v){ return v<=DEFB ? mix(a[0],a[1],v/DEFB) : mix(a[1],a[2],(v-DEFB)/(100-DEFB)); }
+  var DARK_KEYS=['--ink','--line','--line2'];
+  var cur={g:DEFG, b:DEFB};
+  function apply(){
+    var g=Math.max(0,Math.min(100,+cur.g)), v=Math.max(0,Math.min(100,+cur.b)), st=root.style;
+    var light=(g>=50);
+    root.classList.toggle('theme-light', light);
+    if(light){
+      root.classList.remove('tone-adj');
+      DARK_KEYS.forEach(function(k){ st.removeProperty(k); });
+      st.setProperty('--bgdim', (g<DEFG ? (1-(g-50)/(DEFG-50))*0.62 : 0).toFixed(3));
+      st.setProperty('--bgwhite', (g>DEFG ? (g-DEFG)/(100-DEFG)*0.72 : 0).toFixed(3));
+      st.setProperty('--cardbg', rgb(pick(P.card,v),.94)); st.setProperty('--cardsolid', rgb(pick(P.card,v)));
+      st.setProperty('--btnbg', rgb(pick(P.btn,v))); st.setProperty('--fieldbg', rgb(pick(P.field,v)));
+      st.setProperty('--subbg', rgb(pick(P.sub,v)));
+      st.setProperty('--topbg', rgb(pick(P.top,v),.9)); st.setProperty('--topbg2', rgb(pick(P.top2,v),.85));
+      st.setProperty('--surface', rgb(pick(P.card,v))); st.setProperty('--surface2', rgb(pick(P.sub,v)));
+    } else {
+      /* עיצוב כהה: הרקע נע מהשחור המקורי (0) לפחם-כחלחל (49); הכרטיסים מתבהרים לפי הסקלה השנייה */
+      var ink=mix([10,11,14],[40,48,62],g/49);
+      var k = v<=DEFB ? lerp(0.025,0.048,v/DEFB) : lerp(0.048,0.17,(v-DEFB)/(100-DEFB));
+      st.setProperty('--ink', rgb(ink)); st.setProperty('--inkrgb', ink.join(','));
+      root.classList.toggle('tone-adj', g>0);
+      st.setProperty('--surface', rgb(mix(ink,W,k))); st.setProperty('--surface2', rgb(mix(ink,W,k*1.5)));
+      st.setProperty('--line', rgb(mix(ink,W,k+0.07))); st.setProperty('--line2', rgb(mix(ink,W,k+0.15)));
+      /* בנקודה המקורית בדיוק — חוזרים לצבעי המקור */
+      if(g===0 && v===DEFB){ DARK_KEYS.concat(['--surface','--surface2']).forEach(function(x){ st.removeProperty(x); }); }
+    }
   }
-  var saved=DEF; try{ var x=localStorage.getItem(KEY); if(x!==null && x!=='' && !isNaN(+x)) saved=+x; }catch(e){}
-  apply(saved);
+  function load(k,d){ try{ var x=localStorage.getItem(k); if(x!==null && x!=='' && !isNaN(+x)) return +x; }catch(e){} return d; }
+  function save(k,v){ try{ localStorage.setItem(k,String(v)); }catch(e){} }
+  cur.g=load(KG,DEFG); cur.b=load(KB,DEFB); apply();
   function mount(){
     var top=document.querySelector('.top-in'), acts=top&&top.querySelector('.top-actions');
-    if(!top || document.getElementById('brightRange')) return;
+    if(!top || document.getElementById('bgRange')) return;
     var w=document.createElement('div'); w.className='brightctl';
-    w.innerHTML='<span aria-hidden="true">🌙</span><input type="range" id="brightRange" min="0" max="100" step="1" aria-label="בהירות המסך"><span aria-hidden="true">☀️</span>';
+    w.innerHTML='<div class="bc bc-bg"><span aria-hidden="true">⬛</span><input type="range" id="bgRange" min="0" max="100" step="1" aria-label="צבע הרקע — משחור ללבן"><span aria-hidden="true">⬜</span></div>'
+      +'<span class="bc-sep" aria-hidden="true"></span>'
+      +'<div class="bc bc-card"><span aria-hidden="true">🌙</span><input type="range" id="brightRange" min="0" max="100" step="1" aria-label="בהירות הכרטיסים"><span aria-hidden="true">☀️</span></div>';
     top.insertBefore(w, acts||null);
-    var r=w.querySelector('input'); r.value=saved;
-    r.addEventListener('input', function(){ apply(r.value); });
-    r.addEventListener('change', function(){ try{ localStorage.setItem(KEY, String(r.value)); }catch(e){} });
-    r.addEventListener('dblclick', function(){ r.value=DEF; apply(DEF); try{ localStorage.setItem(KEY, String(DEF)); }catch(e){} });
+    function wire(id,key,prop,def){
+      var r=document.getElementById(id); r.value=cur[prop];
+      r.addEventListener('input', function(){ cur[prop]=+r.value; apply(); });
+      r.addEventListener('change', function(){ save(key, r.value); });
+      r.addEventListener('dblclick', function(){ r.value=def; cur[prop]=def; apply(); save(key, def); });
+    }
+    wire('bgRange',KG,'g',DEFG); wire('brightRange',KB,'b',DEFB);
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', mount); else mount();
-  window.__setBright=function(v){ apply(v); var r=document.getElementById('brightRange'); if(r) r.value=v; };
+  window.__setBright=function(v){ cur.b=+v; apply(); var r=document.getElementById('brightRange'); if(r) r.value=v; };
+  window.__setBg=function(v){ cur.g=+v; apply(); var r=document.getElementById('bgRange'); if(r) r.value=v; };
 })();
 </script>
 <!-- ═══════════════════ סוף ערכת העיצוב הבהירה ═══════════════════ -->
@@ -3173,7 +3210,8 @@ html.theme-light .brightctl input[type=range]::-moz-range-thumb{ width:16px; hei
   /* [בורר, כותרת, הסבר]  — ההסבר יכול להיות פונקציה שמקבלת את הלחצן */
   var TIPS=[
     /* ---- כותרת עליונה ---- */
-    ['.brightctl','בהירות המסך','גוררים ימינה ושמאלה: 🌙 כהה יותר ←→ ☀️ בהיר יותר. ההגדרה אישית ונשמרת במכשיר שלך בלבד. לחיצה כפולה מחזירה לברירת המחדל.'],
+    ['.bc-bg','צבע הרקע','מהשחור המקורי ⬛ ועד לבן ⬜. בצד הכהה הטקסט בהיר; מאמצע הסקלה העיצוב הופך לבהיר עם לוגו החברה ברקע. ההגדרה אישית ונשמרת במכשיר שלך. לחיצה כפולה מחזירה לברירת המחדל.'],
+    ['.bc-card','בהירות הכרטיסים','🌙 עמום יותר ←→ ☀️ בהיר יותר — הכרטיסים, הלחצנים והשדות. עובד גם ברקע כהה וגם בבהיר. אישי ונשמר במכשיר שלך. לחיצה כפולה מחזירה לברירת המחדל.'],
     ['#tsBtn','גודל טקסט','מגדיל את כל הכתב בלוח בשלוש דרגות: רגיל · גדול · ענק. כל לחיצה עוברת לדרגה הבאה. נשמר במכשיר הזה בלבד.'],
     ['#tkOpen','כלי עזר','רשימות (הקלדה, הקלטה וכתב יד), ספר טלפונים של ספקים ולקוחות, ממיר מטבעות, ממיר שטחים ותזכורות.'],
     ['#refreshBtn','רענן','טוען עכשיו מחדש את כל הפניות מהשרת. הלוח מתרענן גם לבד כל 10–30 שניות.'],
