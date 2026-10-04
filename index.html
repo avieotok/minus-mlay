@@ -1590,6 +1590,10 @@
     const label=(subj.type||'דיווח')+' · מק״ט '+subj.sku;
     // אין רשת — ישר לתור, בלי להמתין לכישלון של 20 שניות
     if(navigator.onLine===false){ queueReport(payload, label, subj); return; }
+    setStatus('בודק אם המק״ט כבר דווח…');
+    // שומר כפילויות באפליקציה עצמה — לא תלוי רק בשרת. כך הקניין לא מקבל את אותו מק״ט פעמיים.
+    try{ const hit=await findDupReport(subj.sku, subj.type);
+      if(hit){ setStatus(''); dupExisting=hit; showDup(hit); resetForm(); return; } }catch(_){}
     setStatus('שולח לקניינים…');
     try{
       const r=await apiSend(payload);
@@ -1650,16 +1654,19 @@
     let sent=0, dups=0, stop=false, landed=0;
     // אם כבר נעשה ניסיון קודם, ייתכן שהבקשה הגיעה והתשובה אבדה.
     // שליפה אחת של המצב מונעת רשומות כפולות בכל התור.
-    let known=null;
-    if(q.some(x=>(x.tries||0)>0)){
-      try{ const all=await apiGet('all');
-        if(all && all.ok && Array.isArray(all.alerts)) known=all.alerts.map(a=>String(a.id)); }catch(e){}
-    }
+    // אותה שליפה משמשת גם לחסימת דיווח חוזר — דיווח שנשמר אופליין לא עוקף את הבדיקה.
+    let known=null, srvAlerts=null;
+    try{ const all=await apiGet('all');
+      if(all && all.ok && Array.isArray(all.alerts)){ srvAlerts=all.alerts; known=all.alerts.map(a=>String(a.id)); } }catch(e){}
     while(q.length && !stop){
       const it=q[0];
       if(known && known.indexOf(String(it.id))>=0){
         // הדיווח כבר רשום בשרת — הניסיון הקודם הצליח למרות שנראה ככישלון
         histMark(it.id,'',false); q.shift(); obxSave(q); landed++; continue;
+      }
+      if(srvAlerts && it.payload && dupHitIn(srvAlerts, it.payload.sku, it.payload.type)){
+        // מחסנאי אחר כבר דיווח על המק״ט בזמן שהדיווח הזה חיכה — לא שולחים לקניין שוב
+        histMark(it.id,'',true); q.shift(); dups++; obxSave(q); continue;
       }
       try{
         const r=await apiSend(it.payload);
@@ -1730,6 +1737,33 @@
 
   // אם השליחה לא הצליחה — נבדוק ישירות מול השרת אם המק״ט כבר קיים, ונציג הודעה נכונה
   function normSkuMatch(s){ return String(s==null?'':s).trim().replace(/^0+/,''); }
+  /* ===== חסימת דיווח חוזר על אותו מק״ט =====
+     חל רק על "חוסר מלאי" מול "חוסר מלאי". פגום / אי-התאמה לא נחסמים כאן,
+     וגם לא נחסמים בגלל חוסר פתוח על אותו מק״ט.
+     • פנייה פתוחה (ממתין / בטיפול) — חוסמת תמיד, בלי הגבלת זמן, עד שהקניין מסמן "טופל".
+     • פנייה שסומנה "טופל" — חוסמת עוד DUP_DAYS ימים מרגע הטיפול.
+     אם הבדיקה לא מצליחה (אין קליטה / השרת איטי) — הדיווח ממשיך כרגיל, והשרת עדיין בודק בעצמו. */
+  const DUP_DAYS=14;
+  const DUP_TYPE='חוסר מלאי';
+  function dupHitIn(alerts, sku, type){
+    if(String(type||DUP_TYPE)!==DUP_TYPE) return null;
+    const n=normSkuMatch(sku); if(!n) return null;
+    for(const a of (alerts||[])){
+      if(normSkuMatch(a.sku)!==n) continue;
+      if(String(a.type||DUP_TYPE)!==DUP_TYPE) continue;   // פנייה מסוג אחר לא חוסמת חוסר
+      if(String(a.status||'')!=='טופל') return a;
+      const doneAt=String(a.updated||a.ackAt||a.created||'');
+      const t=doneAt?new Date(doneAt).getTime():NaN;
+      if(isNaN(t) || (Date.now()-t)/86400000 < DUP_DAYS) return a;
+    }
+    return null;
+  }
+  async function findDupReport(sku, type){
+    if(String(type||DUP_TYPE)!==DUP_TYPE) return null;
+    const res=await Promise.race([ apiGet('all'), new Promise(r=>setTimeout(()=>r(null), 8000)) ]);
+    if(!res || !res.ok || !Array.isArray(res.alerts)) return null;
+    return dupHitIn(res.alerts, sku, type);
+  }
   async function dupFallback(sku){
     // ניסיון 1: בדיקת check ייעודית
     try{
@@ -1741,16 +1775,7 @@
     try{
       const res=await apiGet('all');
       if(res && res.ok && Array.isArray(res.alerts)){
-        const n=normSkuMatch(sku);
-        let hit=null;
-        for(const a of res.alerts){
-          if(normSkuMatch(a.sku)!==n) continue;
-          const st=String(a.status||'');
-          if(st!=='טופל'){ hit=a; break; }           // פתוח — חוסם
-          const doneAt=String(a.updated||a.ackAt||a.created||'');
-          const days=doneAt?((Date.now()-new Date(doneAt).getTime())/86400000):9999;
-          if(days<14){ hit=a; break; }                 // טופל לאחרונה — חוסם
-        }
+        const hit=dupHitIn(res.alerts, sku, DUP_TYPE);
         if(hit){ setStatus(''); dupExisting=hit; showDup(hit); return; }
       }
     }catch(e){}
@@ -2524,7 +2549,7 @@
 </script>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div id="platTag" style="position:fixed;bottom:5px;right:7px;font-size:10px;color:var(--faint);z-index:5;font-family:monospace;opacity:.55"></div>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:calc(13px * var(--ts));color:var(--faint);z-index:5;font-family:monospace">build 93</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:calc(13px * var(--ts));color:var(--faint);z-index:5;font-family:monospace">build 95</div>
 <!-- ===== כלי עזר (מודול עצמאי — זהה בשתי האפליקציות) ===== -->
 <style>
   #tkModal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;display:none;align-items:flex-start;justify-content:center}
