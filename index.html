@@ -2415,7 +2415,10 @@
       const who=String(x.assignee||'').trim();
       const resp=String(x.response||'').trim();
       let line='';
-      if(f.resp && resp) line='<div class="rn-txt">📋 '+esc(resp)+'</div>';
+      const si=supplyInfo(x);
+      if(f.resp && si && !si.arrived && si.left>0) line='<div class="rn-txt">🚚 <b>הפריט הוזמן</b> — עוד '+si.left+' '+(si.left===1?'יום':'ימים')+' לקבלה משוערת ('+sdDate(si.end)+'). הגעת הפריט באחריות הקניין.</div>';
+      else if(f.resp && si && si.arrived) line='<div class="rn-txt">📦 <b>הפריט הגיע</b> — הקניין סגר את הפנייה.</div>';
+      else if(f.resp && resp) line='<div class="rn-txt">📋 '+esc(resp)+'</div>';
       else if(f.resp) line='<div class="rn-txt">הסטטוס עודכן ל־'+esc(String(x.status||'ממתין'))+'</div>';
       if(f.chat>0) line+='<div class="rn-txt">💬 '+f.chat+' הודעות חדשות בצ׳אט הפנייה</div>';
       return '<div class="rn-item"><div class="rn-sku">'+tic+' מק״ט '+esc(x.sku||'—')+(x.desc?(' · '+esc(x.desc)):'')+'</div>'
@@ -2587,7 +2590,7 @@
 </script>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div id="platTag" style="position:fixed;bottom:5px;right:7px;font-size:10px;color:var(--faint);z-index:5;font-family:monospace;opacity:.55"></div>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:calc(13px * var(--ts));color:var(--faint);z-index:5;font-family:monospace">build 96</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:calc(13px * var(--ts));color:var(--faint);z-index:5;font-family:monospace">build 97</div>
 <!-- ===== כלי עזר (מודול עצמאי — זהה בשתי האפליקציות) ===== -->
 <style>
   #tkModal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;display:none;align-items:flex-start;justify-content:center}

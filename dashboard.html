@@ -266,7 +266,9 @@
   /* ===== ימי אספקה ===== */
   .supply{margin-top:10px;display:none;flex-direction:column;gap:8px;background:var(--ink);border:1px solid var(--line2);border-radius:12px;padding:12px}
   .supply.open{display:flex}
-  .supply .shead{font-size:calc(13px * var(--ts));color:var(--muted);font-weight:700}
+  .supply .shead{font-size:calc(13px * var(--ts));color:var(--muted);font-weight:700;display:flex;align-items:flex-start;gap:10px}
+  .supply .shead span{flex:1}
+  .supply .sback{flex:0 0 auto;background:var(--surface2);border:1px solid var(--line2);color:var(--text);border-radius:9px;padding:7px 12px;font-size:calc(13px * var(--ts));font-weight:800;cursor:pointer;font-family:'Heebo',sans-serif}
   .supply .srow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .supply .sdays{width:110px;background:var(--surface);border:1px solid var(--line2);border-radius:11px;padding:11px 12px;color:var(--text);font-size:calc(16px * var(--ts));font-family:'Heebo',sans-serif;text-align:center}
   .supply .squick{background:var(--surface2);border:1px solid var(--line2);color:var(--text);border-radius:9px;padding:8px 11px;font-size:calc(13px * var(--ts));font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif}
@@ -1219,11 +1221,11 @@
     return '<span class="sbadge late">⚠️ מועד האספקה עבר ('+sdDate(si.end)+') — הפריט לא סומן כהגיע</span>';
   }
   function supplyPanel(a){
-    return '<div class="supply"><div class="shead">🚚 ימי אספקה — הפריט הוזמן. הפנייה תעבור להיסטוריה, והמחסנאים לא יוכלו לדווח על המק״ט עד מועד האספקה.</div>'
+    return '<div class="supply"><div class="shead"><span>🚚 ימי אספקה — הפריט הוזמן. הפנייה נשארת בלוח (בטיפול), המחסנאי יקבל את מועד האספקה, ואף מחסנאי לא יוכל לדווח על המק״ט עד שהפריט יגיע.</span><button type="button" class="sback" title="חזור" aria-label="חזור">→ חזור</button></div>'
       +'<div class="srow"><input class="sdays" type="text" inputmode="numeric" maxlength="3" placeholder="ימים">'
       +[30,60,90,120].map(n=>'<button type="button" class="squick" data-sq="'+n+'">'+n+'</button>').join('')+'</div>'
       +'<div class="seta"></div>'
-      +'<div class="srow"><input class="snote" maxlength="80" placeholder="הערה (לא חובה) — לדוגמה: ספק X, הזמנה 4501234"><button type="button" class="sgo">✅ הוזמן — העבר להיסטוריה</button></div></div>';
+      +'<div class="srow"><input class="snote" maxlength="80" placeholder="הערה (לא חובה) — לדוגמה: ספק X, הזמנה 4501234"><button type="button" class="sgo">🚚 הוזמן — שמור ועדכן מחסנאי</button></div></div>';
   }
   function supplyEta(card){
     const inp=card.querySelector('.sdays'), out=card.querySelector('.seta'); if(!inp||!out) return;
@@ -1744,7 +1746,9 @@
           +'<button class="btn prog'+(a.status==='בטיפול'?' on':'')+'" data-act="בטיפול">'+((String(a.status)==='בטיפול'&&String(a.assignee||'')===me())?'↩️ החזר לממתין':'🟠 קח לטיפול')+'</button>'
           +'<button class="btn done'+(a.status==='טופל'?' on':'')+'" data-act="טופל">✅ טופל</button>'
           +'<button class="btn reply" data-act="transfer">↪️ העבר</button>'
-          +(ty==='חוסר מלאי'?'<button class="btn reply" data-act="supply">🚚 ימי אספקה</button>':'')
+          +(ty==='חוסר מלאי'?(function(){ const si=supplyInfo(a);
+              return '<button class="btn reply" data-act="supply">🚚 ימי אספקה'+((si&&!si.arrived)?(' ('+si.days+')'):'')+'</button>'
+                +((si&&!si.arrived)?'<button class="btn done" data-act="arrived">📦 הפריט הגיע</button>':''); })():'')
           +'<button class="btn reply" data-act="reply">📋</button>'
           +genBtn(a)
           +'</div>'
@@ -2076,8 +2080,10 @@
         if(sp.classList.contains('open')){ const x=sp.querySelector('.sdays'); if(x) try{ x.focus(); }catch(_){} } return; }
       if(a==='arrived'){ if(needMe()) return;
         const al=ALERTS.find(x=>String(x.id)===String(id)); if(!al) return;
-        if(!confirm('לסמן שהפריט הגיע? מעכשיו המחסנאים יוכלו לדווח שוב על המק״ט (אחרי 14 יום).')) return;
-        saveResp(id, String(al.response||'').trim()+' · ✅ הגיע '+sdDate(new Date())); return; }
+        if(!confirm('לסמן שהפריט הגיע? הפנייה תיסגר ותעבור להיסטוריה, והמחסנאי יקבל עדכון.')) return;
+        const txtA=String(al.response||'').trim()+' · ✅ הגיע '+sdDate(new Date());
+        if(String(al.status)==='טופל') saveResp(id, txtA); else assignTo(id, me(), 'טופל', txtA);
+        return; }
       if(a==='order'){ openOrderPanel(card, id); return; }
       if(a==='reopen'){ reopenAlert(id); return; }
       if(a==='בטיפול'){ if(needMe()) return; delete pendingDone[id];
@@ -2106,6 +2112,8 @@
       window.open('https://wa.me/'+ph+'?text='+encodeURIComponent(msg), '_blank');
       return;
     }
+    if(e.target.closest('.sback')){ const sp=card.querySelector('.supply'); if(sp){ sp.classList.remove('open');
+        sp.querySelectorAll('.sdays,.snote').forEach(x=>x.value=''); const et=sp.querySelector('.seta'); if(et) et.textContent=''; } return; }
     if(e.target.closest('.squick')){ const x=card.querySelector('.sdays'); if(x){ x.value=e.target.closest('.squick').dataset.sq; supplyEta(card); } return; }
     if(e.target.closest('.sgo')){
       if(needMe()) return;
@@ -2113,7 +2121,8 @@
       if(!n || n<1 || n>999){ toast('הזן מספר ימי אספקה (1–999)'); const x=card.querySelector('.sdays'); if(x) x.focus(); return; }
       const note=String(((card.querySelector('.snote')||{}).value||'')).replace(/\s+/g,' ').trim();
       delete pendingDone[id];
-      assignTo(id, me(), 'טופל', supplyText(n, note));
+      const sp=card.querySelector('.supply'); if(sp) sp.classList.remove('open');
+      assignTo(id, me(), 'בטיפול', supplyText(n, note));
       return;
     }
     if(e.target.closest('.tgo')){

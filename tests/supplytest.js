@@ -53,7 +53,7 @@ const click = (w, el) => el.dispatchEvent(new w.MouseEvent('click', { bubbles: t
     ok('אין לחצן בפריט פגום', !!cB && !cB.querySelector('[data-act="supply"]'));
     w.closed = true; }
 
-  head('2 · הקניין מזין 120 ימים → הפנייה נסגרת להיסטוריה עם התשובה');
+  head('2 · הקניין מזין 120 ימים → הפנייה נשארת בלוח (בטיפול) עם התשובה');
   { const S = server(); seed(S);
     const { w } = await boot('dashboard.html', { server: S, storage: DB }); await tick(400);
     const card = () => w.document.querySelector('.card[data-id="A1"]');
@@ -68,26 +68,43 @@ const click = (w, el) => el.dispatchEvent(new w.MouseEvent('click', { bubbles: t
     click(w, card().querySelector('.sgo'));
     await tick(600);
     const a = S.alerts[0];
-    ok('הסטטוס טופל (עבר להיסטוריה)', a.status === 'טופל', a.status);
+    ok('הסטטוס בטיפול — לא עבר להיסטוריה', a.status === 'בטיפול', a.status);
+    ok('הכרטיס עדיין בלוח הפתוח', !!card(), '(אין כרטיס)');
+    const lbl = card() && card().querySelector('[data-act="supply"]');
+    ok('הלחצן מציג (120)', lbl && /\(120\)/.test(lbl.textContent), lbl ? lbl.textContent : '');
+    const bd = card() && card().querySelector('.sbadge');
+    ok('תג ספירה לאחור בכרטיס: 120', bd && /עוד 120 ימים/.test(bd.textContent), bd ? bd.textContent : '');
+    ok('הפאנל נסגר אחרי השמירה', !card().querySelector('.supply').classList.contains('open'));
     ok('הקניין משויך', a.assignee === 'דנה', a.assignee);
     ok('התשובה בתבנית ימי אספקה', a.response === '🚚 הוזמן · ימי אספקה: 120 · מתאריך ' + ddmm(dAgo(0)) + ' · ספק אלפא', a.response);
     w.closed = true; }
 
-  head('3 · היסטוריה בלוח: ספירה לאחור + "הפריט הגיע"');
-  { const S = server(); seed(S, { status: 'טופל', assignee: 'דנה', response: supplyResp(1, 120), updated: iso(1) });
+  head('2ב · לחצן "חזור" סוגר את הפאנל בלי לשמור');
+  { const S = server(); seed(S);
     const { w } = await boot('dashboard.html', { server: S, storage: DB }); await tick(400);
-    w.eval("markStatus('history'); render();"); await tick(100);
+    const card = () => w.document.querySelector('.card[data-id="A1"]');
+    click(w, card().querySelector('[data-act="supply"]'));
+    card().querySelector('.sdays').value = '90';
+    click(w, card().querySelector('.sback')); await tick(200);
+    ok('הפאנל נסגר', !card().querySelector('.supply').classList.contains('open'));
+    ok('השדה נוקה', card().querySelector('.sdays').value === '');
+    ok('לא נשמר כלום', S.alerts[0].status === 'ממתין' && !S.alerts[0].response);
+    w.closed = true; }
+
+  head('3 · פנייה פתוחה עם ימי אספקה: ספירה לאחור + "הפריט הגיע" סוגר להיסטוריה');
+  { const S = server(); seed(S, { status: 'בטיפול', assignee: 'דנה', response: supplyResp(1, 120), updated: iso(1) });
+    const { w } = await boot('dashboard.html', { server: S, storage: DB }); await tick(400);
     const c = w.document.querySelector('.card[data-id="A1"]');
     const b = c && c.querySelector('.sbadge');
     ok('מחר → 119 ימים', b && /עוד 119 ימים/.test(b.textContent), b ? b.textContent : '(אין)');
     w.confirm = () => true;
     click(w, c.querySelector('[data-act="arrived"]')); await tick(600);
     ok('סומן הגיע בשרת', /✅ הגיע /.test(S.alerts[0].response), S.alerts[0].response);
-    ok('נשאר בהיסטוריה', S.alerts[0].status === 'טופל');
+    ok('עבר להיסטוריה (טופל)', S.alerts[0].status === 'טופל', S.alerts[0].status);
     w.closed = true; }
 
   head('4 · מחסנאי מדווח על מק״ט שהוזמן לפני 10 ימים (120) → חסום, 110 ימים');
-  { const S = server(); seed(S, { status: 'טופל', assignee: 'דנה', response: supplyResp(10, 120), updated: iso(30) });
+  { const S = server(); seed(S, { status: 'בטיפול', assignee: 'דנה', response: supplyResp(10, 120), updated: iso(30) });
     const r = await whReport(S);
     ok('לא נשלח לקניין', S.creates === 0, 'create=' + S.creates);
     ok('חלון מוצג', r.shown);
@@ -116,6 +133,18 @@ const click = (w, el) => el.dispatchEvent(new w.MouseEvent('click', { bubbles: t
   { const S = server(); seed(S, { status: 'טופל', response: supplyResp(1, 120), updated: iso(30) });
     await whReport(S, '1234567');
     ok('נשלח לקניין', S.creates === 1); }
+
+  head('8ב · המדווח מקבל פופ-אפ "תגובה חדשה" עם ימי האספקה');
+  { const S = server(); seed(S, { reporter: 'משה' });
+    const { w } = await boot('index.html', { server: S, storage: WH }); await tick(200);
+    await w.checkFeedback(); await tick(200);            // המחסנאי ראה את הדיווח במצב ממתין
+    Object.assign(S.alerts[0], { status: 'בטיפול', assignee: 'דנה', response: supplyResp(0, 120), updated: iso(0) });
+    await w.checkFeedback(); await tick(300);
+    const wrap = w.document.getElementById('respWrap');
+    const txt = w.document.getElementById('respBody').textContent;
+    ok('הפופ-אפ קפץ', wrap && !wrap.classList.contains('hidden'));
+    ok('כתוב "הפריט הוזמן" ו-120 ימים', /הפריט הוזמן/.test(txt) && /עוד 120 ימים/.test(txt), txt);
+    w.closed = true; }
 
   head('9 · "הדיווחים שלי" אצל המדווח מציג ספירה לאחור');
   { const S = server(); seed(S, { status: 'טופל', reporter: 'משה', assignee: 'דנה', response: supplyResp(1, 120), updated: iso(1) });
