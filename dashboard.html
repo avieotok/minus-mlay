@@ -536,7 +536,121 @@
   .live.err{color:var(--amber2)}
   .live .live-n{background:var(--gold);color:#171309;border-radius:999px;padding:0 8px;font-weight:800}
   @media print{ .live{display:none !important} }
+  /* ===== כותרת בטלפון: הלחצנים יורדים לשורה משלהם במקום לחרוג מרוחב המסך ===== */
+  @media (max-width:560px){
+    .top-in{ flex-wrap:wrap; row-gap:10px; }
+    .top-in > div:nth-child(2){ flex:1; min-width:0; }
+    .top-actions{ width:100%; display:flex; gap:6px; margin-inline-start:0 !important; }
+    .top-actions .ico{ flex:1 1 0; width:auto; min-width:0; }
+    .top-actions #tkOpen{ flex:2.2 1 0; }
+  }
 </style>
+<!-- ════════════════════════════════════════════════════════════════════
+     ערכת עיצוב בהירה + לוגו החברה בצבעי מים ברקע (אפליקציית קניינים בלבד)
+     ────────────────────────────────────────────────────────────────────
+     לחזרה לעיצוב הכהה הקודם: מוחקים את כל הבלוק הזה, מתחילתו ועד
+     "סוף ערכת העיצוב הבהירה" (וגם את הקובץ bg-watercolor.jpg אם רוצים).
+     כל הכללים כאן תחת html.theme-light, כך שכלי העזר המשותף (tools.js)
+     לא מושפע באפליקציית המחסנאים.
+     ════════════════════════════════════════════════════════════════════ -->
+<script>document.documentElement.classList.add('theme-light');</script>
+<style id="themeLight">
+html.theme-light{
+  --ink:#f3f6fa; --surface:#ffffff; --surface2:#f7f9fc; --line:#dfe5ee; --line2:#c8d2df;
+  --text:#132033; --muted:#46566b; --faint:#66768b;
+  --amber2:#b45309; --green2:#047857; --blue2:#1d6fb8; --gold:#c9a24e; --gold2:#8a6414;
+  color-scheme:light;
+}
+/* ---- רקע: לוגו החברה בצבעי מים ---- */
+html.theme-light body{ background:#f3f6fa url(bg-watercolor.jpg) repeat fixed !important; background-size:820px !important; color:var(--text); }
+@media (max-width:600px){ html.theme-light body{ background-size:560px !important; } }
+
+/* ---- סרגל עליון ושעון ---- */
+html.theme-light .top{ background:rgba(255,255,255,.80) !important; backdrop-filter:blur(14px) saturate(140%); -webkit-backdrop-filter:blur(14px) saturate(140%);
+  border-bottom:1px solid #dfe5ee !important; box-shadow:0 4px 18px -12px rgba(19,32,51,.25) !important; }
+html.theme-light .clockbar{ background:rgba(255,255,255,.62) !important; border-bottom:1px solid #e5eaf1 !important; color:var(--text); }
+html.theme-light .clockbar .clk-time{ color:#1a6db5 !important; }
+html.theme-light .badge{ box-shadow:0 3px 10px -4px rgba(19,32,51,.35), 0 0 0 1px #dfe5ee !important; }
+
+/* ---- משטחים: כרטיסים, מונים, חלונות ---- */
+html.theme-light .card, html.theme-light .kpi{ background:rgba(255,255,255,.88) !important; border:1px solid #dfe5ee !important;
+  box-shadow:0 1px 2px rgba(19,32,51,.05), 0 10px 26px -14px rgba(19,32,51,.22) !important; }
+html.theme-light .card:hover, html.theme-light .kpi:hover{ border-color:#b9c6d6 !important; box-shadow:0 2px 4px rgba(19,32,51,.06), 0 14px 32px -14px rgba(19,32,51,.28) !important; }
+html.theme-light .kpi.sel{ border-color:#3aa0db !important; box-shadow:0 0 0 2px rgba(58,160,219,.25), 0 10px 26px -14px rgba(19,32,51,.22) !important; }
+html.theme-light .sheet{ background:#fff !important; border-top:1px solid #dfe5ee !important; box-shadow:0 -18px 50px -20px rgba(19,32,51,.35) !important; }
+html.theme-light .modal{ background:rgba(19,32,51,.35) !important; }
+html.theme-light .resp, html.theme-light .genchat, html.theme-light .supply, html.theme-light .editor{ background:#f4f7fb !important; border-color:#dfe5ee !important; }
+html.theme-light .order{ background:#ecfdf5 !important; border-color:#86efac !important; }
+
+/* ---- לחצנים וצ'יפים ---- */
+html.theme-light .btn, html.theme-light .chip, html.theme-light .ico, html.theme-light .histchip, html.theme-light .vtab:not(.on),
+html.theme-light .filt-toggle, html.theme-light .ghost, html.theme-light .foot button, html.theme-light .squick, html.theme-light .sback, html.theme-light .tplchip{
+  background:#fff !important; color:#24364d !important; border-color:#c8d2df !important; box-shadow:0 1px 2px rgba(19,32,51,.06) !important; }
+html.theme-light .btn:hover, html.theme-light .chip:hover, html.theme-light .ico:hover, html.theme-light .histchip:hover{ border-color:#3aa0db !important; }
+html.theme-light .chip.on, html.theme-light .histchip.on{ background:#132033 !important; color:#fff !important; border-color:#132033 !important; box-shadow:0 6px 14px -8px rgba(19,32,51,.5) !important; }
+html.theme-light .btn.prog.on{ background:#e8f1fd !important; border-color:#3b82f6 !important; color:#1d4ed8 !important; }
+html.theme-light .btn.done.on{ background:#e9f9ef !important; border-color:#22c55e !important; color:#047857 !important; }
+html.theme-light .btn.unread{ color:#b91c1c !important; border-color:#f87171 !important; }
+html.theme-light .tplchip{ color:#8a6414 !important; border-color:#e5c98a !important; }
+html.theme-light .toast .undo{ background:#132033; color:#fff; }
+
+/* ---- שדות ---- */
+html.theme-light input, html.theme-light textarea, html.theme-light select{ background:#fff !important; color:#132033 !important; border-color:#c8d2df !important; }
+html.theme-light input::placeholder, html.theme-light textarea::placeholder{ color:#8a97a8 !important; }
+
+/* ---- תגיות וצבעי טקסט שהיו בהירים (נועדו לרקע כהה) ---- */
+html.theme-light .tkt{ background:#fff7e6 !important; color:#8a5a00 !important; border-color:#e9c77a !important; }
+html.theme-light .dcmp th:nth-child(2){ color:#b45309 !important; }
+html.theme-light .sbadge{ background:#e8f3fb !important; color:#1a5d93 !important; border-color:#3aa0db !important; }
+html.theme-light .sbadge.late{ background:#fff7e6 !important; color:#92400e !important; border-color:#f59e0b !important; }
+html.theme-light .sbadge.arrived{ background:#e9f9ef !important; color:#065f46 !important; border-color:#22c55e !important; }
+html.theme-light .supply .seta{ color:#1a5d93 !important; }
+html.theme-light .del, html.theme-light .ni-act.del, html.theme-light .msg-fail{ color:#c81e1e !important; }
+html.theme-light .msg-fail button{ color:#991b1b !important; }
+html.theme-light .kst-age, html.theme-light .a-bad, html.theme-light .nc-cat.on, html.theme-light .ni-cat.urgent{ color:#b91c1c !important; }
+html.theme-light .ni-cat.general{ color:#1d6fb8 !important; } html.theme-light .ni-cat.supplier{ color:#047857 !important; }
+html.theme-light .ni-cat.procedure, html.theme-light .ni-pin{ color:#92400e !important; }
+/* תוויות סטטוס/סוג שצבען נקבע בקוד */
+html.theme-light .pill[style^="color:#fbbf24"]{ color:#b45309 !important; border-color:#f59e0b !important; }
+html.theme-light .pill[style^="color:#60a5fa"]{ color:#1d4ed8 !important; border-color:#60a5fa !important; }
+html.theme-light .pill[style^="color:#34d399"]{ color:#047857 !important; border-color:#34d399 !important; }
+html.theme-light .pill[style^="color:#f87171"]{ color:#c81e1e !important; border-color:#f87171 !important; }
+html.theme-light .pill[style^="color:#93c5fd"]{ color:#1a5d93 !important; background:#e8f3fb !important; border-color:#3aa0db !important; }
+html.theme-light .pill{ background:#fff !important; }
+
+/* ---- צבעים שנכתבו ישירות על אלמנטים (style="...") ---- */
+html.theme-light [style*="background:#15171c"], html.theme-light [style*="background:#1f2430"], html.theme-light [style*="background:#1c1f26"],
+html.theme-light [style*="background:#242830"], html.theme-light [style*="background:#0a0b0e"], html.theme-light [style*="background:var(--ink)"]{ background:#f7f9fc !important; }
+html.theme-light [style*="background:#0f1115"]{ background:#f7f9fc !important; }
+html.theme-light [style*="background:#0f1f14"]{ background:#ecfdf5 !important; }
+html.theme-light [style*="background:#0b2239"]{ background:#e8f3fb !important; }
+html.theme-light [style*="background:#06281b"], html.theme-light [style*="background:#14532d"], html.theme-light [style*="background:#0c2a14"]{ background:#ecfdf5 !important; }
+html.theme-light [style*="border:1px solid #343a45"], html.theme-light [style*="border:1px solid #242830"]{ border-color:#c8d2df !important; }
+html.theme-light [style*=";color:#f2f4f8"], html.theme-light [style^="color:#f2f4f8"]{ color:var(--text) !important; }
+html.theme-light [style*=";color:#cbd5e1"], html.theme-light [style^="color:#cbd5e1"]{ color:#334155 !important; }
+html.theme-light [style*=";color:#9aa2ad"], html.theme-light [style^="color:#9aa2ad"]{ color:#5b6b80 !important; }
+html.theme-light [style*=";color:#fca5a5"], html.theme-light [style^="color:#fca5a5"], html.theme-light [style*=";color:#f87171"], html.theme-light [style^="color:#f87171"]{ color:#c81e1e !important; }
+html.theme-light [style*=";color:#fbbf24"], html.theme-light [style^="color:#fbbf24"], html.theme-light [style*=";color:#fde68a"], html.theme-light [style*=";color:#fcd34d"]{ color:#b45309 !important; }
+html.theme-light [style*=";color:#34d399"], html.theme-light [style^="color:#34d399"], html.theme-light [style*=";color:#bbf7d0"], html.theme-light [style*=";color:#86efac"]{ color:#047857 !important; }
+html.theme-light [style*=";color:#60a5fa"], html.theme-light [style^="color:#60a5fa"], html.theme-light [style*=";color:#93c5fd"]{ color:#1d6fb8 !important; }
+
+/* ---- כלי עזר (בתוך אפליקציית קניינים) ---- */
+html.theme-light #tkModal{ background:rgba(19,32,51,.35) !important; }
+html.theme-light #tkModal .tk-newlist, html.theme-light #tkModal .tk-result, html.theme-light #tkModal .tk-ph-new{ background:#ecfdf5 !important; border-color:#86efac !important; }
+html.theme-light #tkModal .tk-additem button, html.theme-light #tkModal .tk-swap, html.theme-light #tkModal .tk-kind,
+html.theme-light #tkModal .tk-ph-x, html.theme-light #tkModal .tk-ph-cancel{ background:#fff !important; color:#24364d !important; border-color:#c8d2df !important; }
+html.theme-light #tkModal .tk-card.shared{ background:#eef6fc !important; border-color:#bcdcf2 !important; }
+html.theme-light #tkModal .tk-tag{ background:#e8f3fb !important; }
+html.theme-light #tkModal .tk-tel, html.theme-light #tkModal .tk-newlist, html.theme-light #tkModal .tk-ph-new,
+html.theme-light #tkModal .tk-card-share, html.theme-light #tkModal #tkRecWa, html.theme-light #tkModal .tk-result .tk-rv{ color:#047857 !important; }
+html.theme-light #tkModal .tk-addr, html.theme-light #tkModal .tk-tag, html.theme-light #tkModal .tk-azdiv, html.theme-light #tkModal .tk-rec-upload{ color:#1d6fb8 !important; }
+html.theme-light #tkModal .tk-dellist, html.theme-light #tkModal .tk-idel, html.theme-light #tkModal .tk-card-del{ color:#c81e1e !important; }
+
+/* ---- הסבר בריחוף: נשאר כהה, בולט על רקע בהיר ---- */
+html.theme-light #tipBox{ background:#132033 !important; color:#eef3f9 !important; border-color:#3aa0db !important; }
+html.theme-light #tipBox b{ color:#93c5fd !important; }
+</style>
+<!-- ═══════════════════ סוף ערכת העיצוב הבהירה ═══════════════════ -->
 </head>
 <body>
 <div id="setGate" style="position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9998;display:none;align-items:center;justify-content:center;padding:24px">

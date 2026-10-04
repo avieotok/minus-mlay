@@ -12,7 +12,7 @@
    ⚠️ בעת עדכון גרסה — שנו את המספר ב-CACHE_VERSION כדי לרענן את המטמון.
 */
 
-const CACHE_VERSION = 'afcon-v59';
+const CACHE_VERSION = 'afcon-v60';
 const CACHE_NAME = CACHE_VERSION;
 
 /* נכסי הליבה של האפליקציה — נטענים מראש כדי שתעבוד גם בלי קליטה */
@@ -25,6 +25,7 @@ const CORE_ASSETS = [
   './tools.js',
   './icon.png',
   './icon-dash.png',
+  './bg-watercolor.jpg',
 ];
 
 /* כתובות חיצוניות (CDN) שכדאי לשמור כדי שהאפליקציה תעבוד גם Offline */
