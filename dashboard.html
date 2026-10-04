@@ -1706,6 +1706,10 @@
     const bar = '';
     list.innerHTML = bar + items.map(a=>{
       const sp=SPILL[a.status]||SPILL['ממתין']; const rail=UCOLOR[a.urgency]||'#57534e';
+      /* "הוזמן" — חוסר שהקניין הזין לו ימי אספקה והפריט עוד לא הגיע. מצב נפרד מ"בטיפול":
+         בלי "החזר לממתין" ובלי "טופל", כדי שלחיצה לא מכוונת לא תבטל את ההזמנה. */
+      const siO=supplyInfo(a);
+      const ordered=(String(a.status)!=='טופל' && String(a.type||'חוסר מלאי')==='חוסר מלאי' && !!siO && !siO.arrived);
       const mineNow=a.assignee && String(a.assignee)===me();
       const assignTxt = a.assignee ? (esc(a.assignee)+(mineNow?' <span class="mine-tag">• שלי</span>':'')) : '<span style="color:var(--muted)">לא משויך</span>';
       const ty=String(a.type||'חוסר מלאי');
@@ -1719,7 +1723,9 @@
         +'<div style="margin-bottom:7px;display:flex;align-items:center;gap:7px;flex-wrap:wrap"><span class="pill'+blink+'" style="color:'+td.c+';background:transparent;border-color:'+td.c+'">'+esc(td.t)+'</span>'+(a.ticket?('<span class="tkt">🎫 '+esc(a.ticket)+'</span>'):'')+'<button class="fc-open" type="button" title="פתח במסך מלא" aria-label="פתח במסך מלא" style="margin-inline-start:auto">⤢</button>'+(mgr?('<button class="del" data-del="'+esc(a.id)+'" style="background:none;border:1px solid #7f1d1d;color:#f87171;border-radius:8px;padding:4px 10px;font-size:calc(13px * var(--ts));font-weight:700;cursor:pointer">🗑️ מחק</button>'):'')+'</div>'
         +'<div class="row1"><div><div class="sku">מק״ט '+esc(a.sku||'—')+'</div>'
         +(a.desc?('<div class="desc">'+esc(a.desc)+'</div>'):'')+'</div>'
-        +'<span class="pill" style="color:'+sp.c+';background:'+sp.bg+';border-color:'+sp.c+'">'+esc(a.status||'')+'</span></div>'
+        +(ordered
+          ? '<span class="pill" style="color:#93c5fd;background:#0b2239;border-color:#3aa0db">🚚 הוזמן</span></div>'
+          : '<span class="pill" style="color:'+sp.c+';background:'+sp.bg+';border-color:'+sp.c+'">'+esc(a.status||'')+'</span></div>')
         +'<div class="meta">'
         +'<span><b>אחראי:</b> '+assignTxt+'</span>'
         +((ty==='חוסר מלאי' && a.urgency)?('<span><b>דחיפות:</b> '+esc(a.urgency)+'</span>'):'')
@@ -1743,14 +1749,18 @@
              +((function(){ const si=supplyInfo(a); return (si && !si.arrived); })()?'<button class="btn done" data-act="arrived">📦 הפריט הגיע</button>':'')
              +genBtn(a)+'</div>'+genPanel(a))
           : ('<div class="acts">'
-          +'<button class="btn prog'+(a.status==='בטיפול'?' on':'')+'" data-act="בטיפול">'+((String(a.status)==='בטיפול'&&String(a.assignee||'')===me())?'↩️ החזר לממתין':'🟠 קח לטיפול')+'</button>'
-          +'<button class="btn done'+(a.status==='טופל'?' on':'')+'" data-act="טופל">✅ טופל</button>'
-          +'<button class="btn reply" data-act="transfer">↪️ העבר</button>'
-          +(ty==='חוסר מלאי'?(function(){ const si=supplyInfo(a);
-              return '<button class="btn reply" data-act="supply">🚚 ימי אספקה'+((si&&!si.arrived)?(' ('+si.days+')'):'')+'</button>'
-                +((si&&!si.arrived)?'<button class="btn done" data-act="arrived">📦 הפריט הגיע</button>':''); })():'')
-          +'<button class="btn reply" data-act="reply">📋</button>'
-          +genBtn(a)
+          +(ordered
+            ? ('<button class="btn done" data-act="arrived">📦 הפריט הגיע</button>'
+              +'<button class="btn reply" data-act="supply">🚚 שנה ימי אספקה ('+siO.days+')</button>'
+              +'<button class="btn reply" data-act="transfer">↪️ העבר</button>'
+              +'<button class="btn reply" data-act="unorder">✖ בטל הזמנה</button>'
+              +genBtn(a))
+            : ('<button class="btn prog'+(a.status==='בטיפול'?' on':'')+'" data-act="בטיפול">'+((String(a.status)==='בטיפול'&&String(a.assignee||'')===me())?'↩️ החזר לממתין':'🟠 קח לטיפול')+'</button>'
+              +'<button class="btn done'+(a.status==='טופל'?' on':'')+'" data-act="טופל">✅ טופל</button>'
+              +'<button class="btn reply" data-act="transfer">↪️ העבר</button>'
+              +(ty==='חוסר מלאי'?'<button class="btn reply" data-act="supply">🚚 ימי אספקה</button>':'')
+              +'<button class="btn reply" data-act="reply">📋</button>'
+              +genBtn(a)))
           +'</div>'
           +'<div class="transfer"><select class="tsel">'+buyerOptions()+'</select><button class="tgo">העבר</button></div>'
           +(ty==='חוסר מלאי'?supplyPanel(a):'')
@@ -2078,6 +2088,9 @@
       if(a==='transfer'){ card.querySelector('.transfer').classList.toggle('open'); return; }
       if(a==='supply'){ const sp=card.querySelector('.supply'); if(!sp) return; sp.classList.toggle('open');
         if(sp.classList.contains('open')){ const x=sp.querySelector('.sdays'); if(x) try{ x.focus(); }catch(_){} } return; }
+      if(a==='unorder'){ if(needMe()) return;
+        if(!confirm('לבטל את ההזמנה? הפנייה תחזור למצב "בטיפול", והמחסנאים יוכלו שוב לראות שהיא פתוחה בלי מועד אספקה.')) return;
+        saveResp(id, '✖ ההזמנה בוטלה — הקניין ממשיך לטפל'); return; }
       if(a==='arrived'){ if(needMe()) return;
         const al=ALERTS.find(x=>String(x.id)===String(id)); if(!al) return;
         if(!confirm('לסמן שהפריט הגיע? הפנייה תיסגר ותעבור להיסטוריה, והמחסנאי יקבל עדכון.')) return;
@@ -3034,7 +3047,8 @@
         : 'משייך את הפנייה אליך ומשנה את הסטטוס ל"בטיפול". המחסנאי רואה מי מטפל, ושאר הקניינים רואים שהיא תפוסה.'; }],
     ['[data-act="טופל"]','טופל','סוגר את הפנייה ומעביר אותה להיסטוריה. צריך לכתוב קודם מה בוצע — אם לא כתבת, ייפתח שדה לכתיבה. המחסנאי מקבל את התשובה.'],
     ['[data-act="transfer"]','העבר לקניין אחר','פותח רשימת קניינים. הפנייה תעבור לקניין שתבחר ותופיע אצלו כמשויכת אליו.'],
-    ['[data-act="supply"]','ימי אספקה','מכריז שהפריט הוזמן ותוך כמה ימים יגיע. הפנייה נשארת בלוח ("בטיפול"), המחסנאי מקבל הודעה עם ספירה לאחור, ואף מחסנאי לא יוכל לדווח שוב על המק״ט עד שתסמן "הפריט הגיע". אפשר ללחוץ שוב כדי לשנות את מספר הימים.'],
+    ['[data-act="supply"]','ימי אספקה','מכריז שהפריט הוזמן ותוך כמה ימים יגיע. הפנייה נשארת בלוח ("בטיפול"), המחסנאי מקבל הודעה עם ספירה לאחור, ואף מחסנאי לא יוכל לדווח שוב על המק״ט עד שתסמן "הפריט הגיע". בפנייה שכבר הוזמנה — הלחצן משנה את מספר הימים.'],
+    ['[data-act="unorder"]','בטל הזמנה','למקרה של טעות: מבטל את ימי האספקה. הפנייה חוזרת ל"בטיפול" רגיל, והמחסנאי מקבל עדכון שההזמנה בוטלה.'],
     ['[data-act="arrived"]','הפריט הגיע','מסמן שהפריט שהוזמן הגיע למחסן. הפנייה נסגרת ועוברת להיסטוריה, והמחסנאי מקבל עדכון.'],
     ['[data-act="reply"]','פעולות לטיפול','פותח שדה לכתוב מה בוצע (למשל: הוזמן מספק X, מגיע ביום ג׳). הטקסט נשלח למחסנאי כתשובה, וחובה למלא אותו כדי לסגור פנייה.'],
     ['[data-act="gchat"]','צ׳אט הפנייה','שיחה על הפנייה הזאת בין המחסנאי, הקניינים והמנהל — כולל תמונות. מספר אדום = הודעות שלא קראת.'],

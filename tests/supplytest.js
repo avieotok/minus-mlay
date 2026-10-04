@@ -75,8 +75,25 @@ const click = (w, el) => el.dispatchEvent(new w.MouseEvent('click', { bubbles: t
     const bd = card() && card().querySelector('.sbadge');
     ok('תג ספירה לאחור בכרטיס: 120', bd && /עוד 120 ימים/.test(bd.textContent), bd ? bd.textContent : '');
     ok('הפאנל נסגר אחרי השמירה', !card().querySelector('.supply').classList.contains('open'));
+    ok('אין לחצן "החזר לממתין"/"קח לטיפול"', !card().querySelector('[data-act="בטיפול"]'));
+    ok('אין לחצן "טופל" (נסגר רק ב"הפריט הגיע")', !card().querySelector('[data-act="טופל"]'));
+    ok('הלחצן הראשון הוא "הפריט הגיע"', (card().querySelector('.acts .btn')||{}).dataset.act === 'arrived');
+    ok('תווית הסטטוס "הוזמן"', /הוזמן/.test(card().querySelector('.row1 .pill').textContent), card().querySelector('.row1 .pill').textContent);
+    ok('יש "בטל הזמנה"', !!card().querySelector('[data-act="unorder"]'));
     ok('הקניין משויך', a.assignee === 'דנה', a.assignee);
     ok('התשובה בתבנית ימי אספקה', a.response === '🚚 הוזמן · ימי אספקה: 120 · מתאריך ' + ddmm(dAgo(0)) + ' · ספק אלפא', a.response);
+    w.closed = true; }
+
+  head('2ג · "בטל הזמנה" מחזיר לבטיפול רגיל ומשחרר את המק״ט');
+  { const S = server(); seed(S, { status: 'בטיפול', assignee: 'דנה', response: supplyResp(0, 120), updated: iso(0) });
+    const { w } = await boot('dashboard.html', { server: S, storage: DB }); await tick(400);
+    w.confirm = () => true;
+    click(w, w.document.querySelector('.card[data-id="A1"] [data-act="unorder"]')); await tick(600);
+    const a = S.alerts[0];
+    ok('נשאר בטיפול', a.status === 'בטיפול', a.status);
+    ok('ימי האספקה נמחקו מהתשובה', !/ימי אספקה:/.test(a.response), a.response);
+    const c = w.document.querySelector('.card[data-id="A1"]');
+    ok('חזר הלחצן הרגיל', c && !!c.querySelector('[data-act="בטיפול"]'));
     w.closed = true; }
 
   head('2ב · לחצן "חזור" סוגר את הפאנל בלי לשמור');
