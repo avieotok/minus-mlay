@@ -92,6 +92,35 @@ const click = (w, el) => el.dispatchEvent(new w.MouseEvent('click', { bubbles: t
     ok('תשובה למחסנאי: אין צורך ברכש', /אין צורך בהזמנת רכש/.test(a.response), a.response);
     w.closed = true; }
 
+  head('8ב · סריקה: פניות ישנות (בלי סימון) על פריטים ייחודיים מסומנות אוטומטית');
+  { const S = server(); const iso = h => new Date(Date.now() - h * 3600e3).toISOString();
+    const add = (id, sku, type, status, note) => S.alerts.push({ id, ticket: '26-' + id, type, sku, desc: '', qty: '', status, reporter: 'אבי', assignee: '', response: '', note: note || '', created: iso(48), updated: iso(48), chat: '' });
+    add('O1', '7777777', 'חוסר מלאי', 'ממתין');          // ייחודי, ישן, בלי סימון
+    add('O2', '0007777777', 'חוסר מלאי', 'בטיפול');      // ייחודי עם אפסים מובילים
+    add('O3', '1000123', 'חוסר מלאי', 'ממתין');          // מנוהל מינימום
+    add('O4', '7777777', 'פריט פגום', 'ממתין', 'שבור');  // פגום — לא נבדק
+    add('O5', '8888888', 'חוסר מלאי', 'טופל');           // ייחודי אבל סגור — לא נספר
+    const { w } = await boot('dashboard.html', { server: S, storage: DB, minstock: MS }); await tick(400);
+    const card = id => w.document.querySelector('.card[data-id="' + id + '"]');
+    ok('O1 מסומן סגול', card('O1') && card('O1').classList.contains('proj'));
+    ok('O1 — "זוהה בסריקה"', /זוהה בסריקה/.test(((card('O1') || {}).textContent) || ''));
+    ok('O1 — יש "העבר להיסטוריה"', !!(card('O1') && card('O1').querySelector('[data-act="projclose"]')));
+    ok('O2 (אפסים מובילים) מסומן', card('O2') && card('O2').classList.contains('proj'));
+    ok('O3 (מנוהל מינימום) לא מסומן', card('O3') && !card('O3').classList.contains('proj'));
+    ok('O4 (פגום) לא מסומן', card('O4') && !card('O4').classList.contains('proj'));
+    const sum = w.document.querySelector('.proj-sum');
+    ok('פס סיכום: 2 פניות פתוחות', sum && /\b2\b/.test(sum.textContent), sum ? sum.textContent : '(אין)');
+    click(w, sum.querySelector('[data-projfilter]')); await tick(150);
+    const ids = [...w.document.querySelectorAll('#list .card')].map(c => c.dataset.id).sort().join(',');
+    ok('"הצג רק אותן" — רק O1,O2', ids === 'O1,O2', ids);
+    click(w, w.document.querySelector('[data-projfilter]')); await tick(150);
+    ok('"הצג הכל" מחזיר את כל הפתוחות', w.document.querySelectorAll('#list .card').length === 4, w.document.querySelectorAll('#list .card').length);
+    w.closed = true; }
+  { const S = server(); S.alerts.push({ id: 'X1', ticket: '26-1', type: 'חוסר מלאי', sku: '7777777', desc: '', status: 'ממתין', reporter: 'אבי', assignee: '', response: '', note: '', created: new Date().toISOString(), updated: new Date().toISOString(), chat: '' });
+    const { w } = await boot('dashboard.html', { server: S, storage: DB, minstock: [] }); await tick(400);
+    ok('בלי רשימה — שום דבר לא מסומן', !w.document.querySelector('.card.proj') && !w.document.querySelector('.proj-sum'));
+    w.closed = true; }
+
   head('9 · עדכון שבועי: קריאת קובץ האקסל האמיתי');
   { const { w } = await boot('dashboard.html', { server: server(), storage: DB }); await tick(300);
     const XLSXlib = require(path.join(process.env.NODE_PATH || '', 'xlsx'));

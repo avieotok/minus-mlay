@@ -16,7 +16,7 @@ node hebtest.js   # מעבר התאריך העברי בשקיעה
 node livetest.js  # עדכון חי בלוח — 14 בדיקות
 node duptest.js   # חסימת דיווח חוזר (חוסר מלאי) — 21 בדיקות
 node supplytest.js # ימי אספקה — לוח קניינים ומחסן — 40 בדיקות
-node minstocktest.js # מלאי מינימום / ייחודי לפרויקט — 35 בדיקות (צריך גם npm install xlsx)
+node minstocktest.js # מלאי מינימום / ייחודי לפרויקט + סריקת פניות קיימות — 45 בדיקות (צריך גם npm install xlsx)
 ```
 
 ## מה מדומה

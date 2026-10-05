@@ -543,6 +543,13 @@
     color:#c4b5fd; font-weight:800; font-size:calc(13.5px * var(--ts)); line-height:1.5; }
   html.theme-light .proj-band{ background:#f3eefe; color:#5b21b6; }
   .btn.projclose{ border-color:#8b5cf6 !important; color:#a78bfa !important; }
+  .proj-auto{ font-weight:600; opacity:.85; }
+  .proj-sum{ grid-column:1 / -1; display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:12px; padding:11px 14px; border-radius:14px;
+    background:rgba(139,92,246,.14); border:1px solid #8b5cf6; color:#ddd6fe; font-size:calc(14px * var(--ts)); line-height:1.5; }
+  .proj-sum span{ flex:1 1 260px; }
+  .proj-sum-btn{ flex:0 0 auto; min-height:38px; padding:7px 14px; border-radius:10px; border:1px solid #8b5cf6; background:transparent; color:inherit; font-weight:800; cursor:pointer; font-family:'Heebo',sans-serif; font-size:calc(13.5px * var(--ts)); }
+  .proj-sum.on .proj-sum-btn, .proj-sum-btn:hover{ background:#7c3aed; color:#fff; }
+  html.theme-light .proj-sum{ background:#f3eefe; color:#4c1d95; }
   html.theme-light .btn.projclose{ color:#6d28d9 !important; }
   /* ----- רשימת מלאי מינימום (הגדרות ▸ תוכן) ----- */
   .ms-stat{ font-size:calc(13.5px * var(--ts)); font-weight:800; color:var(--text); background:var(--ink); border:1px solid var(--line2); border-radius:11px; padding:10px 12px; }
@@ -1597,7 +1604,16 @@ html.tone-adj:not(.theme-light) .clockbar{ background:rgba(var(--inkrgb),.9) !im
   function isOpen(a){ return String(a.status)!=='טופל'; }
   /* פנייה על פריט ייחודי לפרויקט (לא במלאי מינימום) — מסומנת בהערה שהמחסן מצרף */
   const PROJ_MARK='🏷️ ייחודי לפרויקט';
-  function isProjAlert(a){ return String((a&&a.note)||'').indexOf(PROJ_MARK)===0; }
+  function projMarked(a){ return String((a&&a.note)||'').indexOf(PROJ_MARK)===0; }
+  /* סריקה: חוסר מלאי על מק״ט שאינו ברשימת מלאי המינימום — כולל פניות שנשלחו לפני ההחלטה */
+  function projByList(a){
+    try{ if(!(window.MINSTOCK && MINSTOCK.items && Object.keys(MINSTOCK.items).length)) return false; }catch(e){ return false; }
+    if(String((a&&a.type)||'חוסר מלאי')!=='חוסר מלאי') return false;
+    const k=String((a&&a.sku)||'').trim().toUpperCase().replace(/^0+/,'');
+    return !!k && !Object.prototype.hasOwnProperty.call(MINSTOCK.items,k);
+  }
+  function isProjAlert(a){ return projMarked(a) || projByList(a); }
+  let fProj=false;
   /* ===== ימי אספקה =====
      הקניין מכריז שהזמין את הפריט ותוך כמה ימים הוא צפוי להגיע. הנתון נשמר בתוך
      תשובת הקניין (response) בתבנית קבועה, כך שאין צורך בשינוי בשרת:
@@ -2001,6 +2017,7 @@ html.tone-adj:not(.theme-light) .clockbar{ background:rgba(var(--inkrgb),.9) !im
     if(fStatus==='history' || fStatus==='טופל'){ r=r.filter(a=>String(a.status)==='טופל'); }
     else { r=r.filter(a=>String(a.status)!=='טופל'); if(fStatus!=='all') r=r.filter(a=>String(a.status)===fStatus); }
     if(fMine) r=r.filter(a=>String(a.assignee||'')===me());
+    if(fProj) r=r.filter(isProjAlert);
     if(fUrg!=='all') r=r.filter(a=>String(a.urgency)===fUrg);
     if(fType!=='all') r=r.filter(a=>String(a.type||'חוסר מלאי')===fType);
     if(fSearch){ const q=fSearch.toLowerCase();
@@ -2107,8 +2124,12 @@ html.tone-adj:not(.theme-light) .clockbar{ background:rgba(var(--inkrgb),.9) !im
                 pos:(typeof _act.selectionStart==='number')?_act.selectionStart:null};
       }
     });
-    if(!items.length){ list.innerHTML='<div class="empty"><div class="big">📭</div>אין דיווחים שתואמים לסינון.</div>'; applyFullCard(); return; }
-    const bar = '';
+    const projOpen=ALERTS.filter(a=>isOpen(a) && isProjAlert(a)).length;
+    const bar = (projOpen || fProj)
+      ? ('<div class="proj-sum'+(fProj?' on':'')+'"><span>🏷️ <b>'+projOpen+'</b> '+(projOpen===1?'פנייה פתוחה היא':'פניות פתוחות הן')+' על פריטים <b>ייחודיים לפרויקט</b> — לא מנוהלים במלאי מינימום.</span>'
+        +'<button type="button" class="proj-sum-btn" data-projfilter="1">'+(fProj?'✕ הצג הכל':'הצג רק אותן')+'</button></div>')
+      : '';
+    if(!items.length){ list.innerHTML=bar+'<div class="empty"><div class="big">📭</div>אין דיווחים שתואמים לסינון.</div>'; applyFullCard(); return; }
     list.innerHTML = bar + items.map(a=>{
       const sp=SPILL[a.status]||SPILL['ממתין']; const rail=UCOLOR[a.urgency]||'#57534e';
       /* "הוזמן" — חוסר שהקניין הזין לו ימי אספקה והפריט עוד לא הגיע. מצב נפרד מ"בטיפול":
@@ -2125,7 +2146,8 @@ html.tone-adj:not(.theme-light) .clockbar{ background:rgba(var(--inkrgb),.9) !im
       const mgr=(isBoss()||me()===MGR); // מנהל — רשאי למחוק פנייה
       const proj=isProjAlert(a);
       return '<div class="card'+(proj?' proj':'')+'" data-id="'+esc(a.id)+'">'
-        +(proj?'<div class="proj-band">🏷️ ייחודי לפרויקט — לא מנוהל במלאי מינימום. המחסנאי ביקש לעדכן בכל זאת.</div>':'')
+        +(proj?('<div class="proj-band">🏷️ ייחודי לפרויקט — לא מנוהל במלאי מינימום. '
+            +(projMarked(a)?'המחסנאי ביקש לעדכן בכל זאת.':'<span class="proj-auto">זוהה בסריקה מול רשימת מלאי המינימום.</span>')+'</div>'):'')
         +'<span class="rail" style="background:'+rail+'"></span>'
         +'<div style="margin-bottom:7px;display:flex;align-items:center;gap:7px;flex-wrap:wrap"><span class="pill'+blink+'" style="color:'+td.c+';background:transparent;border-color:'+td.c+'">'+esc(td.t)+'</span>'+(a.ticket?('<span class="tkt">🎫 '+esc(a.ticket)+'</span>'):'')+'<button class="fc-open" type="button" title="פתח במסך מלא" aria-label="פתח במסך מלא" style="margin-inline-start:auto">⤢</button>'+(mgr?('<button class="del" data-del="'+esc(a.id)+'" style="background:none;border:1px solid #7f1d1d;color:#f87171;border-radius:8px;padding:4px 10px;font-size:calc(13px * var(--ts));font-weight:700;cursor:pointer">🗑️ מחק</button>'):'')+'</div>'
         +'<div class="row1"><div><div class="sku">מק״ט '+esc(a.sku||'—')+'</div>'
@@ -2487,6 +2509,7 @@ html.tone-adj:not(.theme-light) .clockbar{ background:rgba(var(--inkrgb),.9) !im
 
   $('list').addEventListener('click', e=>{
     if(e.target.closest('#delSel')){ deleteSelected(); return; }
+    if(e.target.closest('[data-projfilter]')){ fProj=!fProj; render(); try{ window.scrollTo({top:0,behavior:'smooth'}); }catch(_){} return; }
     const card=e.target.closest('.card'); if(!card) return; const id=card.dataset.id;
     if(e.target.closest('.fc-open')){ openFullCard(id); return; }
     const btn=e.target.closest('[data-act]');
@@ -3617,6 +3640,7 @@ html.tone-adj:not(.theme-light) .clockbar{ background:rgba(var(--inkrgb),.9) !im
     ['.st-tab[data-pane="maint"]','תחזוקה','נתוני שימוש, השאלות ציוד ופעולות רגישות שאינן הפיכות.'],
     ['#msLoad','טען קובץ מלאי מינימום','בוחרים את קובץ האקסל המעודכן (עם שורת כותרות; עמודה D מסומנת Y). האפליקציה מראה כמה פריטים נוספו והוסרו לפני שמכינים קובץ.'],
     ['#msDownload','הורד קובץ מעודכן','מוריד את minstock.js החדש. מעלים אותו לאתר במקום הקיים ולוחצים "פרסם לכולם".'],
+    ['[data-projfilter]','פריטים ייחודיים לפרויקט','מציג רק פניות על מק״טים שאינם ברשימת מלאי המינימום — כולל פניות ישנות שנשלחו לפני ההחלטה. לחיצה נוספת מחזירה את כל הפניות.'],
     ['[data-act="projclose"]','העבר להיסטוריה','הפריט ייחודי לפרויקט ואין צורך ברכש: סוגר את הפנייה בלי הזמנה, והמחסנאי מקבל תשובה על כך. אפשר במקום זה לטפל ולהזמין כרגיל.'],
     ['.st-switch-row','מצב מנהל','מתג: כשהוא דולק — הלוח במצב צפייה ומעקב בלבד, בלי כפתורי טיפול. לוחצים "שמור זהות" כדי לשמור.'],
     ['.st-eye','הצג / הסתר','מציג את הטוקן הסודי או מסתיר אותו שוב.'],
