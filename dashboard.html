@@ -591,6 +591,7 @@
   .st-inwrap input{ padding-right:48px !important; padding-left:13px !important; }
   .st-eye{ position:absolute; right:6px; top:50%; transform:translateY(-50%); width:36px; height:34px; border-radius:9px; border:0; background:transparent; cursor:pointer; font-size:16px; opacity:.75; }
   .st-eye:hover{ opacity:1; background:var(--surface2); }
+  .st-masked{ -webkit-text-security:disc; text-security:disc; }
   .st-ok{ color:var(--st-good); font-size:calc(13px * var(--ts)); font-weight:700; margin:-4px 0 0; }
   /* מתג */
   .st-switch-row{ cursor:pointer; padding:11px 13px; border:1px solid var(--line2); border-radius:12px; background:var(--ink); }
@@ -938,7 +939,7 @@ html.tone-adj:not(.theme-light) .clockbar{ background:rgba(var(--inkrgb),.9) !im
       <div class="histwrap">
         <button class="histchip" id="histBtn" data-s="history">🗄️ היסטוריה (טופלו)</button>
       </div>
-      <input class="search" id="search" placeholder="חיפוש מק״ט / תיאור / מדווח…">
+      <input class="search" id="search" type="search" name="afcon-board-search" autocomplete="off" data-lpignore="true" data-1p-ignore="true" placeholder="חיפוש מק״ט / תיאור / מדווח…">
     </div>
     </div>
 
@@ -1042,7 +1043,7 @@ html.tone-adj:not(.theme-light) .clockbar{ background:rgba(var(--inkrgb),.9) !im
           <div class="st-card-h"><b>🔗 חיבור לשרת</b><span>כתובת ה-Web App והטוקן — זהים לכל הצוות.</span></div>
           <div class="st-field"><label for="mUrl">כתובת המערכת (Web App URL)</label><input id="mUrl" dir="ltr" autocomplete="off" spellcheck="false" placeholder="https://script.google.com/macros/s/..."></div>
           <div class="st-field"><label for="mTok">טוקן סודי</label>
-            <div class="st-inwrap"><input id="mTok" type="password" dir="ltr" autocomplete="off" spellcheck="false" placeholder="אותו סוד שבקוד השרת"><button type="button" class="st-eye" data-eye="mTok" aria-label="הצג / הסתר טוקן">👁</button></div></div>
+            <div class="st-inwrap"><input id="mTok" type="text" class="st-masked" dir="ltr" autocomplete="off" data-lpignore="true" data-1p-ignore="true" name="afcon-server-key" spellcheck="false" placeholder="אותו סוד שבקוד השרת"><button type="button" class="st-eye" data-eye="mTok" aria-label="הצג / הסתר טוקן">👁</button></div></div>
           <div class="st-field"><label for="mSheet">קישור לגיליון <em>(לא חובה — לכפתור "פתח גיליון")</em></label><input id="mSheet" dir="ltr" autocomplete="off" spellcheck="false" placeholder="https://docs.google.com/spreadsheets/..."></div>
           <button type="button" class="st-btn primary wide" id="advSave">בדוק חיבור ושמור</button>
           <div class="note" id="advNote"></div>
@@ -3356,7 +3357,7 @@ html.tone-adj:not(.theme-light) .clockbar{ background:rgba(var(--inkrgb),.9) !im
   document.addEventListener('click', function(e){
     var t=e.target.closest && e.target.closest('#advBox .st-tab'); if(t){ show(t.dataset.pane); return; }
     var eye=e.target.closest && e.target.closest('.st-eye');
-    if(eye){ var inp=document.getElementById(eye.dataset.eye); if(inp){ inp.type=(inp.type==='password')?'text':'password'; eye.textContent=(inp.type==='password')?'👁':'🙈'; } }
+    if(eye){ var inp=document.getElementById(eye.dataset.eye); if(inp){ var hid=inp.classList.toggle('st-masked'); eye.textContent=hid?'👁':'🙈'; } }
   });
   var box=document.getElementById('advBox'), lock=document.getElementById('stLock');
   function sync(){ if(box&&lock) lock.style.display=box.classList.contains('hidden')?'':'none'; }
