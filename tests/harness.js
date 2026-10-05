@@ -34,6 +34,13 @@ async function boot(file, opts) {
     const fp = path.join(APP, clean);
     if (!fs.existsSync(fp)) return m;
     if (/config\.js$/.test(clean) && opts.noConfig) return '';   // מדמה כשל בטעינת config.js
+    // רשימת מלאי מינימום לבדיקות: כל מק״טי הבדיקות הקיימות נחשבים "מנוהלי מינימום",
+    // כדי שהבדיקות הישנות ימשיכו במסלול הרגיל. minstocktest.js בודק את המסלול החדש.
+    if (/minstock\.js$/.test(clean) && !opts.realMinstock) {
+      const keys = opts.minstock || ['1000123','1112223','1234567','2000456','3000789','4000111','5000222','5551234','6000333','6661111','6662222','7000444','8000555','9000666','3000111'];
+      const items = {}; keys.forEach(k => { items[String(k).replace(/^0+/, '')] = 'test item'; });
+      return '<script>window.MINSTOCK=' + JSON.stringify({ updated: '2026-10-05', count: keys.length, items: items }) + ';<\/script>';
+    }
     if (/catalog\.js$/.test(clean) && !opts.realCatalog) {
       return '<script>window.DEFAULT_CATALOG={"1000123":"beam bolt","1234567":"steel nut"};<\/script>';
     }

@@ -536,6 +536,27 @@
   .live.err{color:var(--amber2)}
   .live .live-n{background:var(--gold);color:#171309;border-radius:999px;padding:0 8px;font-weight:800}
   @media print{ .live{display:none !important} }
+  /* ===================== פריט ייחודי לפרויקט ===================== */
+  .card.proj{ border-color:#8b5cf6 !important; box-shadow:0 0 0 1px rgba(139,92,246,.45), 0 14px 32px -18px rgba(109,40,217,.55) !important; }
+  .card.proj::before{ content:''; position:absolute; inset:0; background:linear-gradient(180deg, rgba(139,92,246,.10), rgba(139,92,246,.03) 45%, transparent); pointer-events:none; border-radius:inherit; }
+  .proj-band{ position:relative; margin:-4px 0 10px; padding:8px 12px; border-radius:11px; background:rgba(139,92,246,.16); border:1px solid #8b5cf6;
+    color:#c4b5fd; font-weight:800; font-size:calc(13.5px * var(--ts)); line-height:1.5; }
+  html.theme-light .proj-band{ background:#f3eefe; color:#5b21b6; }
+  .btn.projclose{ border-color:#8b5cf6 !important; color:#a78bfa !important; }
+  html.theme-light .btn.projclose{ color:#6d28d9 !important; }
+  /* ----- רשימת מלאי מינימום (הגדרות ▸ תוכן) ----- */
+  .ms-stat{ font-size:calc(13.5px * var(--ts)); font-weight:800; color:var(--text); background:var(--ink); border:1px solid var(--line2); border-radius:11px; padding:10px 12px; }
+  .ms-result{ background:var(--ink); border:1px solid var(--line2); border-radius:12px; padding:12px 14px; font-size:calc(13.5px * var(--ts)); line-height:1.7; color:var(--text); }
+  .ms-result .ms-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:6px 0 8px; }
+  .ms-result .ms-n{ text-align:center; border:1px solid var(--line2); border-radius:10px; padding:8px 4px; }
+  .ms-result .ms-n b{ display:block; font-family:Rubik,sans-serif; font-size:calc(20px * var(--ts)); }
+  .ms-result .ms-n span{ font-size:calc(13px * var(--ts)); color:var(--muted); }
+  .ms-result .ms-add b{ color:var(--st-good); } .ms-result .ms-del b{ color:var(--st-danger); }
+  .ms-result details{ margin-top:4px; } .ms-result summary{ cursor:pointer; color:var(--muted); font-weight:700; }
+  .ms-result .ms-warn{ color:var(--st-warn); font-weight:800; }
+  .ms-result .ms-err{ color:var(--st-danger); font-weight:800; }
+  .ms-steps{ font-size:calc(13.5px * var(--ts)); color:var(--text); line-height:1.7; background:var(--ink); border:1px dashed var(--st-good-bd); border-radius:12px; padding:10px 14px; }
+  .ms-steps ol{ margin:4px 18px 0 0; padding:0; } .ms-steps code{ background:var(--surface2); padding:1px 6px; border-radius:6px; }
   /* ===================== מסך הגדרות (פאנל מפתח) ===================== */
   :root{ --st-danger:#f87171; --st-danger-bd:#7f1d1d; --st-good:#34d399; --st-good-bd:#166534; --st-warn:#fbbf24; --st-acc:#3aa0db; }
   html.theme-light{ --st-danger:#c81e1e; --st-danger-bd:#f3b4b4; --st-good:#047857; --st-good-bd:#9fdcbf; --st-warn:#a16207; }
@@ -1076,6 +1097,23 @@ html.tone-adj:not(.theme-light) .clockbar{ background:rgba(var(--inkrgb),.9) !im
 
       <!-- ===== 📦 תוכן ===== -->
       <section class="st-pane" data-pane="content" role="tabpanel">
+        <div class="st-card" id="msCard">
+          <div class="st-card-h"><b>🏷️ רשימת מלאי מינימום</b><span>רק מק״טים שברשימה נשלחים לקניין כרגיל. מק״ט שאינו ברשימה נחשב <b>ייחודי לפרויקט</b> — המחסנאי נשאל אם לעדכן בכל זאת.</span></div>
+          <div class="ms-stat" id="msStatus"></div>
+          <div class="st-row">
+            <span class="st-txt"><b>עדכון שבועי</b><span>טוענים את קובץ האקסל (שורת כותרות, עמודה D = Y). האפליקציה בודקת אותו ומכינה קובץ מעודכן להעלאה לאתר.</span></span>
+            <button type="button" class="st-btn warn" id="msLoad">📂 טען קובץ אקסל</button>
+          </div>
+          <input type="file" id="msFile" accept=".xlsx,.xls,.csv" style="display:none">
+          <div class="ms-result" id="msResult" hidden></div>
+          <button type="button" class="st-btn good wide" id="msDownload" hidden>⬇️ הורד את הקובץ המעודכן (minstock.js)</button>
+          <div class="ms-steps" id="msSteps" hidden>
+            <b>מה עושים עכשיו:</b>
+            <ol><li>מעלים את <code>minstock.js</code> לריפו ב-GitHub — מחליף את הקיים.</li>
+            <li>בלשונית <b>🔗 חיבור</b> לוחצים <b>"פרסם לכולם"</b> — כל המכשירים יתעדכנו תוך דקה.</li></ol>
+          </div>
+          <div class="note" id="msNote"></div>
+        </div>
         <div class="st-card">
           <div class="st-row">
             <span class="st-txt"><b>📦 קטלוג פריטים מרכזי</b><span>קובץ אקסל / CSV — עמודה A: מק״ט, עמודה B: תיאור. נדחף לכל המחסנאים אוטומטית.</span></span>
@@ -1550,6 +1588,9 @@ html.tone-adj:not(.theme-light) .clockbar{ background:rgba(var(--inkrgb),.9) !im
     return s.split(' | ').map(function(part){ var m=part.match(/^(.*?)\s*\((.*)\)\s*$/);
       return m ? (m[1].trim()+' ('+fmt(m[2])+')') : part.trim(); }).join('  ;  '); }
   function isOpen(a){ return String(a.status)!=='טופל'; }
+  /* פנייה על פריט ייחודי לפרויקט (לא במלאי מינימום) — מסומנת בהערה שהמחסן מצרף */
+  const PROJ_MARK='🏷️ ייחודי לפרויקט';
+  function isProjAlert(a){ return String((a&&a.note)||'').indexOf(PROJ_MARK)===0; }
   /* ===== ימי אספקה =====
      הקניין מכריז שהזמין את הפריט ותוך כמה ימים הוא צפוי להגיע. הנתון נשמר בתוך
      תשובת הקניין (response) בתבנית קבועה, כך שאין צורך בשינוי בשרת:
@@ -2075,7 +2116,9 @@ html.tone-adj:not(.theme-light) .clockbar{ background:rgba(var(--inkrgb),.9) !im
       const isMis=(ty==='אי-התאמה'), isDef=(ty==='פריט פגום');
       const blink=(String(a.status)!=='טופל')?' blink':'';
       const mgr=(isBoss()||me()===MGR); // מנהל — רשאי למחוק פנייה
-      return '<div class="card" data-id="'+esc(a.id)+'">'
+      const proj=isProjAlert(a);
+      return '<div class="card'+(proj?' proj':'')+'" data-id="'+esc(a.id)+'">'
+        +(proj?'<div class="proj-band">🏷️ ייחודי לפרויקט — לא מנוהל במלאי מינימום. המחסנאי ביקש לעדכן בכל זאת.</div>':'')
         +'<span class="rail" style="background:'+rail+'"></span>'
         +'<div style="margin-bottom:7px;display:flex;align-items:center;gap:7px;flex-wrap:wrap"><span class="pill'+blink+'" style="color:'+td.c+';background:transparent;border-color:'+td.c+'">'+esc(td.t)+'</span>'+(a.ticket?('<span class="tkt">🎫 '+esc(a.ticket)+'</span>'):'')+'<button class="fc-open" type="button" title="פתח במסך מלא" aria-label="פתח במסך מלא" style="margin-inline-start:auto">⤢</button>'+(mgr?('<button class="del" data-del="'+esc(a.id)+'" style="background:none;border:1px solid #7f1d1d;color:#f87171;border-radius:8px;padding:4px 10px;font-size:calc(13px * var(--ts));font-weight:700;cursor:pointer">🗑️ מחק</button>'):'')+'</div>'
         +'<div class="row1"><div><div class="sku">מק״ט '+esc(a.sku||'—')+'</div>'
@@ -2112,7 +2155,8 @@ html.tone-adj:not(.theme-light) .clockbar{ background:rgba(var(--inkrgb),.9) !im
               +'<button class="btn reply" data-act="transfer">↪️ העבר</button>'
               +'<button class="btn reply" data-act="unorder">✖ בטל הזמנה</button>'
               +genBtn(a))
-            : ('<button class="btn prog'+(a.status==='בטיפול'?' on':'')+'" data-act="בטיפול">'+((String(a.status)==='בטיפול'&&String(a.assignee||'')===me())?'↩️ החזר לממתין':'🟠 קח לטיפול')+'</button>'
+            : ((proj?'<button class="btn projclose" data-act="projclose">📁 העבר להיסטוריה</button>':'')
+              +'<button class="btn prog'+(a.status==='בטיפול'?' on':'')+'" data-act="בטיפול">'+((String(a.status)==='בטיפול'&&String(a.assignee||'')===me())?'↩️ החזר לממתין':'🟠 קח לטיפול')+'</button>'
               +'<button class="btn done'+(a.status==='טופל'?' on':'')+'" data-act="טופל">✅ טופל</button>'
               +'<button class="btn reply" data-act="transfer">↪️ העבר</button>'
               +(ty==='חוסר מלאי'?'<button class="btn reply" data-act="supply">🚚 ימי אספקה</button>':'')
@@ -2445,6 +2489,11 @@ html.tone-adj:not(.theme-light) .clockbar{ background:rgba(var(--inkrgb),.9) !im
       if(a==='transfer'){ card.querySelector('.transfer').classList.toggle('open'); return; }
       if(a==='supply'){ const sp=card.querySelector('.supply'); if(!sp) return; sp.classList.toggle('open');
         if(sp.classList.contains('open')){ const x=sp.querySelector('.sdays'); if(x) try{ x.focus(); }catch(_){} } return; }
+      if(a==='projclose'){ if(needMe()) return;
+        if(!confirm('לסגור את הפנייה ולהעביר להיסטוריה בלי הזמנה?\nהמחסנאי יקבל תשובה שהפריט ייחודי לפרויקט ואין צורך ברכש.')) return;
+        delete pendingDone[id];
+        assignTo(id, me(), 'טופל', '🏷️ פריט ייחודי לפרויקט — אין צורך בהזמנת רכש. הפנייה נסגרה ללא הזמנה.');
+        return; }
       if(a==='unorder'){ if(needMe()) return;
         if(!confirm('לבטל את ההזמנה? הפנייה תחזור למצב "בטיפול", והמחסנאים יוכלו שוב לראות שהיא פתוחה בלי מועד אספקה.')) return;
         saveResp(id, '✖ ההזמנה בוטלה — הקניין ממשיך לטפל'); return; }
@@ -3340,6 +3389,7 @@ html.tone-adj:not(.theme-light) .clockbar{ background:rgba(var(--inkrgb),.9) !im
   <div style="flex:1;overflow:auto;-webkit-overflow-scrolling:touch;display:flex;align-items:flex-start;justify-content:center"><img id="tkDcZoomImg" style="min-width:100%;height:auto;touch-action:pinch-zoom"></div>
 </div>
 <script src="catalog.js"></script>
+<script src="minstock.js"></script>
 <script src="tools.js?v=38"></script>
 <!-- ===== סוף כלי עזר ===== -->
 <script>
@@ -3369,6 +3419,93 @@ html.tone-adj:not(.theme-light) .clockbar{ background:rgba(var(--inkrgb),.9) !im
     if(m && m.classList.contains('open')){ var x=document.getElementById('mClose'); if(x) x.click(); }
   });
   window.__stShow=show;
+})();
+</script>
+<script>
+/* ===== עדכון שבועי של רשימת מלאי מינימום =====
+   קורא את קובץ האקסל בדפדפן, מאתר את שורת הכותרות ואת העמודות (מק״ט / תיאור / מינימום),
+   משווה לרשימה הנוכחית ומכין קובץ minstock.js חדש להורדה. שום דבר לא נשלח לשרת. */
+(function(){
+  var $=function(id){ return document.getElementById(id); };
+  var built=null;
+  function key(s){ return String(s==null?'':s).trim().toUpperCase().replace(/^0+/,''); }
+  function cur(){ try{ return (window.MINSTOCK && MINSTOCK.items) ? MINSTOCK.items : {}; }catch(e){ return {}; } }
+  function fmtD(iso){ var m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso||'')); return m?(m[3]+'.'+m[2]+'.'+m[1]):'—'; }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function paintStatus(){
+    var el=$('msStatus'); if(!el) return; var n=Object.keys(cur()).length;
+    el.textContent = n ? ('📋 ברשימה כעת: '+n.toLocaleString('he-IL')+' פריטים · עודכן '+fmtD(window.MINSTOCK&&MINSTOCK.updated))
+                       : '⚠️ הרשימה לא נטענה — כרגע כל הפריטים נשלחים לקניין כרגיל.';
+  }
+  function yes(v){ v=String(v==null?'':v).trim().toUpperCase(); return v==='Y'||v==='YES'||v==='כן'||v==='1'||v==='TRUE'||v==='V'||v==='✓'; }
+  function parse(rows){
+    var h=-1, cS=0, cD=1, cM=3;
+    for(var i=0;i<Math.min(rows.length,15);i++){
+      var r=(rows[i]||[]).map(function(x){ return String(x==null?'':x); });
+      var s=r.findIndex(function(x){ return /מק.?.?ט/.test(x); });
+      var m=r.findIndex(function(x){ return /מינימום/.test(x); });
+      if(s>=0){ h=i; cS=s; var d=r.findIndex(function(x){ return /תיאור|תאור/.test(x); }); if(d>=0) cD=d; if(m>=0) cM=m; break; }
+    }
+    if(h<0) return {err:'לא נמצאה שורת כותרות עם עמודת "מק״ט".'};
+    var items={}, skipped=0, notY=0;
+    for(var j=h+1;j<rows.length;j++){
+      var row=rows[j]||[]; var k=key(row[cS]);
+      if(!k){ skipped++; continue; }
+      if(!yes(row[cM])){ notY++; continue; }
+      items[k]=String(row[cD]==null?'':row[cD]).trim();
+    }
+    return {items:items, skipped:skipped, notY:notY, header:h+1, colM:cM};
+  }
+  function show(res){
+    var box=$('msResult'); box.hidden=false; $('msDownload').hidden=true; $('msSteps').hidden=true; built=null;
+    if(res.err){ box.innerHTML='<span class="ms-err">❌ '+esc(res.err)+'</span>'; return; }
+    var now=cur(), n=Object.keys(res.items).length;
+    if(!n){ box.innerHTML='<span class="ms-err">❌ לא נמצא אף פריט מסומן Y בעמודת המינימום. בדוק שזה הקובץ הנכון.</span>'; return; }
+    var add=Object.keys(res.items).filter(function(k){ return !(k in now); });
+    var del=Object.keys(now).filter(function(k){ return !(k in res.items); });
+    var before=Object.keys(now).length, warn='';
+    if(before && n < before*0.7) warn='<div class="ms-warn">⚠️ הרשימה החדשה קטנה ב-'+Math.round((1-n/before)*100)+'% מהנוכחית. ודא שזה הקובץ המלא.</div>';
+    function list(arr,src){ return arr.slice(0,60).map(function(k){ return esc(k)+(src[k]?(' — '+esc(src[k])):''); }).join('<br>')+(arr.length>60?('<br>… ועוד '+(arr.length-60)):''); }
+    box.innerHTML='<b>✓ הקובץ נקרא בהצלחה</b>'
+      +'<div class="ms-grid"><div class="ms-n"><b>'+n.toLocaleString('he-IL')+'</b><span>בקובץ החדש</span></div>'
+      +'<div class="ms-n ms-add"><b>+'+add.length+'</b><span>נוספו</span></div>'
+      +'<div class="ms-n ms-del"><b>−'+del.length+'</b><span>הוסרו</span></div></div>'
+      +warn
+      +(res.notY?('<div>שורות שאינן מסומנות Y (לא נכללו): '+res.notY+'</div>'):'')
+      +(add.length?('<details><summary>הצג פריטים שנוספו</summary>'+list(add,res.items)+'</details>'):'')
+      +(del.length?('<details><summary>הצג פריטים שהוסרו</summary>'+list(del,now)+'</details>'):'');
+    var d=new Date(), iso=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+    built='/* רשימת פריטים מנוהלי מלאי מינימום — נוצר אוטומטית מקובץ האקסל (עמודה D = Y).\n'
+      +'   ⚠️ לא לערוך ידנית. לעדכון שבועי: לוח קניינים ▸ הגדרות ▸ תוכן ▸ "רשימת מלאי מינימום".\n'
+      +'   מפתחות: מק״ט בלי אפסים מובילים, באותיות גדולות. */\n'
+      +'window.MINSTOCK='+JSON.stringify({updated:iso,count:n,source:'עדכון מלוח הקניינים',items:res.items})+';\n';
+    $('msDownload').hidden=false;
+  }
+  document.addEventListener('click', function(e){
+    if(e.target.closest('#msLoad')){ var f=$('msFile'); if(f){ f.value=''; f.click(); } return; }
+    if(e.target.closest('#msDownload')){
+      if(!built) return;
+      var a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([built],{type:'application/javascript'})); a.download='minstock.js';
+      document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },500);
+      $('msSteps').hidden=false; $('msNote').textContent='✓ הקובץ ירד. עכשיו מעלים אותו לאתר.';
+    }
+  });
+  document.addEventListener('change', function(e){
+    if(e.target.id!=='msFile') return; var f=e.target.files&&e.target.files[0]; if(!f) return;
+    $('msNote').textContent='קורא את הקובץ…';
+    var rd=new FileReader();
+    rd.onload=function(){
+      try{
+        if(typeof XLSX==='undefined') throw new Error('ספריית האקסל לא נטענה — בדוק חיבור לאינטרנט ונסה שוב.');
+        var wb=XLSX.read(new Uint8Array(rd.result),{type:'array'}); var ws=wb.Sheets[wb.SheetNames[0]];
+        var rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,defval:''});
+        show(parse(rows)); $('msNote').textContent='';
+      }catch(err){ show({err:err.message||'שגיאה בקריאת הקובץ'}); $('msNote').textContent=''; }
+    };
+    rd.readAsArrayBuffer(f);
+  });
+  window.__msParse=parse;
+  paintStatus();
 })();
 </script>
 <!-- ===== הסברי ריחוף: מעבירים את העכבר מעל לחצן ומקבלים הסבר מה הוא עושה =====
@@ -3471,6 +3608,9 @@ html.tone-adj:not(.theme-light) .clockbar{ background:rgba(var(--inkrgb),.9) !im
     ['.st-tab[data-pane="content"]','תוכן','קטלוג המק״טים, תבניות תשובה לצ׳אט וקודי QR להתקנה.'],
     ['.st-tab[data-pane="backup"]','גיבוי','גיבוי ושחזור — בשרת ובקובץ במחשב.'],
     ['.st-tab[data-pane="maint"]','תחזוקה','נתוני שימוש, השאלות ציוד ופעולות רגישות שאינן הפיכות.'],
+    ['#msLoad','טען קובץ מלאי מינימום','בוחרים את קובץ האקסל המעודכן (עם שורת כותרות; עמודה D מסומנת Y). האפליקציה מראה כמה פריטים נוספו והוסרו לפני שמכינים קובץ.'],
+    ['#msDownload','הורד קובץ מעודכן','מוריד את minstock.js החדש. מעלים אותו לאתר במקום הקיים ולוחצים "פרסם לכולם".'],
+    ['[data-act="projclose"]','העבר להיסטוריה','הפריט ייחודי לפרויקט ואין צורך ברכש: סוגר את הפנייה בלי הזמנה, והמחסנאי מקבל תשובה על כך. אפשר במקום זה לטפל ולהזמין כרגיל.'],
     ['.st-switch-row','מצב מנהל','מתג: כשהוא דולק — הלוח במצב צפייה ומעקב בלבד, בלי כפתורי טיפול. לוחצים "שמור זהות" כדי לשמור.'],
     ['.st-eye','הצג / הסתר','מציג את הטוקן הסודי או מסתיר אותו שוב.'],
     ['#mSave','שמור זהות','שומר במכשיר הזה את השם שבחרת. כל פעולה שלך (לקיחה, תשובה, סגירה) תירשם בשם הזה.'],

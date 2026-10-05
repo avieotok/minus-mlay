@@ -398,6 +398,11 @@
   .msg-fail button{background:#7f1d1d;color:#fee2e2;border:0;border-radius:8px;padding:5px 13px;
     font-family:'Heebo',sans-serif;font-weight:800;font-size:calc(13px * var(--ts));cursor:pointer;min-height:34px}
 
+  /* ================= פריט ייחודי לפרויקט ================= */
+  .proj-info{ background:var(--ink); border:1px solid #7c3aed; border-radius:12px; padding:14px 16px; font-size:calc(14.5px * var(--ts)); color:var(--text); line-height:1.75; margin-bottom:12px; text-align:center; }
+  .proj-info .pj-tag{ display:inline-block; margin-top:8px; padding:5px 12px; border-radius:999px; background:rgba(139,92,246,.16); border:1px solid #8b5cf6; color:#c4b5fd; font-weight:800; }
+  .proj-q{ text-align:center; font-weight:800; font-size:calc(16px * var(--ts)); color:var(--text); margin:2px 0 12px; }
+  .proj-yes{ background:linear-gradient(180deg,#8b5cf6,#6d28d9) !important; color:#fff !important; }
   /* ================= שעון ותאריך ================= */
   .clockbar{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:0 10px;
     padding:9px 16px;border-bottom:1px solid var(--line);
@@ -760,6 +765,17 @@
     </div>
   </div>
 
+  <!-- פריט ייחודי לפרויקט — לא מנוהל במלאי מינימום -->
+  <div class="recip-overlay hidden" id="projWrap" role="dialog" aria-modal="true" aria-labelledby="projTitle">
+    <div class="recip-card">
+      <div class="recip-title" id="projTitle">🏷️ פריט ייחודי לפרויקט</div>
+      <div id="projInfo" class="proj-info"></div>
+      <div class="proj-q">האם בכל זאת לעדכן את הקניין?</div>
+      <button class="send proj-yes" id="projYes">כן, שלח לקניין</button>
+      <button class="recip-cancel" id="projNo">לא, בטל</button>
+    </div>
+  </div>
+
   <div class="srch-overlay hidden" id="srchWrap">
     <div class="srch-card">
       <div id="srchNumRow" style="display:flex; gap:8px; align-items:center;">
@@ -815,6 +831,7 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="catalog.js"></script>
+<script src="minstock.js"></script>
 <script src="config.js"></script>
 <script>
   // ===== הגדלת תמונה במקום (lightbox) — לחיצה על תמונה מגדילה, לא פותחת לשונית =====
@@ -1568,8 +1585,29 @@
     submitReport(kind);
   }
 
+  /* ===== מלאי מינימום =====
+     רק פריטים מנוהלי מלאי מינימום (minstock.js) נשלחים לקניין כרגיל.
+     פריט שאינו ברשימה = ייחודי לפרויקט: שואלים את המחסנאי אם בכל זאת לעדכן.
+     אם הרשימה לא נטענה — לא חוסמים (עדיף דיווח מיותר מאשר חוסר שלא דווח). */
+  const PROJ_MARK='🏷️ ייחודי לפרויקט';
+  function minKey(s){ return String(s==null?'':s).trim().toUpperCase().replace(/^0+/,''); }
+  function minstockReady(){ try{ return !!(window.MINSTOCK && MINSTOCK.items && Object.keys(MINSTOCK.items).length); }catch(e){ return false; } }
+  function isProjectItem(sku){ if(!minstockReady()) return false; const k=minKey(sku); return !!k && !Object.prototype.hasOwnProperty.call(MINSTOCK.items,k); }
+  let projPending=null;
+  function showProj(subj, kind){
+    projPending={kind:kind};
+    $('projInfo').innerHTML='מק״ט <b>'+esc(subj.sku)+'</b>'+(subj.desc?(' — '+esc(subj.desc)):'')
+      +'<br>הפריט <b>אינו מנוהל במלאי מינימום</b> — הוא ייחודי לפרויקט, <b>ואין צורך לעדכן את הרכש.</b>'
+      +'<br><span class="pj-tag">🏷️ ייחודי לפרויקט</span>';
+    setStatus(''); show($('projWrap'));
+    try{ $('projNo').focus(); }catch(e){}
+  }
+  $('projYes').addEventListener('click', function(){ const p=projPending; projPending=null; hide($('projWrap')); if(p) submitReport(p.kind, {projectOk:true}); });
+  $('projNo').addEventListener('click', function(){ projPending=null; hide($('projWrap')); resetForm(); setStatus(''); showToast('הדיווח בוטל — לא נשלח לקניין'); });
+
   // שליחה ללא וואטסאפ — רושם את הדיווח במערכת, והוא מופיע מיד בלוח הקניינים
-  async function submitReport(kind){
+  async function submitReport(kind, opts){
+    opts=opts||{};
     const subj=subjectFor(kind);
     vArmed=true; vHard=true; try{ paintValidity(); }catch(e){}
     if(!subj.sku){ setStatus('נא למלא מק״ט.'); return; }
@@ -1582,6 +1620,9 @@
       if(!subj.qty || !subj.qtyRecv){ setStatus('נא למלא כמה הוזמן וכמה התקבל.'); return; }
     }
     if(!apiOn()){ setStatus('אין חיבור למערכת — לא ניתן לשלוח. פנה למפתח.'); return; }
+    const projItem=(subj.type==='חוסר מלאי' && isProjectItem(subj.sku));
+    if(projItem && !opts.projectOk){ showProj(subj, kind); return; }
+    if(projItem) subj.note=PROJ_MARK+' — המחסנאי ביקש לעדכן בכל זאת';
     currentAlertId=newAlertId();
     const payload={ id:currentAlertId, type:subj.type, sku:subj.sku, desc:subj.desc, qty:subj.qty,
       po:subj.po||'', qtyRecv:subj.qtyRecv||'', descRecv:subj.descRecv||'', note:subj.note||'',
@@ -2590,7 +2631,7 @@
 </script>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div id="platTag" style="position:fixed;bottom:5px;right:7px;font-size:10px;color:var(--faint);z-index:5;font-family:monospace;opacity:.55"></div>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:calc(13px * var(--ts));color:var(--faint);z-index:5;font-family:monospace">build 105</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:calc(13px * var(--ts));color:var(--faint);z-index:5;font-family:monospace">build 106</div>
 <!-- ===== כלי עזר (מודול עצמאי — זהה בשתי האפליקציות) ===== -->
 <style>
   #tkModal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;display:none;align-items:flex-start;justify-content:center}
