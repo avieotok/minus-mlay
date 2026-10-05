@@ -562,6 +562,13 @@
   .ms-result details{ margin-top:4px; } .ms-result summary{ cursor:pointer; color:var(--muted); font-weight:700; }
   .ms-result .ms-warn{ color:var(--st-warn); font-weight:800; }
   .ms-result .ms-err{ color:var(--st-danger); font-weight:800; }
+  .up-log{ font-size:calc(13px * var(--ts)); color:var(--muted); }
+  .up-log summary{ cursor:pointer; font-weight:800; padding:2px 0; }
+  .up-log .ul-row{ display:flex; gap:10px; flex-wrap:wrap; justify-content:space-between; padding:7px 0; border-top:1px dashed var(--line2); color:var(--text); }
+  .up-log .ul-row:first-child{ border-top:0; }
+  .up-log .ul-when{ font-weight:800; direction:ltr; unicode-bidi:isolate; }
+  .up-log .ul-meta{ color:var(--muted); }
+  .up-log .ul-empty{ padding:6px 0; color:var(--faint); }
   .ms-steps{ font-size:calc(13.5px * var(--ts)); color:var(--text); line-height:1.7; background:var(--ink); border:1px dashed var(--st-good-bd); border-radius:12px; padding:10px 14px; }
   .ms-steps ol{ margin:4px 18px 0 0; padding:0; } .ms-steps code{ background:var(--surface2); padding:1px 6px; border-radius:6px; }
   /* ===================== מסך הגדרות (פאנל מפתח) ===================== */
@@ -1114,6 +1121,7 @@ html.tone-adj:not(.theme-light) .clockbar{ background:rgba(var(--inkrgb),.9) !im
         <div class="st-card" id="msCard">
           <div class="st-card-h"><b>🏷️ רשימת מלאי מינימום</b><span>רק מק״טים שברשימה נשלחים לקניין כרגיל. מק״ט שאינו ברשימה נחשב <b>ייחודי לפרויקט</b> — המחסנאי נשאל אם לעדכן בכל זאת.</span></div>
           <div class="ms-stat" id="msStatus"></div>
+          <details class="up-log" id="msLogBox"><summary>🕘 היסטוריית העלאות</summary><div id="msLog"></div></details>
           <div class="st-row">
             <span class="st-txt"><b>עדכון שבועי</b><span>טוענים את קובץ האקסל (שורת כותרות, עמודה D = Y). האפליקציה בודקת אותו ומכינה קובץ מעודכן להעלאה לאתר.</span></span>
             <button type="button" class="st-btn warn" id="msLoad">📂 טען קובץ אקסל</button>
@@ -1135,6 +1143,8 @@ html.tone-adj:not(.theme-light) .clockbar{ background:rgba(var(--inkrgb),.9) !im
           </div>
           <input type="file" id="catFile" accept=".xlsx,.xls,.csv" style="display:none">
           <div class="note" id="catNote"></div>
+          <div class="ms-stat" id="catStatus"></div>
+          <details class="up-log" id="catLogBox"><summary>🕘 היסטוריית העלאות</summary><div id="catLog"></div></details>
         </div>
         <div class="st-card">
           <div class="st-card-h"><b>💬 תבניות לצ'אט</b><span>תשובות מוכנות לפי סוג הפנייה, משותפות לכל המכשירים. "כללי" מופיע בכל הסוגים.</span></div>
@@ -2805,6 +2815,7 @@ html.tone-adj:not(.theme-light) .clockbar{ background:rgba(var(--inkrgb),.9) !im
         try{ const chk=await apiGet('catalog'); if(chk&&chk.ok&&Array.isArray(chk.items)) okCount=chk.items.length; }catch(_){ }
         if(okCount!=null){ $('catNote').textContent='✓ נדחפו '+okCount+' פריטים — כל המסופונים יתעדכנו אוטומטית בפתיחה'; }
         else { $('catNote').textContent='נשלח. אם לא הופיע במסופון — רענן ונסה שוב.'; }
+        if(window.upLog) upLog.add('catalog',{file:file.name||'', count:(okCount!=null?okCount:items.length), note:(okCount!=null?'אומת בשרת':'נשלח')});
       }catch(err){ $('catNote').textContent='שגיאה בקריאת הקובץ.'; }
       e.target.value='';
     };
@@ -3452,19 +3463,57 @@ html.tone-adj:not(.theme-light) .clockbar{ background:rgba(var(--inkrgb),.9) !im
 })();
 </script>
 <script>
+/* ===== יומן העלאות (קטלוג / מלאי מינימום) — תאריך, שעה, שם קובץ, כמות ומי העלה =====
+   נשמר במכשיר שממנו מעלים (10 האחרונות לכל סוג). למלאי מינימום התאריך נכתב גם בתוך הקובץ עצמו. */
+(function(){
+  var KEY='afcon_upload_log';
+  function load(){ try{ var o=JSON.parse(localStorage.getItem(KEY)||'{}'); return (o&&typeof o==='object')?o:{}; }catch(e){ return {}; } }
+  function save(o){ try{ localStorage.setItem(KEY, JSON.stringify(o)); }catch(e){} }
+  function who(){ try{ return (localStorage.getItem('afcon_me')||'').trim(); }catch(e){ return ''; } }
+  function pad(n){ return ('0'+n).slice(-2); }
+  function fmtTs(iso){ var d=new Date(iso); if(isNaN(d.getTime())){ var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso||'')); return m?(m[3]+'.'+m[2]+'.'+m[1]):'—'; }
+    return pad(d.getDate())+'.'+pad(d.getMonth()+1)+'.'+d.getFullYear()+' '+pad(d.getHours())+':'+pad(d.getMinutes()); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  window.upLog={
+    fmt:fmtTs, who:who,
+    add:function(kind, info){ var o=load(); var a=Array.isArray(o[kind])?o[kind]:[];
+      a.unshift({ts:new Date().toISOString(), by:who(), file:info.file||'', count:info.count||0, note:info.note||''});
+      o[kind]=a.slice(0,10); save(o); this.paint(kind); },
+    list:function(kind){ var o=load(); return Array.isArray(o[kind])?o[kind]:[]; },
+    paint:function(kind){
+      var box=document.getElementById(kind==='catalog'?'catLog':'msLog'); if(!box) return;
+      var a=this.list(kind);
+      box.innerHTML = a.length ? a.map(function(x){
+        return '<div class="ul-row"><span class="ul-when">'+esc(fmtTs(x.ts))+'</span><span class="ul-meta">'
+          +(x.count?(Number(x.count).toLocaleString('he-IL')+' פריטים'):'')+(x.file?(' · 📄 <bdi dir="auto">'+esc(x.file)+'</bdi>'):'')+(x.by?(' · 👤 '+esc(x.by)):'')+(x.note?(' · '+esc(x.note)):'')+'</span></div>';
+      }).join('') : '<div class="ul-empty">אין עדיין העלאות רשומות במכשיר זה.</div>';
+      if(kind==='catalog'){
+        var st=document.getElementById('catStatus'); if(st){
+          st.textContent = a.length ? ('📋 העלאה אחרונה: '+fmtTs(a[0].ts)+(a[0].count?(' · '+Number(a[0].count).toLocaleString('he-IL')+' פריטים'):'')+(a[0].by?(' · ע״י '+a[0].by):''))
+                                    : '📋 עדיין לא נרשמה העלאת קטלוג ממכשיר זה.'; }
+      }
+    }
+  };
+  function init(){ upLog.paint('catalog'); upLog.paint('minstock'); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+</script>
+<script>
 /* ===== עדכון שבועי של רשימת מלאי מינימום =====
    קורא את קובץ האקסל בדפדפן, מאתר את שורת הכותרות ואת העמודות (מק״ט / תיאור / מינימום),
    משווה לרשימה הנוכחית ומכין קובץ minstock.js חדש להורדה. שום דבר לא נשלח לשרת. */
 (function(){
   var $=function(id){ return document.getElementById(id); };
-  var built=null;
+  var built=null, built_count=0;
   function key(s){ return String(s==null?'':s).trim().toUpperCase().replace(/^0+/,''); }
   function cur(){ try{ return (window.MINSTOCK && MINSTOCK.items) ? MINSTOCK.items : {}; }catch(e){ return {}; } }
-  function fmtD(iso){ var m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso||'')); return m?(m[3]+'.'+m[2]+'.'+m[1]):'—'; }
+  function fmtD(iso){ return (window.upLog?upLog.fmt(iso):String(iso||'—')); }
+  var lastFile='';
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
   function paintStatus(){
     var el=$('msStatus'); if(!el) return; var n=Object.keys(cur()).length;
-    el.textContent = n ? ('📋 ברשימה כעת: '+n.toLocaleString('he-IL')+' פריטים · עודכן '+fmtD(window.MINSTOCK&&MINSTOCK.updated))
+    var M=window.MINSTOCK||{};
+    el.textContent = n ? ('📋 ברשימה כעת: '+n.toLocaleString('he-IL')+' פריטים · עודכן '+fmtD(M.updated)+(M.by?(' · ע״י '+M.by):'')+(M.file||M.source?(' · מקובץ \u2068'+(M.file||M.source)+'\u2069'):''))
                        : '⚠️ הרשימה לא נטענה — כרגע כל הפריטים נשלחים לקניין כרגיל.';
   }
   function yes(v){ v=String(v==null?'':v).trim().toUpperCase(); return v==='Y'||v==='YES'||v==='כן'||v==='1'||v==='TRUE'||v==='V'||v==='✓'; }
@@ -3504,11 +3553,12 @@ html.tone-adj:not(.theme-light) .clockbar{ background:rgba(var(--inkrgb),.9) !im
       +(res.notY?('<div>שורות שאינן מסומנות Y (לא נכללו): '+res.notY+'</div>'):'')
       +(add.length?('<details><summary>הצג פריטים שנוספו</summary>'+list(add,res.items)+'</details>'):'')
       +(del.length?('<details><summary>הצג פריטים שהוסרו</summary>'+list(del,now)+'</details>'):'');
-    var d=new Date(), iso=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+    var iso=new Date().toISOString(), by=(window.upLog?upLog.who():'');
     built='/* רשימת פריטים מנוהלי מלאי מינימום — נוצר אוטומטית מקובץ האקסל (עמודה D = Y).\n'
       +'   ⚠️ לא לערוך ידנית. לעדכון שבועי: לוח קניינים ▸ הגדרות ▸ תוכן ▸ "רשימת מלאי מינימום".\n'
       +'   מפתחות: מק״ט בלי אפסים מובילים, באותיות גדולות. */\n'
-      +'window.MINSTOCK='+JSON.stringify({updated:iso,count:n,source:'עדכון מלוח הקניינים',items:res.items})+';\n';
+      +'window.MINSTOCK='+JSON.stringify({updated:iso,count:n,by:by,file:lastFile,source:'עדכון מלוח הקניינים',items:res.items})+';\n';
+    built_count=n;
     $('msDownload').hidden=false;
   }
   document.addEventListener('click', function(e){
@@ -3518,10 +3568,12 @@ html.tone-adj:not(.theme-light) .clockbar{ background:rgba(var(--inkrgb),.9) !im
       var a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([built],{type:'application/javascript'})); a.download='minstock.js';
       document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },500);
       $('msSteps').hidden=false; $('msNote').textContent='✓ הקובץ ירד. עכשיו מעלים אותו לאתר.';
+      if(window.upLog) upLog.add('minstock',{file:lastFile, count:built_count, note:'נוצר minstock.js'});
     }
   });
   document.addEventListener('change', function(e){
     if(e.target.id!=='msFile') return; var f=e.target.files&&e.target.files[0]; if(!f) return;
+    lastFile=f.name||'';
     $('msNote').textContent='קורא את הקובץ…';
     var rd=new FileReader();
     rd.onload=function(){
@@ -3638,6 +3690,7 @@ html.tone-adj:not(.theme-light) .clockbar{ background:rgba(var(--inkrgb),.9) !im
     ['.st-tab[data-pane="content"]','תוכן','קטלוג המק״טים, תבניות תשובה לצ׳אט וקודי QR להתקנה.'],
     ['.st-tab[data-pane="backup"]','גיבוי','גיבוי ושחזור — בשרת ובקובץ במחשב.'],
     ['.st-tab[data-pane="maint"]','תחזוקה','נתוני שימוש, השאלות ציוד ופעולות רגישות שאינן הפיכות.'],
+    ['.up-log summary','היסטוריית העלאות','10 ההעלאות האחרונות: תאריך ושעה, שם הקובץ, כמות הפריטים ומי העלה.'],
     ['#msLoad','טען קובץ מלאי מינימום','בוחרים את קובץ האקסל המעודכן (עם שורת כותרות; עמודה D מסומנת Y). האפליקציה מראה כמה פריטים נוספו והוסרו לפני שמכינים קובץ.'],
     ['#msDownload','הורד קובץ מעודכן','מוריד את minstock.js החדש. מעלים אותו לאתר במקום הקיים ולוחצים "פרסם לכולם".'],
     ['[data-projfilter]','פריטים ייחודיים לפרויקט','מציג רק פניות על מק״טים שאינם ברשימת מלאי המינימום — כולל פניות ישנות שנשלחו לפני ההחלטה. לחיצה נוספת מחזירה את כל הפניות.'],
