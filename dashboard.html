@@ -792,6 +792,13 @@ html.tone-adj:not(.theme-light) .clockbar{ background:rgba(var(--inkrgb),.9) !im
 .brightctl input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:20px; height:20px; border-radius:50%;
   background:#3aa0db; border:3px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.45); }
 .brightctl input[type=range]::-moz-range-thumb{ width:16px; height:16px; border-radius:50%; background:#3aa0db; border:3px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.45); }
+/* טאבלט ומחשב קטן: הסקלות יורדות לשורה משלהן מתחת לכותרת, כדי שלא יחרגו מרוחב המסך */
+@media (min-width:561px) and (max-width:1100px){
+  .top-in{ flex-wrap:wrap; row-gap:10px; }
+  .top-in > div:nth-child(2){ flex:1; min-width:0; }
+  .brightctl{ order:5; width:100%; margin-inline-start:0; justify-content:center; gap:18px; }
+  .brightctl .bc{ flex:0 1 300px; } .brightctl input[type=range]{ flex:1; width:auto; }
+}
 @media (max-width:560px){
   .brightctl{ order:5; width:100%; margin-inline-start:0; justify-content:space-between; padding:7px 12px; gap:10px; }
   .brightctl .bc{ flex:1; min-width:0; }
