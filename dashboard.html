@@ -536,6 +536,107 @@
   .live.err{color:var(--amber2)}
   .live .live-n{background:var(--gold);color:#171309;border-radius:999px;padding:0 8px;font-weight:800}
   @media print{ .live{display:none !important} }
+  /* ===================== מסך הגדרות (פאנל מפתח) ===================== */
+  :root{ --st-danger:#f87171; --st-danger-bd:#7f1d1d; --st-good:#34d399; --st-good-bd:#166534; --st-warn:#fbbf24; --st-acc:#3aa0db; }
+  html.theme-light{ --st-danger:#c81e1e; --st-danger-bd:#f3b4b4; --st-good:#047857; --st-good-bd:#9fdcbf; --st-warn:#a16207; }
+  .st-sheet{ display:flex; flex-direction:column; padding:0 !important; overflow:hidden !important; height:min(90vh,860px); max-height:none !important; }
+  html[data-device="desktop"] .st-sheet{ max-width:840px; height:min(86vh,820px); }
+  .st-head{ display:flex; align-items:center; gap:12px; padding:14px 18px; border-bottom:1px solid var(--line); flex:0 0 auto; }
+  .st-logo{ width:40px; height:40px; border-radius:11px; background:#fff; display:flex; align-items:center; justify-content:center; overflow:hidden; flex:0 0 auto; box-shadow:0 2px 8px -3px rgba(0,0,0,.35); }
+  .st-logo img{ width:100%; height:100%; object-fit:contain; padding:5px; }
+  .st-logo-a{ font-family:Rubik,sans-serif; font-weight:900; color:#3aa0db; font-size:22px; }
+  .st-titles{ flex:1; min-width:0; }
+  .st-titles h3{ margin:0 !important; text-align:start !important; font-size:calc(19px * var(--ts)) !important; }
+  .st-sub{ font-size:calc(13px * var(--ts)); color:var(--muted); margin-top:2px; }
+  .st-x{ width:40px; height:40px; border-radius:11px; border:1px solid var(--line2); background:var(--surface2); color:var(--text); font-size:calc(16px * var(--ts)); cursor:pointer; flex:0 0 auto; }
+  .st-x:hover{ border-color:var(--st-acc); }
+  .st-body{ flex:1; overflow-y:auto; overscroll-behavior:contain; padding:0 18px 18px; }
+  .st-lock{ padding:18px 0 4px; display:flex; flex-direction:column; gap:10px; }
+  .st-about{ font-size:calc(13.5px * var(--ts)); color:var(--muted); line-height:1.7; text-align:center; }
+  .st-pinrow{ gap:8px; }
+  .st-pinrow input{ flex:1; }
+  /* לשוניות — נדבקות לראש האזור הנגלל */
+  .st-tabs{ position:sticky; top:0; z-index:3; display:grid; grid-template-columns:repeat(6,1fr); gap:6px; padding:12px 0 10px; margin-bottom:4px;
+    background:inherit; background:var(--surface); border-bottom:1px solid var(--line); }
+  html.theme-light .st-tabs{ background:var(--cardsolid); }
+  .st-tab{ display:flex; flex-direction:column; align-items:center; gap:3px; padding:9px 4px; border-radius:12px; border:1px solid var(--line2); background:var(--surface2);
+    color:var(--muted); font-family:'Heebo',sans-serif; font-size:calc(17px * var(--ts)); cursor:pointer; line-height:1; transition:border-color .15s, background .15s; }
+  .st-tab span{ font-size:calc(13px * var(--ts)); font-weight:800; }
+  .st-tab:hover{ border-color:var(--st-acc); }
+  .st-tab.on{ background:var(--st-acc); border-color:var(--st-acc); color:#fff; box-shadow:0 6px 16px -8px rgba(58,160,219,.8); }
+  @media (max-width:560px){ .st-tabs{ grid-template-columns:repeat(3,1fr); } .st-body{ padding:0 12px 14px; } .st-head{ padding:12px 14px; } }
+  .st-pane{ display:none; flex-direction:column; gap:12px; padding-top:10px; animation:stIn .18s ease; }
+  .st-pane.on{ display:flex; }
+  @keyframes stIn{ from{ opacity:0; transform:translateY(4px); } to{ opacity:1; transform:none; } }
+  /* כרטיס */
+  .st-card{ background:var(--surface2); border:1px solid var(--line); border-radius:16px; padding:14px 15px; display:flex; flex-direction:column; gap:11px; }
+  .st-card-h{ display:flex; flex-direction:column; gap:3px; }
+  .st-card-h b{ font-family:'Rubik',sans-serif; font-size:calc(15px * var(--ts)); font-weight:800; color:var(--text); }
+  .st-card-h span, .st-txt span{ font-size:calc(13px * var(--ts)); color:var(--muted); line-height:1.55; }
+  .st-card em, .st-field em{ font-style:normal; color:var(--faint); font-weight:500; }
+  .st-tag{ display:inline-block; margin-inline-start:6px; padding:2px 8px; border-radius:999px; border:1px solid var(--st-good-bd); color:var(--st-good) !important; font-size:calc(13px * var(--ts)); font-weight:800 !important; }
+  /* שורת הגדרה: טקסט מימין, פעולה משמאל */
+  .st-row{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  .st-txt{ flex:1 1 220px; min-width:0; display:flex; flex-direction:column; gap:2px; }
+  .st-txt b{ font-size:calc(14.5px * var(--ts)); color:var(--text); font-weight:800; }
+  .st-row + .st-row{ padding-top:11px; border-top:1px dashed var(--line2); }
+  /* שדות */
+  .st-field{ display:flex; flex-direction:column; gap:6px; }
+  .st-field label{ font-size:calc(13px * var(--ts)); color:var(--muted); font-weight:700; }
+  .st-sheet input:not([type=checkbox]):not([type=file]), .st-sheet select{ width:100%; min-height:46px; background:var(--ink); border:1px solid var(--line2); border-radius:12px;
+    padding:11px 13px; color:var(--text); font-size:calc(15px * var(--ts)); font-family:'Heebo',sans-serif; transition:border-color .15s, box-shadow .15s; }
+  .st-sheet input[dir=ltr]{ text-align:left; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:calc(13.5px * var(--ts)); }
+  .st-sheet input:focus, .st-sheet select:focus{ outline:none; border-color:var(--st-acc) !important; box-shadow:0 0 0 3px rgba(58,160,219,.22); }
+  .st-inwrap{ position:relative; }
+  .st-inwrap input{ padding-right:48px !important; padding-left:13px !important; }
+  .st-eye{ position:absolute; right:6px; top:50%; transform:translateY(-50%); width:36px; height:34px; border-radius:9px; border:0; background:transparent; cursor:pointer; font-size:16px; opacity:.75; }
+  .st-eye:hover{ opacity:1; background:var(--surface2); }
+  .st-ok{ color:var(--st-good); font-size:calc(13px * var(--ts)); font-weight:700; margin:-4px 0 0; }
+  /* מתג */
+  .st-switch-row{ cursor:pointer; padding:11px 13px; border:1px solid var(--line2); border-radius:12px; background:var(--ink); }
+  .st-switch{ position:relative; width:50px; height:28px; flex:0 0 auto; }
+  .st-switch input{ position:absolute; inset:0; opacity:0; margin:0; cursor:pointer; z-index:1; }
+  .st-switch i{ position:absolute; inset:0; border-radius:999px; background:var(--line2); transition:background .2s; }
+  .st-switch i::after{ content:''; position:absolute; top:3px; inset-inline-start:3px; width:22px; height:22px; border-radius:50%; background:#fff; box-shadow:0 1px 4px rgba(0,0,0,.35); transition:inset-inline-start .2s; }
+  .st-switch input:checked + i{ background:#22c55e; }
+  .st-switch input:checked + i::after{ inset-inline-start:25px; }
+  .st-switch input:focus-visible + i{ box-shadow:0 0 0 3px rgba(58,160,219,.4); }
+  /* לחצנים */
+  .st-btn{ min-height:44px; padding:10px 16px; border-radius:12px; border:1px solid var(--line2); background:var(--surface); color:var(--text);
+    font-family:'Heebo',sans-serif; font-size:calc(14px * var(--ts)); font-weight:800; cursor:pointer; white-space:nowrap; flex:0 0 auto; transition:border-color .15s, transform .1s, box-shadow .15s; }
+  .st-btn:hover{ border-color:var(--st-acc); }
+  .st-btn:active{ transform:translateY(1px); }
+  .st-btn.wide{ width:100%; }
+  .st-btn.primary{ background:linear-gradient(180deg,#43aee6,#2386d0); border-color:#2386d0; color:#fff; box-shadow:0 8px 18px -10px rgba(35,134,208,.9); }
+  .st-btn.good{ color:var(--st-good); border-color:var(--st-good-bd); }
+  .st-btn.warn{ color:var(--st-warn); border-color:var(--st-warn); }
+  .st-btn.danger{ color:var(--st-danger); border-color:var(--st-danger-bd); }
+  .st-btn.danger:hover{ border-color:var(--st-danger); }
+  .st-btnpair{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  @media (max-width:420px){ .st-btnpair{ grid-template-columns:1fr; } .st-row .st-btn{ width:100%; } }
+  /* רשימות ושורות הוספה */
+  .st-seg{ display:flex; gap:7px; flex-wrap:wrap; }
+  .st-list{ display:flex; flex-direction:column; gap:7px; max-height:280px; overflow-y:auto; }
+  .st-list:empty{ display:none; }
+  .st-addrow{ display:flex; gap:8px; }
+  .st-addrow input{ flex:1; }
+  .st-restore{ display:flex; flex-direction:column; gap:8px; }
+  .st-health{ text-align:start !important; line-height:1.6; }
+  .st-link{ font-size:calc(13px * var(--ts)); color:var(--st-acc); text-decoration:none; font-weight:700; }
+  .st-link:hover{ text-decoration:underline; }
+  /* QR */
+  .st-qrs{ display:flex; gap:16px; justify-content:center; flex-wrap:wrap; }
+  .st-qr{ display:flex; flex-direction:column; align-items:center; gap:5px; text-align:center; }
+  .st-qr b{ font-size:calc(13.5px * var(--ts)); } .st-qr span{ font-size:calc(13px * var(--ts)); color:var(--faint); }
+  .st-qrbox{ background:#fff; padding:9px; border-radius:12px; width:140px; height:140px; display:flex; align-items:center; justify-content:center; }
+  /* אזור רגיש */
+  .st-danger{ border-color:var(--st-danger-bd); }
+  .st-danger > .st-card-h b{ color:var(--st-danger); }
+  .st-dz{ padding-top:11px; border-top:1px dashed var(--st-danger-bd); }
+  .st-dzctl{ display:flex; gap:8px; margin-top:9px; flex-wrap:wrap; }
+  .st-dzctl select{ flex:1 1 200px; width:auto !important; }
+  .st-foot{ text-align:center; font-size:calc(13px * var(--ts)); color:var(--faint); padding:16px 0 4px; }
+  .st-sheet .note:empty{ display:none; }
   /* ===== כותרת בטלפון: הלחצנים יורדים לשורה משלהם במקום לחרוג מרוחב המסך ===== */
   @media (max-width:560px){
     .top-in{ flex-wrap:wrap; row-gap:10px; }
@@ -881,163 +982,210 @@ html.tone-adj:not(.theme-light) .clockbar{ background:rgba(var(--inkrgb),.9) !im
 </div>
 
 <div class="modal" id="modal">
-  <div class="sheet">
-    <h3>הגדרות</h3>
+  <div class="sheet st-sheet" role="dialog" aria-modal="true" aria-labelledby="stTitle">
+    <!-- ===== כותרת קבועה ===== -->
+    <div class="st-head">
+      <div class="st-logo"><img src="icon-dash.png" alt="אפקון" onerror="this.outerHTML='<span class=\'st-logo-a\'>A</span>'"></div>
+      <div class="st-titles">
+        <h3 id="stTitle">הגדרות</h3>
+        <div class="st-sub">אפקון — פורטל שרשרת האספקה</div>
+      </div>
+      <button type="button" class="st-x" id="mClose" aria-label="סגור">✕</button>
+    </div>
+    <div class="st-body">
 
-    <div style="background:var(--ink);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px">
-      <div style="width:54px;height:54px;border-radius:13px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden"><img src="icon-dash.png" style="width:100%;height:100%;object-fit:contain;padding:6px" alt="אפקון" onerror="this.outerHTML='<span style=\'font-family:Rubik;font-weight:900;color:#3aa0db;font-size:24px\'>A</span>'"></div>
-      <div style="font-family:'Rubik',sans-serif;font-weight:900;font-size:calc(17px * var(--ts))">אפקון — פורטל שרשרת האספקה</div>
-      <div style="font-size:calc(13px * var(--ts));color:var(--muted);line-height:1.6">מערכת לניהול חוסרים במחסן: המחסנאים מדווחים, הקניינים מטפלים, והמנהל עוקב. כל דיווח נרשם ומתועד אוטומטית.</div>
-      <div style="font-size:calc(13px * var(--ts));color:var(--faint);margin-top:2px">© אבידן קוטאי · כל הזכויות שמורות</div>
+    <!-- ===== כניסה לאזור המפתח (מוצג רק כשהאזור נעול) ===== -->
+    <div class="st-lock" id="stLock">
+      <p class="st-about">מערכת לניהול חוסרים במחסן: המחסנאים מדווחים, הקניינים מטפלים, והמנהל עוקב. כל דיווח נרשם ומתועד אוטומטית.</p>
+      <button type="button" class="st-btn" id="advBtn">🔒 הגדרות (מפתח)</button>
+      <div id="advPinRow" class="st-pinrow" style="display:none">
+        <input id="advPin" type="tel" inputmode="numeric" autocomplete="off" placeholder="סיסמת מפתח">
+        <button type="button" class="st-btn primary" id="advPinOk">אישור</button>
+      </div>
     </div>
 
-    <button class="ghost" id="advBtn">🔒 הגדרות (מפתח)</button>
-    <div id="advPinRow" style="display:none;gap:8px;margin-top:10px">
-      <input id="advPin" type="tel" inputmode="numeric" placeholder="סיסמת מפתח" style="flex:1;background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--text);font-family:'Heebo',sans-serif;font-size:calc(16px * var(--ts))">
-      <button class="prim" id="advPinOk" style="max-width:110px">אישור</button>
-    </div>
+    <div id="advBox" class="hidden">
+      <!-- ===== לשוניות ===== -->
+      <nav class="st-tabs" role="tablist" aria-label="קטגוריות הגדרות">
+        <button type="button" class="st-tab on" data-pane="id" role="tab">👤<span>זהות</span></button>
+        <button type="button" class="st-tab" data-pane="conn" role="tab">🔗<span>חיבור</span></button>
+        <button type="button" class="st-tab" data-pane="team" role="tab">👥<span>צוות</span></button>
+        <button type="button" class="st-tab" data-pane="content" role="tab">📦<span>תוכן</span></button>
+        <button type="button" class="st-tab" data-pane="backup" role="tab">🗂️<span>גיבוי</span></button>
+        <button type="button" class="st-tab" data-pane="maint" role="tab">🛠️<span>תחזוקה</span></button>
+      </nav>
 
-    <div id="advBox" class="hidden" style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px">
-      <div class="field"><label>מי אתה? (בחר מרשימת הקניינים)</label><select id="mName"><option value="">— בחר —</option></select></div>
-      <p id="idLock" class="hidden" style="color:#22c55e;font-size:calc(13px * var(--ts));margin:-8px 0 14px">🔒 השם נבחר וננעל. לשינוי — אפס זהות למטה.</p>
-      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:14px;font-size:calc(14.5px * var(--ts));font-weight:700"><input type="checkbox" id="mBoss" style="width:22px;height:22px;accent-color:#22c55e;flex:0 0 auto"><span>אני מנהל — צפייה ומעקב בלבד (בלי כפתורי טיפול)</span></label>
-      <button class="prim" id="mSave">שמור זהות / מנהל</button>
-      <div class="note" id="mNote"></div>
-      <div style="border-top:1px solid var(--line);margin:14px 0;padding-top:4px"></div>
-      <div class="field"><label>כתובת המערכת (Web App URL)</label><input id="mUrl" placeholder="https://script.google.com/macros/s/..."></div>
-      <div class="field"><label>טוקן סודי</label><input id="mTok" placeholder="אותו סוד שבקוד השרת"></div>
-      <div class="field"><label>קישור לגיליון (לא חובה — לכפתור "פתח גיליון")</label><input id="mSheet" placeholder="https://docs.google.com/spreadsheets/..."></div>
-      <button class="prim" id="advSave">בדוק חיבור ושמור</button>
-      <div class="note" id="advNote"></div>
-
-      <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
-        <div style="font-weight:700;font-size:calc(14px * var(--ts));margin-bottom:4px">📦 קטלוג פריטים מרכזי</div>
-        <p style="font-size:calc(13px * var(--ts));color:var(--faint);line-height:1.6;margin-bottom:10px">העלה קובץ אקסל/CSV — עמודה A: מק״ט, עמודה B: תיאור. הקטלוג יידחף לכל המחסנאים אוטומטית.</p>
-        <input type="file" id="catFile" accept=".xlsx,.xls,.csv" style="display:none">
-        <button class="ghost" id="catPush" style="border-color:var(--amber);color:var(--amber2)">⬆️ דחוף קטלוג לכולם</button>
-        <div class="note" id="catNote"></div>
-      </div>
-
-      <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
-        <div style="font-weight:700;font-size:calc(14px * var(--ts));margin-bottom:4px">💬 תבניות לצ'אט (משותף לכל המכשירים)</div>
-        <p style="font-size:calc(13px * var(--ts));color:var(--faint);line-height:1.6;margin-bottom:10px">תבניות מהירות לכל תווית. יופיעו בלחיצה על שורת הצ'אט בפנייה מאותו סוג. "כללי" יופיע בכל הסוגים.</p>
-        <div id="tplTypeTabs" style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:11px">
-          <button class="chip on" data-tt="חוסר מלאי">🟠 חוסר מלאי</button>
-          <button class="chip" data-tt="פריט פגום">🔴 פגום</button>
-          <button class="chip" data-tt="אי-התאמה">🔵 אי-התאמה</button>
-          <button class="chip" data-tt="">כללי</button>
+      <!-- ===== 👤 זהות ===== -->
+      <section class="st-pane on" data-pane="id" role="tabpanel">
+        <div class="st-card">
+          <div class="st-card-h"><b>👤 הזהות שלך</b><span>כל פעולה בלוח נרשמת בשם הזה.</span></div>
+          <div class="st-field"><label for="mName">שם (מרשימת הקניינים)</label><select id="mName"><option value="">— בחר —</option></select></div>
+          <p id="idLock" class="st-ok hidden">🔒 השם נבחר וננעל. לשינוי — "אפס זהות" למטה.</p>
+          <label class="st-row st-switch-row" for="mBoss">
+            <span class="st-txt"><b>מצב מנהל</b><span>צפייה ומעקב בלבד — בלי כפתורי טיפול</span></span>
+            <span class="st-switch"><input type="checkbox" id="mBoss"><i aria-hidden="true"></i></span>
+          </label>
+          <button type="button" class="st-btn primary wide" id="mSave">שמור זהות</button>
+          <div class="note" id="mNote"></div>
         </div>
-        <div id="tplList" style="display:flex;flex-direction:column;gap:7px;margin-bottom:10px"></div>
-        <div style="display:flex;gap:8px">
-          <input id="tplNew" placeholder="טקסט תבנית חדשה…" style="flex:1;background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--text);font-family:'Heebo',sans-serif;font-size:calc(14px * var(--ts))">
-          <button class="ghost" id="tplAdd" style="border-color:var(--green);color:var(--green2)">➕ הוסף</button>
-        </div>
-        <div class="note" id="tplNote"></div>
-      </div>
-
-      <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
-        <div style="font-weight:700;font-size:calc(14px * var(--ts));margin-bottom:8px">📲 קודי QR להתקנה</div>
-        <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
-          <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
-            <div id="qrWh" style="background:#fff;padding:9px;border-radius:12px;width:140px;height:140px;display:flex;align-items:center;justify-content:center"></div>
-            <div style="font-weight:800;font-size:calc(13px * var(--ts))">📦 למחסנאים</div>
-            <div style="font-size:calc(13px * var(--ts));color:var(--faint)">דיווח חוסרים</div>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
-            <div id="qrBuy" style="background:#fff;padding:9px;border-radius:12px;width:140px;height:140px;display:flex;align-items:center;justify-content:center"></div>
-            <div style="font-weight:800;font-size:calc(13px * var(--ts))">🛒 לקניינים ולמנהל</div>
-            <div style="font-size:calc(13px * var(--ts));color:var(--faint)">לוח בקרה</div>
+        <div class="st-card">
+          <div class="st-row">
+            <span class="st-txt"><b>🔄 איפוס זהות</b><span>מוחק את השם השמור במכשיר זה, כדי לבחור שם מחדש.</span></span>
+            <button type="button" class="st-btn danger" id="resetIdent">אפס זהות</button>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
-        <div style="font-weight:700;font-size:calc(14px * var(--ts));margin-bottom:4px">👥 ניהול שמות</div>
-        <p style="font-size:calc(13px * var(--ts));color:var(--faint);line-height:1.6;margin-bottom:10px">הוסף, ערוך או הסר שמות. הקניינים והמחסנאים בוחרים מתוך הרשימות האלה.</p>
-        <div style="display:flex;gap:8px;margin-bottom:10px">
-          <button class="chip on" id="nameTabBuyers" data-k="buyers">קניינים</button>
-          <button class="chip" id="nameTabReporters" data-k="reporters">מחסנאים</button>
+      <!-- ===== 🔗 חיבור ===== -->
+      <section class="st-pane" data-pane="conn" role="tabpanel">
+        <div class="st-card">
+          <div class="st-card-h"><b>🔗 חיבור לשרת</b><span>כתובת ה-Web App והטוקן — זהים לכל הצוות.</span></div>
+          <div class="st-field"><label for="mUrl">כתובת המערכת (Web App URL)</label><input id="mUrl" dir="ltr" autocomplete="off" spellcheck="false" placeholder="https://script.google.com/macros/s/..."></div>
+          <div class="st-field"><label for="mTok">טוקן סודי</label>
+            <div class="st-inwrap"><input id="mTok" type="password" dir="ltr" autocomplete="off" spellcheck="false" placeholder="אותו סוד שבקוד השרת"><button type="button" class="st-eye" data-eye="mTok" aria-label="הצג / הסתר טוקן">👁</button></div></div>
+          <div class="st-field"><label for="mSheet">קישור לגיליון <em>(לא חובה — לכפתור "פתח גיליון")</em></label><input id="mSheet" dir="ltr" autocomplete="off" spellcheck="false" placeholder="https://docs.google.com/spreadsheets/..."></div>
+          <button type="button" class="st-btn primary wide" id="advSave">בדוק חיבור ושמור</button>
+          <div class="note" id="advNote"></div>
         </div>
-        <div id="nameList" style="display:flex;flex-direction:column;gap:7px;margin-bottom:10px"></div>
-        <div style="display:flex;gap:8px">
-          <input id="nameNew" placeholder="שם מלא חדש (שם ושם משפחה)" style="flex:1;background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--text);font-family:'Heebo',sans-serif;font-size:calc(14px * var(--ts))">
-          <button class="ghost" id="nameAdd" style="border-color:var(--green);color:var(--green2)">➕ הוסף</button>
+        <div class="st-card">
+          <div class="st-row">
+            <span class="st-txt"><b>📢 פרסום גרסה</b><span>אחרי העלאת גרסה חדשה לאתר — כל המכשירים הפתוחים יתרעננו אליה אוטומטית.</span></span>
+            <button type="button" class="st-btn good" id="pubVer">פרסם לכולם</button>
+          </div>
+          <div class="note" id="pubNote"></div>
         </div>
-        <div class="note" id="nameNote"></div>
-      </div>
+      </section>
 
-      <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
-        <div style="font-weight:700;font-size:calc(14px * var(--ts));margin-bottom:8px">🔄 איפוס זהות</div>
-        <p style="font-size:calc(13px * var(--ts));color:var(--faint);line-height:1.6;margin-bottom:10px">מאפס את השם שנבחר במכשיר זה, כדי לאפשר בחירת שם מחדש.</p>
-        <button class="ghost" id="resetIdent" style="border-color:#7f1d1d;color:#f87171">🔄 אפס זהות במכשיר זה</button>
-      </div>
+      <!-- ===== 👥 צוות ===== -->
+      <section class="st-pane" data-pane="team" role="tabpanel">
+        <div class="st-card">
+          <div class="st-card-h"><b>👥 ניהול שמות</b><span>הקניינים והמחסנאים בוחרים את שמם מתוך הרשימות האלה.</span></div>
+          <div class="st-seg">
+            <button type="button" class="chip on" id="nameTabBuyers" data-k="buyers">קניינים</button>
+            <button type="button" class="chip" id="nameTabReporters" data-k="reporters">מחסנאים</button>
+          </div>
+          <div id="nameList" class="st-list"></div>
+          <div class="st-addrow">
+            <input id="nameNew" placeholder="שם מלא חדש (שם ושם משפחה)">
+            <button type="button" class="st-btn good" id="nameAdd">➕ הוסף</button>
+          </div>
+          <div class="note" id="nameNote"></div>
+        </div>
+      </section>
 
-      <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
-        <div style="font-weight:700;font-size:calc(14px * var(--ts));margin-bottom:8px">📢 פרסום גרסה</div>
-        <p style="font-size:calc(13px * var(--ts));color:var(--faint);line-height:1.6;margin-bottom:10px">אחרי שהעלית גרסה חדשה לאתר — לחץ כאן, וכל המכשירים הפתוחים יתרעננו אוטומטית לגרסה החדשה.</p>
-        <button class="ghost" id="pubVer" style="border-color:var(--green);color:var(--green2)">📢 פרסם גרסה לכולם</button>
-        <div class="note" id="pubNote"></div>
-      </div>
+      <!-- ===== 📦 תוכן ===== -->
+      <section class="st-pane" data-pane="content" role="tabpanel">
+        <div class="st-card">
+          <div class="st-row">
+            <span class="st-txt"><b>📦 קטלוג פריטים מרכזי</b><span>קובץ אקסל / CSV — עמודה A: מק״ט, עמודה B: תיאור. נדחף לכל המחסנאים אוטומטית.</span></span>
+            <button type="button" class="st-btn warn" id="catPush">⬆️ העלה קטלוג</button>
+          </div>
+          <input type="file" id="catFile" accept=".xlsx,.xls,.csv" style="display:none">
+          <div class="note" id="catNote"></div>
+        </div>
+        <div class="st-card">
+          <div class="st-card-h"><b>💬 תבניות לצ'אט</b><span>תשובות מוכנות לפי סוג הפנייה, משותפות לכל המכשירים. "כללי" מופיע בכל הסוגים.</span></div>
+          <div id="tplTypeTabs" class="st-seg">
+            <button type="button" class="chip on" data-tt="חוסר מלאי">🟠 חוסר מלאי</button>
+            <button type="button" class="chip" data-tt="פריט פגום">🔴 פגום</button>
+            <button type="button" class="chip" data-tt="אי-התאמה">🔵 אי-התאמה</button>
+            <button type="button" class="chip" data-tt="">כללי</button>
+          </div>
+          <div id="tplList" class="st-list"></div>
+          <div class="st-addrow">
+            <input id="tplNew" placeholder="טקסט תבנית חדשה…">
+            <button type="button" class="st-btn good" id="tplAdd">➕ הוסף</button>
+          </div>
+          <div class="note" id="tplNote"></div>
+        </div>
+        <div class="st-card">
+          <div class="st-card-h"><b>📲 קודי QR להתקנה</b><span>סורקים בטלפון ומוסיפים למסך הבית.</span></div>
+          <div class="st-qrs">
+            <div class="st-qr"><div id="qrWh" class="st-qrbox"></div><b>📦 למחסנאים</b><span>דיווח חוסרים</span></div>
+            <div class="st-qr"><div id="qrBuy" class="st-qrbox"></div><b>🛒 לקניינים ולמנהל</b><span>לוח בקרה</span></div>
+          </div>
+        </div>
+      </section>
 
-      <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
-        <div style="font-weight:700;font-size:calc(14px * var(--ts));margin-bottom:8px">📊 שימוש ב-AI · מס׳ סידוריים</div>
-        <p style="font-size:calc(13px * var(--ts));color:var(--faint);line-height:1.6;margin-bottom:10px">כמה פעמים השתמשו בכפתור הכחול „🤖 קרא את כל המספרים", לפי משתמש, והערכת עלות מצטברת. שים לב: <b>היתרה המדויקת</b> שנשארה במפתח נבדקת רק בלוח הבקרה של Anthropic — כאן זו הערכה בלבד.</p>
-        <button class="ghost" id="aiUsageBtn" style="border-color:var(--line2)">📊 טען נתוני שימוש</button>
-        <div class="note" id="aiUsageNote"></div>
-        <div id="aiUsageBox" style="margin-top:10px"></div>
-        <a href="https://console.anthropic.com/settings/billing" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;font-size:calc(13px * var(--ts));color:#60a5fa;text-decoration:none">🔗 בדוק יתרה אמיתית בלוח הבקרה של Anthropic</a>
-      </div>
-
-      <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
-        <div style="font-weight:700;font-size:calc(14px * var(--ts));margin-bottom:8px;color:var(--amber2)">🔢 מחיקת קריאה ומספור מחדש</div>
-        <p style="font-size:calc(13px * var(--ts));color:var(--faint);line-height:1.6;margin-bottom:10px">מוחק קריאה אחת ומסדר מחדש את המספרים של כל השאר ברצף — בלי חורים. גיבוי מלא יורד למחשב אוטומטית לפני הביצוע, ואם משהו נכשל בדרך שום דבר לא משתנה.</p>
-        <div class="field"><select id="renumSel"><option value="">— בחר קריאה למחיקה —</option></select></div>
-        <button class="ghost" id="renumBtn" style="border-color:#7f1d1d;color:#f87171">🔢 מחק ומספר מחדש</button>
-        <div class="note" id="renumNote"></div>
-        <p style="font-size:calc(13px * var(--ts));color:var(--faint);line-height:1.6;margin-top:8px">⚠️ המספר של הקריאה <b>הבאה</b> נקבע במונה שיושב בשרת (Apps Script) ולא מתעדכן מכאן. אחרי מספור מחדש — שלח דיווח בדיקה אחד וודא שהמספר ממשיך ברצף.</p>
-      </div>
-      <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
-        <div style="font-weight:700;font-size:calc(14px * var(--ts));margin-bottom:8px;color:#f87171">🧹 איפוס כל ההתראות</div>
-        <p style="font-size:calc(13px * var(--ts));color:var(--faint);line-height:1.6;margin-bottom:10px">מוחק את <b>כל</b> ההתראות מהמערכת לצמיתות (ממתינות, בטיפול וטופלו). השמות והקטלוג יישארו. פעולה זו אינה הפיכה.</p>
-        <button class="ghost" id="clearAll" style="border-color:#7f1d1d;color:#f87171">🧹 אפס את כל ההתראות</button>
-        <button class="ghost" id="loansMgr" style="border-color:var(--line2)">🔁 השאלות ציוד — פתח ניהול</button>
-        <button class="ghost" id="loanSeqReset" style="border-color:#7f1d1d;color:#f87171">🔢 איפוס מספור תעודות השאלה</button>
-        <div class="note" id="loanSeqNote"></div>
-        <div class="note" id="clearNote"></div>
-      </div>
-      <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
-        <div style="font-weight:700;font-size:calc(14px * var(--ts));margin-bottom:8px;color:#f87171">📞 ספר הטלפונים המשותף</div>
-        <p style="font-size:calc(13px * var(--ts));color:var(--faint);line-height:1.6;margin-bottom:10px">מוחק את <b>כל</b> הספקים ששותפו לכולם (ב„כלי עזר ▸ טלפונים"). הספקים האישיים שכל אחד שמר במכשירו לא יושפעו. פעולה זו אינה הפיכה.</p>
-        <button class="ghost" id="clearPhones" style="border-color:#7f1d1d;color:#f87171">🗑️ מחק את כל ספר הטלפונים המשותף</button>
-        <div class="note" id="clearPhNote"></div>
-      </div>
-      <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
-        <div style="font-weight:700;font-size:calc(14px * var(--ts));margin-bottom:8px">🗂️ גיבוי הנתונים</div>
-        <p style="font-size:calc(13px * var(--ts));color:var(--faint);line-height:1.6;margin-bottom:10px">גיבוי יומי אוטומטי של כל הנתונים נשמר בתיקיית Drive (נשמרים 30 הגיבויים האחרונים). אפשר גם לגבות עכשיו ידנית כדי לבדוק.</p>
-        <button class="ghost" id="backupNow" style="border-color:var(--line2)">🗂️ גבה עכשיו</button>
-        <div class="note" id="bkHealth" style="text-align:start;line-height:1.6"></div>
-        <div class="note" id="backupNote"></div>
-        <div style="margin-top:12px">
-          <button class="ghost" id="loadBackups" style="border-color:var(--line2)">↩️ שחזור מגיבוי…</button>
-          <div id="restoreBox" style="display:none;margin-top:10px">
-            <select id="restoreSel" style="width:100%;background:var(--ink);border:1px solid var(--line2);color:var(--text);border-radius:10px;padding:10px;font-size:calc(13.5px * var(--ts));font-family:'Heebo',sans-serif"></select>
-            <button class="ghost" id="doRestore" style="border-color:#7f1d1d;color:#f87171;margin-top:8px;width:100%">↩️ שחזר מהגיבוי שנבחר</button>
+      <!-- ===== 🗂️ גיבוי ===== -->
+      <section class="st-pane" data-pane="backup" role="tabpanel">
+        <div class="st-card">
+          <div class="st-card-h"><b>🗂️ גיבוי בשרת (Drive)</b><span>גיבוי יומי אוטומטי; נשמרים 30 הגיבויים האחרונים.</span></div>
+          <div class="note st-health" id="bkHealth"></div>
+          <div class="st-row">
+            <span class="st-txt"><b>גבה עכשיו</b><span>גיבוי ידני מיידי — גם לבדיקה שהמנגנון עובד.</span></span>
+            <button type="button" class="st-btn" id="backupNow">🗂️ גבה עכשיו</button>
+          </div>
+          <div class="note" id="backupNote"></div>
+          <div class="st-row">
+            <span class="st-txt"><b>שחזור מגיבוי בשרת</b><span>בחירת גיבוי מהרשימה והחזרת הנתונים ממנו.</span></span>
+            <button type="button" class="st-btn" id="loadBackups">↩️ בחר גיבוי…</button>
+          </div>
+          <div id="restoreBox" style="display:none" class="st-restore">
+            <select id="restoreSel"></select>
+            <button type="button" class="st-btn danger" id="doRestore">↩️ שחזר מהגיבוי שנבחר</button>
           </div>
           <div class="note" id="restoreNote"></div>
         </div>
-        <div style="border-top:1px dashed var(--line2);margin-top:14px;padding-top:14px">
-          <div style="font-weight:700;font-size:calc(14px * var(--ts));margin-bottom:4px">💾 גיבוי לקובץ במחשב <span style="color:var(--green);font-size:calc(13px * var(--ts));font-weight:800">(מומלץ)</span></div>
-          <p style="font-size:calc(13px * var(--ts));color:var(--faint);line-height:1.6;margin-bottom:10px">מוריד את <b>כל</b> הנתונים לקובץ אחד במחשב שלך — פניות, ספר טלפונים, ידיעון, קטלוג, שמות <b>וגם התמונות</b>. לא דורש הרשאות. השחזור טוען קובץ כזה ומחזיר את הכל.</p>
-          <button class="ghost" id="dlBackup" style="border-color:#166534;color:#34d399;width:100%">⬇️ הורד גיבוי לקובץ</button>
-          <div class="note" id="dlNote" style="margin-bottom:8px"></div>
-          <button class="ghost" id="upRestore" style="border-color:#7f1d1d;color:#f87171;width:100%">⬆️ שחזר מקובץ במחשב</button>
+        <div class="st-card">
+          <div class="st-card-h"><b>💾 גיבוי לקובץ במחשב <em class="st-tag">מומלץ</em></b><span>כל הנתונים בקובץ אחד — פניות, טלפונים, ידיעון, קטלוג, שמות וגם התמונות. השחזור טוען קובץ כזה ומחזיר הכל.</span></div>
+          <div class="st-btnpair">
+            <button type="button" class="st-btn good" id="dlBackup">⬇️ הורד גיבוי לקובץ</button>
+            <button type="button" class="st-btn danger" id="upRestore">⬆️ שחזר מקובץ</button>
+          </div>
           <input type="file" id="restoreFile" accept="application/json,.json" style="display:none">
+          <div class="note" id="dlNote"></div>
           <div class="note" id="upNote"></div>
         </div>
-      </div>
+      </section>
+
+      <!-- ===== 🛠️ תחזוקה ===== -->
+      <section class="st-pane" data-pane="maint" role="tabpanel">
+        <div class="st-card">
+          <div class="st-row">
+            <span class="st-txt"><b>📊 שימוש ב-AI · מס׳ סידוריים</b><span>כמה פעמים השתמשו ב„🤖 קרא את כל המספרים", לפי משתמש, והערכת עלות. היתרה המדויקת — רק בלוח הבקרה של Anthropic.</span></span>
+            <button type="button" class="st-btn" id="aiUsageBtn">📊 טען נתונים</button>
+          </div>
+          <div class="note" id="aiUsageNote"></div>
+          <div id="aiUsageBox"></div>
+          <a class="st-link" href="https://console.anthropic.com/settings/billing" target="_blank" rel="noopener">🔗 בדוק יתרה אמיתית בלוח הבקרה של Anthropic</a>
+        </div>
+        <div class="st-card">
+          <div class="st-row">
+            <span class="st-txt"><b>🔁 השאלות ציוד</b><span>ניהול תעודות השאלת ציוד בכלי העזר.</span></span>
+            <button type="button" class="st-btn" id="loansMgr">פתח ניהול</button>
+          </div>
+        </div>
+
+        <div class="st-card st-danger">
+          <div class="st-card-h"><b>⚠️ אזור רגיש</b><span>פעולות שאינן הפיכות. מומלץ להוריד גיבוי לקובץ לפני כל אחת מהן.</span></div>
+          <div class="st-dz">
+            <span class="st-txt"><b>🔢 מחיקת קריאה ומספור מחדש</b><span>מוחק קריאה אחת ומסדר את מספרי השאר ברצף. גיבוי מלא יורד אוטומטית לפני הביצוע. המספר של הקריאה <b>הבאה</b> נקבע בשרת — אחרי מספור מחדש שלח דיווח בדיקה ווודא שהרצף נשמר.</span></span>
+            <div class="st-dzctl"><select id="renumSel"><option value="">— בחר קריאה למחיקה —</option></select>
+              <button type="button" class="st-btn danger" id="renumBtn">מחק ומספר מחדש</button></div>
+            <div class="note" id="renumNote"></div>
+          </div>
+          <div class="st-dz st-row">
+            <span class="st-txt"><b>🧹 איפוס כל ההתראות</b><span>מוחק את <b>כל</b> הפניות (ממתינות, בטיפול וטופלו) ומאפס את המספור. השמות והקטלוג נשארים.</span></span>
+            <button type="button" class="st-btn danger" id="clearAll">אפס הכל</button>
+          </div>
+          <div class="note" id="clearNote"></div>
+          <div class="st-dz st-row">
+            <span class="st-txt"><b>🔢 איפוס מספור תעודות השאלה</b><span>מתחיל מחדש את מספור תעודות השאלת הציוד.</span></span>
+            <button type="button" class="st-btn danger" id="loanSeqReset">אפס מספור</button>
+          </div>
+          <div class="note" id="loanSeqNote"></div>
+          <div class="st-dz st-row">
+            <span class="st-txt"><b>📞 מחיקת ספר הטלפונים המשותף</b><span>מוחק את כל הספקים ששותפו לכולם. אנשי הקשר האישיים בכל מכשיר נשארים.</span></span>
+            <button type="button" class="st-btn danger" id="clearPhones">מחק ספר משותף</button>
+          </div>
+          <div class="note" id="clearPhNote"></div>
+        </div>
+      </section>
     </div>
 
-    <button class="ghost" id="mClose">סגור</button>
+    <div class="st-foot">© אבידן קוטאי · כל הזכויות שמורות</div>
+    </div>
   </div>
 </div>
 
@@ -3193,6 +3341,35 @@ html.tone-adj:not(.theme-light) .clockbar{ background:rgba(var(--inkrgb),.9) !im
 <script src="catalog.js"></script>
 <script src="tools.js?v=38"></script>
 <!-- ===== סוף כלי עזר ===== -->
+<script>
+/* ===== מסך הגדרות: לשוניות, הצגת טוקן, הסתרת שורת הנעילה כשהאזור פתוח ===== */
+(function(){
+  var TK='afcon_settings_tab';
+  function show(name){
+    var ok=false;
+    document.querySelectorAll('#advBox .st-tab').forEach(function(t){ var on=t.dataset.pane===name; t.classList.toggle('on',on); t.setAttribute('aria-selected',on?'true':'false'); if(on) ok=true; });
+    if(!ok) return show('id');
+    document.querySelectorAll('#advBox .st-pane').forEach(function(p){ p.classList.toggle('on', p.dataset.pane===name); });
+    var b=document.querySelector('#modal .st-body'); if(b) b.scrollTop=0;
+    try{ localStorage.setItem(TK,name); }catch(e){}
+  }
+  document.addEventListener('click', function(e){
+    var t=e.target.closest && e.target.closest('#advBox .st-tab'); if(t){ show(t.dataset.pane); return; }
+    var eye=e.target.closest && e.target.closest('.st-eye');
+    if(eye){ var inp=document.getElementById(eye.dataset.eye); if(inp){ inp.type=(inp.type==='password')?'text':'password'; eye.textContent=(inp.type==='password')?'👁':'🙈'; } }
+  });
+  var box=document.getElementById('advBox'), lock=document.getElementById('stLock');
+  function sync(){ if(box&&lock) lock.style.display=box.classList.contains('hidden')?'':'none'; }
+  if(box){ new MutationObserver(sync).observe(box,{attributes:true,attributeFilter:['class']}); sync(); }
+  var last='id'; try{ last=localStorage.getItem(TK)||'id'; }catch(e){}
+  show(last);
+  document.addEventListener('keydown', function(e){
+    if(e.key!=='Escape') return; var m=document.getElementById('modal');
+    if(m && m.classList.contains('open')){ var x=document.getElementById('mClose'); if(x) x.click(); }
+  });
+  window.__stShow=show;
+})();
+</script>
 <!-- ===== הסברי ריחוף: מעבירים את העכבר מעל לחצן ומקבלים הסבר מה הוא עושה =====
      כל ההסברים מרוכזים ברשימה TIPS. לשינוי טקסט — עורכים רק כאן.
      סדר הרשימה חשוב: הכלל הראשון שמתאים ללחצן הוא שמוצג. -->
@@ -3287,6 +3464,14 @@ html.tone-adj:not(.theme-light) .clockbar{ background:rgba(var(--inkrgb),.9) !im
     ['[data-npin]','הצמדה','מצמיד את ההודעה לראש הידיעון, או מבטל הצמדה קיימת.'],
     ['[data-ndel]','מחק הודעה','מוחק את ההודעה מהידיעון לכולם.'],
     /* ---- הגדרות ---- */
+    ['.st-tab[data-pane="id"]','זהות','בחירת השם שלך, מצב מנהל ואיפוס הזהות במכשיר.'],
+    ['.st-tab[data-pane="conn"]','חיבור','כתובת השרת, הטוקן, קישור לגיליון ופרסום גרסה לכל המכשירים.'],
+    ['.st-tab[data-pane="team"]','צוות','ניהול רשימות השמות של הקניינים והמחסנאים.'],
+    ['.st-tab[data-pane="content"]','תוכן','קטלוג המק״טים, תבניות תשובה לצ׳אט וקודי QR להתקנה.'],
+    ['.st-tab[data-pane="backup"]','גיבוי','גיבוי ושחזור — בשרת ובקובץ במחשב.'],
+    ['.st-tab[data-pane="maint"]','תחזוקה','נתוני שימוש, השאלות ציוד ופעולות רגישות שאינן הפיכות.'],
+    ['.st-switch-row','מצב מנהל','מתג: כשהוא דולק — הלוח במצב צפייה ומעקב בלבד, בלי כפתורי טיפול. לוחצים "שמור זהות" כדי לשמור.'],
+    ['.st-eye','הצג / הסתר','מציג את הטוקן הסודי או מסתיר אותו שוב.'],
     ['#mSave','שמור זהות','שומר במכשיר הזה את השם שבחרת. כל פעולה שלך (לקיחה, תשובה, סגירה) תירשם בשם הזה.'],
     ['#advBtn','הגדרות מפתח','אזור מוגן בקוד: חיבור לשרת, ניהול שמות, תבניות, גיבויים ואיפוסים.'],
     ['#advSave','בדוק חיבור ושמור','בודק שכתובת השרת והטוקן עובדים, ושומר אותם במכשיר.'],
@@ -3309,7 +3494,7 @@ html.tone-adj:not(.theme-light) .clockbar{ background:rgba(var(--inkrgb),.9) !im
     ['#doRestore','שחזר מהגיבוי שנבחר','⚠️ מחליף את כל הנתונים הנוכחיים בנתונים מהגיבוי שבחרת.'],
     ['#dlBackup','הורד גיבוי לקובץ','שומר את כל הנתונים כקובץ במחשב שלך.'],
     ['#upRestore','שחזר מקובץ','⚠️ טוען גיבוי מקובץ במחשב ומחליף בו את כל הנתונים הנוכחיים.'],
-    ['#mClose','סגור','סוגר את חלון ההגדרות.'],
+    ['#mClose','סגור','סוגר את חלון ההגדרות (גם מקש Esc).'],
     ['#presRefresh','רענן נוכחות','טוען מחדש מי מחובר עכשיו.'],
     ['#presClose','סגור','סוגר את חלון הנוכחות.'],
     ['#gateOk','כניסה','נכנס ללוח עם השם שבחרת.'],
