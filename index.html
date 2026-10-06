@@ -1009,7 +1009,9 @@ html[data-input="touch"] textarea, html[data-input="touch"] select{ font-size:ca
     if(/\u2713|\u2714|הופעלו|נבחר|הודבקה/.test(t)) return 'good';
     return '';
   }
-  function setStatus(t){ $('status').textContent=t; if(t) showToast(t, toastKind(t)); }
+  function setStatus(t){ $('status').textContent=t; if(t){ showToast(t, toastKind(t)); return; }
+    // ניקוי סטטוס — הודעת "בתהליך" (…) נעלמת מיד, כדי שלא תכסה את חלון "הדיווח נשלח"
+    try{ var el=$('toast'); if(el && /…$/.test(el.textContent||'')){ el.className='toast'; if(_toastT) clearTimeout(_toastT); } }catch(e){} }
 
   try{ var _pt=document.getElementById('platTag'); if(_pt&&window.PLATFORM) _pt.textContent=window.PLATFORM.label; }catch(e){}
 
@@ -1666,7 +1668,7 @@ html[data-input="touch"] textarea, html[data-input="touch"] select{ font-size:ca
       +'<br>המק״ט שהוקלד <b>אינו מופיע בקובץ הפריטים</b> של המערכת.'
       +'<br>אנא בדוק שוב שהמספר הוקלד נכון — ספרה אחת שגויה מובילה לפריט אחר.'
       +'<br><span class="uk-hint">אם בדקת והמק״ט נכון — אפשר להמשיך ולשלוח לקניינים.</span>';
-    $('unkGo').textContent = (from==='keypad') ? '✓ כן, בדקתי — המק״ט נכון, המשך' : '✓ כן, בדקתי — שלח לקניינים';
+    $('unkGo').textContent = '✓ כן, בדקתי — שלח לקניינים';
     setStatus(''); show($('unkWrap'));
     try{ $('unkBack').focus(); }catch(e){}
   }
@@ -1678,7 +1680,12 @@ html[data-input="touch"] textarea, html[data-input="touch"] select{ font-size:ca
   $('unkGo').addEventListener('click', function(){
     const p=unkPending; unkPending=null; hide($('unkWrap')); if(!p) return;
     skuConfirmed=unkKey(p.sku);
-    if(p.from==='keypad'){ kpAcceptSku(); return; }
+    if(p.from==='keypad'){
+      // המחסנאי אישר — שולחים מיד לקניין, בלי לחזור לשלב הכמות
+      $('txtSku').value=kpVal; hide($('kpWrap')); try{ buzz(); }catch(e){}
+      submitReport('text', {unknownOk:true});
+      return;
+    }
     submitReport(p.kind, {unknownOk:true});
   });
   function showProj(subj, kind){
@@ -1965,7 +1972,9 @@ html[data-input="touch"] textarea, html[data-input="touch"] select{ font-size:ca
     resetForm();
     show($('sentWrap'));
     var tkt = ticket ? ('<div style="margin:10px auto 0;display:inline-block;background:#0c2a14;border:1px solid #166534;border-radius:12px;padding:9px 18px;color:#bbf7d0;font-size:calc(18px * var(--ts));font-weight:800;font-family:\'Rubik\',sans-serif">🎫 קריאה מס׳ '+esc(ticket)+'</div>') : '';
-    $('sentInfo').innerHTML='<b>'+esc(subj.type||'דיווח')+'</b> · מק״ט <b>'+esc(subj.sku)+'</b>'+(subj.desc?(' — '+esc(subj.desc)):'')+' נשלח לקניינים ונכנס ללוח לטיפול. ✓'+tkt;
+    const unkLine = (String(subj.note||'').indexOf('❓ מק״ט לא מוכר')===0)
+      ? '<div style="margin-top:10px;font-size:calc(13.5px * var(--ts));color:#fbbf24">הדיווח סומן לקניין כ<b>"מק״ט לא מוכר"</b> — לפי אישורך שהמק״ט הוקלד נכון.</div>' : '';
+    $('sentInfo').innerHTML='<b>'+esc(subj.type||'דיווח')+'</b> · מק״ט <b>'+esc(subj.sku)+'</b>'+(subj.desc?(' — '+esc(subj.desc)):'')+' נשלח לקניינים ונכנס ללוח לטיפול. ✓'+tkt+unkLine;
   }
 
   // דיאלוג כפילות
@@ -2733,7 +2742,7 @@ html[data-input="touch"] textarea, html[data-input="touch"] select{ font-size:ca
 </script>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div id="platTag" style="position:fixed;bottom:5px;right:7px;font-size:10px;color:var(--faint);z-index:5;font-family:monospace;opacity:.55"></div>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:calc(13px * var(--ts));color:var(--faint);z-index:5;font-family:monospace">build 112</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:calc(13px * var(--ts));color:var(--faint);z-index:5;font-family:monospace">build 113</div>
 <!-- ===== כלי עזר (מודול עצמאי — זהה בשתי האפליקציות) ===== -->
 <style>
   #tkModal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;display:none;align-items:flex-start;justify-content:center}

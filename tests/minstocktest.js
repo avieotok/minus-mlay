@@ -99,12 +99,14 @@ const click = (w, el) => el.dispatchEvent(new w.MouseEvent('click', { bubbles: t
     click(w, w.document.getElementById('unkBack')); await tick(100);
     ok('"אתקן" — חוזרים למקלדת עם המספר לתיקון', !vis(w, 'unkWrap') && vis(w, 'kpWrap') && w.eval('kpVal') === '7777777' && w.eval('kpStep') === 'sku');
     click(w, w.document.getElementById('kpEnter')); await tick(100);
-    click(w, w.document.getElementById('unkGo')); await tick(150);
-    ok('"כן, בדקתי" — ממשיכים לכמות', w.eval('kpStep') === 'qty' && w.document.getElementById('txtSku').value === '7777777');
-    w.eval("kpVal='2'"); click(w, w.document.getElementById('kpEnter')); await tick(100);
-    await w.submitReport('text'); await tick(400);
-    ok('בשליחה לא שואלים שוב', !vis(w, 'unkWrap'));
-    ok('נשלח עם סימון "מק״ט לא מוכר"', S.creates === 1 && /^❓ מק״ט לא מוכר/.test((S.alerts[0] || {}).note || ''), (S.alerts[0] || {}).note);
+    ok('הלחצן: "כן, בדקתי — שלח לקניינים"', /שלח לקניינים/.test(w.document.getElementById('unkGo').textContent));
+    click(w, w.document.getElementById('unkGo')); await tick(500);
+    ok('"כן, בדקתי" — נשלח מיד, בלי שלב כמות', S.creates === 1, 'create=' + S.creates);
+    ok('המקלדת נסגרה', !vis(w, 'kpWrap'));
+    ok('לא נשאלים שוב', !vis(w, 'unkWrap'));
+    ok('נשלח עם סימון "מק״ט לא מוכר"', /^❓ מק״ט לא מוכר/.test((S.alerts[0] || {}).note || ''), (S.alerts[0] || {}).note);
+    ok('המחסנאי רואה "✅ הדיווח נשלח"', vis(w, 'sentWrap') && /הדיווח נשלח/.test(w.document.getElementById('sentTitle').textContent));
+    ok('בהודעה כתוב שסומן "מק״ט לא מוכר"', /מק״ט לא מוכר/.test(w.document.getElementById('sentInfo').textContent));
     ok('אחרי השליחה האישור מתאפס', w.eval('skuConfirmed') === '');
     w.closed = true; }
 
