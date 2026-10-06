@@ -88,7 +88,27 @@ const click = (w, el) => el.dispatchEvent(new w.MouseEvent('click', { bubbles: t
     ok('עדיין לא נשלח', S.creates === 0);
     w.closed = true; }
 
-  head('7ג · "הקלדתי נכון — שלח בכל זאת" → נשלח עם סימון, בלי לשאול שוב על פרויקט');
+  head('7ב2 · מקלדת המק״ט: השאלה עולה מיד באנטר');
+  { const S = server(); const w = await wh(S);
+    w.openKeypad('sku'); w.eval("kpVal='7777777'; kpRender();");
+    ok('אזהרה בתוך המקלדת', /לא נמצא בקובץ הפריטים/.test(w.document.getElementById('kpDesc').textContent), w.document.getElementById('kpDesc').textContent);
+    click(w, w.document.getElementById('kpEnter')); await tick(150);
+    ok('השאלה מוצגת מיד', vis(w, 'unkWrap'));
+    ok('השאלה: "האם המק״ט הוקלד נכון?"', /האם המק״ט הוקלד נכון/.test(w.document.querySelector('#unkWrap .unk-q').textContent));
+    ok('המקלדת נשארת פתוחה מתחת', vis(w, 'kpWrap'));
+    click(w, w.document.getElementById('unkBack')); await tick(100);
+    ok('"אתקן" — חוזרים למקלדת עם המספר לתיקון', !vis(w, 'unkWrap') && vis(w, 'kpWrap') && w.eval('kpVal') === '7777777' && w.eval('kpStep') === 'sku');
+    click(w, w.document.getElementById('kpEnter')); await tick(100);
+    click(w, w.document.getElementById('unkGo')); await tick(150);
+    ok('"כן, בדקתי" — ממשיכים לכמות', w.eval('kpStep') === 'qty' && w.document.getElementById('txtSku').value === '7777777');
+    w.eval("kpVal='2'"); click(w, w.document.getElementById('kpEnter')); await tick(100);
+    await w.submitReport('text'); await tick(400);
+    ok('בשליחה לא שואלים שוב', !vis(w, 'unkWrap'));
+    ok('נשלח עם סימון "מק״ט לא מוכר"', S.creates === 1 && /^❓ מק״ט לא מוכר/.test((S.alerts[0] || {}).note || ''), (S.alerts[0] || {}).note);
+    ok('אחרי השליחה האישור מתאפס', w.eval('skuConfirmed') === '');
+    w.closed = true; }
+
+  head('7ג · "כן, בדקתי — שלח לקניינים" → נשלח עם סימון, בלי לשאול שוב על פרויקט');
   { const S = server(); const w = await wh(S);
     w.document.getElementById('txtSku').value = '7777777'; await w.submitReport('text'); await tick(200);
     click(w, w.document.getElementById('unkGo')); await tick(400);

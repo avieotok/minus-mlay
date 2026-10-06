@@ -400,7 +400,10 @@
 
   /* ================= מק״ט לא מוכר ================= */
   .unk-info{ background:var(--ink); border:1px solid #f59e0b; border-radius:12px; padding:14px 16px; font-size:calc(14.5px * var(--ts)); color:var(--text); line-height:1.75; margin-bottom:12px; text-align:center; }
+  .unk-info .uk-hint{ display:block; margin-top:8px; color:var(--muted); font-size:calc(13.5px * var(--ts)); }
   .unk-info .uk-sku{ display:inline-block; margin:8px 0 2px; padding:6px 16px; border-radius:10px; background:rgba(245,158,11,.14); border:1px solid #f59e0b; color:#fde68a; font-family:'Rubik',sans-serif; font-weight:900; font-size:calc(22px * var(--ts)); letter-spacing:.06em; direction:ltr; }
+  #unkWrap{ z-index:80; }
+  .unk-q{ text-align:center; font-weight:800; font-size:calc(16.5px * var(--ts)); color:var(--text); margin:2px 0 12px; }
   .unk-back{ background:linear-gradient(180deg,#fbbf24,#d97706) !important; color:#1c1305 !important; }
   .unk-go{ border-color:#f59e0b !important; color:#fde68a !important; }
   .desc-line.desc-warn{ color:#fbbf24 !important; font-weight:800; }
@@ -433,6 +436,9 @@
 /* ===== מניעת "זום" אוטומטי בטלפון =====
    אייפון (ובחלק מהמקרים גם אנדרואיד) מגדיל את כל המסך כשנוגעים בשדה שהטקסט בו קטן מ-16 פיקסלים.
    במכשירי מגע בלבד — כל השדות לפחות 16px (וגדלים יחד עם כפתור "אא"). צביטה להגדלה נשארת זמינה. */
+/* הקשה כפולה מהירה (למשל על מקלדת המק״ט) גרמה לאייפון להגדיל את המסך — מבוטל; צביטה להגדלה נשארת */
+html, body, button, a, input, select, textarea, label, .kp-key{ touch-action:manipulation; }
+html{ -webkit-text-size-adjust:100%; text-size-adjust:100%; }
 @media (hover:none), (pointer:coarse){
   input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=button]):not([type=submit]),
   textarea, select{ font-size:calc(16px * var(--ts, 1)) !important; }
@@ -445,6 +451,12 @@ html[data-input="touch"] textarea, html[data-input="touch"] select{ font-size:ca
   #tkOpen{ padding:0 9px !important; margin-inline-start:6px !important; }
 }
 </style>
+<script>
+/* אייפון: מבטל זום אוטומטי בלי לחסום צביטה (iOS מתעלם מ-maximum-scale לגבי צביטה ידנית).
+   באנדרואיד לא מוסיפים — שם זה היה חוסם גם צביטה. */
+(function(){ try{ if(document.documentElement.getAttribute('data-os')!=='ios') return;
+  var m=document.querySelector('meta[name=viewport]'); if(m && !/maximum-scale/.test(m.content)) m.content+=', maximum-scale=1'; }catch(e){} })();
+</script>
 </head>
 <body>
 <div id="idGate" style="position:fixed;inset:0;background:var(--ink);z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center">
@@ -790,10 +802,11 @@ html[data-input="touch"] textarea, html[data-input="touch"] select{ font-size:ca
   <!-- מק״ט שלא מופיע בקובץ הפריטים — כנראה טעות הקלדה -->
   <div class="recip-overlay hidden" id="unkWrap" role="dialog" aria-modal="true" aria-labelledby="unkTitle">
     <div class="recip-card">
-      <div class="recip-title" id="unkTitle">❓ המק״ט לא נמצא בקובץ</div>
+      <div class="recip-title" id="unkTitle">⚠️ המק״ט לא נמצא בקובץ הפריטים</div>
       <div id="unkInfo" class="unk-info"></div>
-      <button class="send unk-back" id="unkBack">✏️ חזור ובדוק את המק״ט</button>
-      <button class="recip-cancel unk-go" id="unkGo">הקלדתי נכון — שלח בכל זאת</button>
+      <div class="unk-q">האם המק״ט הוקלד נכון?</div>
+      <button class="send unk-back" id="unkBack">✏️ לא — אתקן את המק״ט</button>
+      <button class="recip-cancel unk-go" id="unkGo">✓ כן, בדקתי — שלח לקניינים</button>
     </div>
   </div>
 
@@ -1494,7 +1507,8 @@ html[data-input="touch"] textarea, html[data-input="touch"] select{ font-size:ca
   function setCatCount(){ const el=$('catCount'); if(el) el.textContent=Object.keys(CATALOG).length; }
   function refreshDesc(){ const v=$('txtSku').value.trim(), d=lookupDesc(v), el=$('descText');
     const unknown=(!!v && v.length>=5 && !d && skuListsReady() && !skuKnown(v));
-    el.textContent = d ? ('📦 '+d) : (unknown ? '⚠️ המק״ט לא נמצא בקובץ הפריטים — בדוק שהוקלד נכון' : '');
+    let conf=false; try{ conf = unknown && (typeof skuConfirmed!=='undefined') && skuConfirmed===String(v).trim().toUpperCase().replace(/^0+/,''); }catch(e){}
+    el.textContent = d ? ('📦 '+d) : (unknown ? (conf ? '⚠️ המק״ט לא נמצא בקובץ הפריטים · אישרת שהוקלד נכון' : '⚠️ המק״ט לא נמצא בקובץ הפריטים — בדוק שהוקלד נכון') : '');
     el.classList.toggle('desc-warn', unknown); }
 
   // catalog search (by name or sku)
@@ -1643,20 +1657,30 @@ html[data-input="touch"] textarea, html[data-input="touch"] select{ font-size:ca
   function isProjectItem(sku){ if(!minstockReady()) return false; const k=minKey(sku); return !!k && !Object.prototype.hasOwnProperty.call(MINSTOCK.items,k); }
   let projPending=null, unkPending=null;
   const UNK_MARK='❓ מק״ט לא מוכר';
-  function showUnknown(subj, kind){
-    unkPending={kind:kind};
-    $('unkInfo').innerHTML='המק״ט שהוקלד <b>לא מופיע בקובץ הפריטים</b>:'
-      +'<br><span class="uk-sku">'+esc(subj.sku)+'</span>'
-      +'<br>עליך לבדוק אותו שוב — ייתכן שנפלה טעות בהקלדה.'
-      +'<br><span style="color:var(--muted);font-size:calc(13.5px * var(--ts))">אם הקלדת נכון — אפשר לשלוח בכל זאת.</span>';
+  let skuConfirmed='';   // מק״ט לא מוכר שהמחסנאי כבר אישר שהוקלד נכון — לא שואלים עליו שוב
+  function unkKey(s){ return String(s==null?'':s).trim().toUpperCase().replace(/^0+/,''); }
+  /* from: 'keypad' — מיד אחרי "אנטר" במקלדת המק״ט · 'send' — בלחיצה על שליחה */
+  function showUnknown(sku, from, kind){
+    unkPending={from:from, kind:kind, sku:sku};
+    $('unkInfo').innerHTML='<span class="uk-sku">'+esc(sku)+'</span>'
+      +'<br>המק״ט שהוקלד <b>אינו מופיע בקובץ הפריטים</b> של המערכת.'
+      +'<br>אנא בדוק שוב שהמספר הוקלד נכון — ספרה אחת שגויה מובילה לפריט אחר.'
+      +'<br><span class="uk-hint">אם בדקת והמק״ט נכון — אפשר להמשיך ולשלוח לקניינים.</span>';
+    $('unkGo').textContent = (from==='keypad') ? '✓ כן, בדקתי — המק״ט נכון, המשך' : '✓ כן, בדקתי — שלח לקניינים';
     setStatus(''); show($('unkWrap'));
     try{ $('unkBack').focus(); }catch(e){}
   }
   $('unkBack').addEventListener('click', function(){
     const p=unkPending; unkPending=null; hide($('unkWrap'));
+    if(p && p.from==='keypad'){ try{ buzz(); }catch(e){} return; }      // המקלדת עדיין פתוחה — מתקנים במקום
     try{ if(p && (p.kind==='text' || cardMode)) openKeypad('sku'); else $('overlayText').focus(); }catch(e){}
   });
-  $('unkGo').addEventListener('click', function(){ const p=unkPending; unkPending=null; hide($('unkWrap')); if(p) submitReport(p.kind, {unknownOk:true}); });
+  $('unkGo').addEventListener('click', function(){
+    const p=unkPending; unkPending=null; hide($('unkWrap')); if(!p) return;
+    skuConfirmed=unkKey(p.sku);
+    if(p.from==='keypad'){ kpAcceptSku(); return; }
+    submitReport(p.kind, {unknownOk:true});
+  });
   function showProj(subj, kind){
     projPending={kind:kind};
     $('projInfo').innerHTML='מק״ט <b>'+esc(subj.sku)+'</b>'+(subj.desc?(' — '+esc(subj.desc)):'')
@@ -1685,7 +1709,7 @@ html[data-input="touch"] textarea, html[data-input="touch"] select{ font-size:ca
     if(!apiOn()){ setStatus('אין חיבור למערכת — לא ניתן לשלוח. פנה למפתח.'); return; }
     // מק״ט שלא מופיע בקובץ — קודם בודקים הקלדה. אישור כאן מחליף את שאלת "ייחודי לפרויקט" (לא שואלים פעמיים).
     const unknownSku=(skuListsReady() && !skuKnown(subj.sku));
-    if(unknownSku && !opts.unknownOk){ showUnknown(subj, kind); return; }
+    if(unknownSku && !opts.unknownOk && skuConfirmed!==unkKey(subj.sku)){ showUnknown(subj.sku, 'send', kind); return; }
     if(unknownSku){
       subj.note = (subj.type==='חוסר מלאי')
         ? (UNK_MARK+' — לא מופיע בקובץ הפריטים, המחסנאי אישר שהוקלד נכון')
@@ -1914,6 +1938,7 @@ html[data-input="touch"] textarea, html[data-input="touch"] select{ font-size:ca
 
   // מסך אישור אחרי שליחה + איפוס הטופס
   function resetForm(){
+    skuConfirmed='';
     if($('txtSku')) $('txtSku').value='';
     if($('qtyText')) $('qtyText').value='';
     if($('overlayText')) $('overlayText').value='';
@@ -2643,16 +2668,22 @@ html[data-input="touch"] textarea, html[data-input="touch"] select{ font-size:ca
     $('kpSkip').classList.toggle('hidden', kpStep!=='qty');
     $('kpEnter').textContent = kpStep==='sku' ? 'אנטר ←' : 'סיום ושליחה ←';
     const kd=$('kpDesc');
-    if(kpStep==='sku' && kpVal){ const d=lookupDesc(kpVal); if(d){ kd.style.color='#34d399'; kd.textContent='📦 '+d; } else { kd.style.color='#78716c'; kd.textContent='מק״ט לא נמצא בקטלוג'; } }
+    if(kpStep==='sku' && kpVal){ const d=lookupDesc(kpVal);
+      if(d){ kd.style.color='#34d399'; kd.textContent='📦 '+d; }
+      else if(kpVal.length>=5 && skuListsReady() && !skuKnown(kpVal)){ kd.style.color='#fbbf24'; kd.textContent='⚠️ המק״ט לא נמצא בקובץ הפריטים'; }
+      else { kd.style.color='#78716c'; kd.textContent=''; } }
     else { kd.textContent=''; }
   }
   function kpFinish(){ hide($('kpWrap')); refreshDesc && refreshDesc(); }
+  function kpAcceptSku(){ $('txtSku').value=kpVal; refreshDesc(); buzz(); kpStep='qty'; kpVal=$('qtyText').value.trim(); kpRender(); }
   $('kpGrid').addEventListener('click',e=>{ const k=e.target.closest('.kp-key'); if(!k) return; speakDigit(k.dataset.d); if(kpVal.length<14){ kpVal+=k.dataset.d; kpRender(); } });
   $('kpBack').addEventListener('click',()=>{ kpVal=kpVal.slice(0,-1); kpRender(); });
   $('kpCancel').addEventListener('click',()=>hide($('kpWrap')));
   $('kpSkip').addEventListener('click',()=>{ $('qtyText').value=''; kpFinish(); });
   $('kpEnter').addEventListener('click',()=>{
-    if(kpStep==='sku'){ if(!kpVal){ setStatus('הקש מק״ט.'); return; } $('txtSku').value=kpVal; refreshDesc(); buzz(); kpStep='qty'; kpVal=$('qtyText').value.trim(); kpRender(); }
+    if(kpStep==='sku'){ if(!kpVal){ setStatus('הקש מק״ט.'); return; }
+      if(skuListsReady() && !skuKnown(kpVal) && skuConfirmed!==unkKey(kpVal)){ showUnknown(kpVal, 'keypad'); return; }
+      kpAcceptSku(); }
     else { $('qtyText').value=kpVal; buzz(); kpFinish(); }
   });
   $('txtSku').addEventListener('click',()=>openKeypad('sku'));
@@ -2702,7 +2733,7 @@ html[data-input="touch"] textarea, html[data-input="touch"] select{ font-size:ca
 </script>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div id="platTag" style="position:fixed;bottom:5px;right:7px;font-size:10px;color:var(--faint);z-index:5;font-family:monospace;opacity:.55"></div>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:calc(13px * var(--ts));color:var(--faint);z-index:5;font-family:monospace">build 111</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:calc(13px * var(--ts));color:var(--faint);z-index:5;font-family:monospace">build 112</div>
 <!-- ===== כלי עזר (מודול עצמאי — זהה בשתי האפליקציות) ===== -->
 <style>
   #tkModal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;display:none;align-items:flex-start;justify-content:center}

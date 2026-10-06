@@ -896,6 +896,9 @@ html.tone-adj:not(.theme-light) .clockbar{ background:rgba(var(--inkrgb),.9) !im
 /* ===== מניעת "זום" אוטומטי בטלפון =====
    אייפון (ובחלק מהמקרים גם אנדרואיד) מגדיל את כל המסך כשנוגעים בשדה שהטקסט בו קטן מ-16 פיקסלים.
    במכשירי מגע בלבד — כל השדות לפחות 16px (וגדלים יחד עם כפתור "אא"). צביטה להגדלה נשארת זמינה. */
+/* הקשה כפולה מהירה (למשל על מקלדת המק״ט) גרמה לאייפון להגדיל את המסך — מבוטל; צביטה להגדלה נשארת */
+html, body, button, a, input, select, textarea, label, .kp-key{ touch-action:manipulation; }
+html{ -webkit-text-size-adjust:100%; text-size-adjust:100%; }
 @media (hover:none), (pointer:coarse){
   input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=button]):not([type=submit]),
   textarea, select{ font-size:calc(16px * var(--ts, 1)) !important; }
@@ -903,6 +906,12 @@ html.tone-adj:not(.theme-light) .clockbar{ background:rgba(var(--inkrgb),.9) !im
 html[data-input="touch"] input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=button]):not([type=submit]),
 html[data-input="touch"] textarea, html[data-input="touch"] select{ font-size:calc(16px * var(--ts, 1)) !important; }
 </style>
+<script>
+/* אייפון: מבטל זום אוטומטי בלי לחסום צביטה (iOS מתעלם מ-maximum-scale לגבי צביטה ידנית).
+   באנדרואיד לא מוסיפים — שם זה היה חוסם גם צביטה. */
+(function(){ try{ if(document.documentElement.getAttribute('data-os')!=='ios') return;
+  var m=document.querySelector('meta[name=viewport]'); if(m && !/maximum-scale/.test(m.content)) m.content+=', maximum-scale=1'; }catch(e){} })();
+</script>
 </head>
 <body>
 <div id="setGate" style="position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9998;display:none;align-items:center;justify-content:center;padding:24px">
