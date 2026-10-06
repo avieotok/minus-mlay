@@ -889,6 +889,17 @@ html.tone-adj:not(.theme-light) .clockbar{ background:rgba(var(--inkrgb),.9) !im
 })();
 </script>
 <!-- ═══════════════════ סוף ערכת העיצוב הבהירה ═══════════════════ -->
+<style id="noAutoZoom">
+/* ===== מניעת "זום" אוטומטי בטלפון =====
+   אייפון (ובחלק מהמקרים גם אנדרואיד) מגדיל את כל המסך כשנוגעים בשדה שהטקסט בו קטן מ-16 פיקסלים.
+   במכשירי מגע בלבד — כל השדות לפחות 16px (וגדלים יחד עם כפתור "אא"). צביטה להגדלה נשארת זמינה. */
+@media (hover:none), (pointer:coarse){
+  input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=button]):not([type=submit]),
+  textarea, select{ font-size:calc(16px * var(--ts, 1)) !important; }
+}
+html[data-input="touch"] input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=button]):not([type=submit]),
+html[data-input="touch"] textarea, html[data-input="touch"] select{ font-size:calc(16px * var(--ts, 1)) !important; }
+</style>
 </head>
 <body>
 <div id="setGate" style="position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9998;display:none;align-items:center;justify-content:center;padding:24px">

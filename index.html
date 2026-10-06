@@ -423,6 +423,22 @@
   }
   @media print{ .clockbar{display:none !important} }
 </style>
+<style id="noAutoZoom">
+/* ===== מניעת "זום" אוטומטי בטלפון =====
+   אייפון (ובחלק מהמקרים גם אנדרואיד) מגדיל את כל המסך כשנוגעים בשדה שהטקסט בו קטן מ-16 פיקסלים.
+   במכשירי מגע בלבד — כל השדות לפחות 16px (וגדלים יחד עם כפתור "אא"). צביטה להגדלה נשארת זמינה. */
+@media (hover:none), (pointer:coarse){
+  input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=button]):not([type=submit]),
+  textarea, select{ font-size:calc(16px * var(--ts, 1)) !important; }
+}
+html[data-input="touch"] input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=button]):not([type=submit]),
+html[data-input="touch"] textarea, html[data-input="touch"] select{ font-size:calc(16px * var(--ts, 1)) !important; }
+/* טלפונים צרים מאוד (כ-320px, למשל iPhone SE): מרווחי הכותרת מצטמצמים כדי שלא תחרוג מהמסך */
+@media (max-width:360px){
+  .header{ padding-inline:10px !important; gap:8px !important; }
+  #tkOpen{ padding:0 9px !important; margin-inline-start:6px !important; }
+}
+</style>
 </head>
 <body>
 <div id="idGate" style="position:fixed;inset:0;background:var(--ink);z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center">
@@ -2631,7 +2647,7 @@
 </script>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div id="platTag" style="position:fixed;bottom:5px;right:7px;font-size:10px;color:var(--faint);z-index:5;font-family:monospace;opacity:.55"></div>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:calc(13px * var(--ts));color:var(--faint);z-index:5;font-family:monospace">build 109</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:calc(13px * var(--ts));color:var(--faint);z-index:5;font-family:monospace">build 110</div>
 <!-- ===== כלי עזר (מודול עצמאי — זהה בשתי האפליקציות) ===== -->
 <style>
   #tkModal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;display:none;align-items:flex-start;justify-content:center}
