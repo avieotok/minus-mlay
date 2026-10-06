@@ -398,6 +398,12 @@
   .msg-fail button{background:#7f1d1d;color:#fee2e2;border:0;border-radius:8px;padding:5px 13px;
     font-family:'Heebo',sans-serif;font-weight:800;font-size:calc(13px * var(--ts));cursor:pointer;min-height:34px}
 
+  /* ================= מק״ט לא מוכר ================= */
+  .unk-info{ background:var(--ink); border:1px solid #f59e0b; border-radius:12px; padding:14px 16px; font-size:calc(14.5px * var(--ts)); color:var(--text); line-height:1.75; margin-bottom:12px; text-align:center; }
+  .unk-info .uk-sku{ display:inline-block; margin:8px 0 2px; padding:6px 16px; border-radius:10px; background:rgba(245,158,11,.14); border:1px solid #f59e0b; color:#fde68a; font-family:'Rubik',sans-serif; font-weight:900; font-size:calc(22px * var(--ts)); letter-spacing:.06em; direction:ltr; }
+  .unk-back{ background:linear-gradient(180deg,#fbbf24,#d97706) !important; color:#1c1305 !important; }
+  .unk-go{ border-color:#f59e0b !important; color:#fde68a !important; }
+  .desc-line.desc-warn{ color:#fbbf24 !important; font-weight:800; }
   /* ================= פריט ייחודי לפרויקט ================= */
   .proj-info{ background:var(--ink); border:1px solid #7c3aed; border-radius:12px; padding:14px 16px; font-size:calc(14.5px * var(--ts)); color:var(--text); line-height:1.75; margin-bottom:12px; text-align:center; }
   .proj-info .pj-tag{ display:inline-block; margin-top:8px; padding:5px 12px; border-radius:999px; background:rgba(139,92,246,.16); border:1px solid #8b5cf6; color:#c4b5fd; font-weight:800; }
@@ -778,6 +784,16 @@ html[data-input="touch"] textarea, html[data-input="touch"] select{ font-size:ca
       <div class="recip-title" id="dupTitle">⛔ המק״ט כבר דווח</div>
       <div id="dupInfo" style="background:var(--ink);border:1px solid var(--line2);border-radius:12px;padding:14px 16px;font-size:calc(14px * var(--ts));color:var(--text);line-height:1.7;margin-bottom:12px"></div>
       <button class="recip-cancel" id="dupCancel">סגור</button>
+    </div>
+  </div>
+
+  <!-- מק״ט שלא מופיע בקובץ הפריטים — כנראה טעות הקלדה -->
+  <div class="recip-overlay hidden" id="unkWrap" role="dialog" aria-modal="true" aria-labelledby="unkTitle">
+    <div class="recip-card">
+      <div class="recip-title" id="unkTitle">❓ המק״ט לא נמצא בקובץ</div>
+      <div id="unkInfo" class="unk-info"></div>
+      <button class="send unk-back" id="unkBack">✏️ חזור ובדוק את המק״ט</button>
+      <button class="recip-cancel unk-go" id="unkGo">הקלדתי נכון — שלח בכל זאת</button>
     </div>
   </div>
 
@@ -1461,9 +1477,25 @@ html[data-input="touch"] textarea, html[data-input="touch"] select{ font-size:ca
   }
   function normSku(s){ return String(s==null?'':s).trim(); }
   function lookupDesc(sku){ const k=normSku(sku); if(!k) return ''; if(CATALOG[k]) return CATALOG[k];
-    const k2=k.replace(/^0+/,''); for(const key in CATALOG){ if(key.replace(/^0+/,'')===k2) return CATALOG[key]; } return ''; }
+    const k2=k.replace(/^0+/,''); for(const key in CATALOG){ if(key.replace(/^0+/,'')===k2) return CATALOG[key]; }
+    try{ const mk=k2.toUpperCase(); if(window.MINSTOCK && MINSTOCK.items && MINSTOCK.items[mk]) return MINSTOCK.items[mk]; }catch(e){}
+    return ''; }
+  /* ===== מק״ט מוכר? — קיים בקטלוג הפריטים או ברשימת מלאי המינימום (גם בלי אפסים מובילים) ===== */
+  let _skuIdx=null, _skuIdxN=-1;
+  function skuIndex(){ const n=Object.keys(CATALOG).length; if(_skuIdx && _skuIdxN===n) return _skuIdx;
+    const m=new Set(); for(const key in CATALOG){ m.add(String(key).trim().toUpperCase().replace(/^0+/,'')); } _skuIdx=m; _skuIdxN=n; return m; }
+  function skuListsReady(){ return Object.keys(CATALOG).length>0 || (typeof minstockReady==='function' && minstockReady()); }
+  function skuKnown(sku){
+    const k=String(sku==null?'':sku).trim().toUpperCase().replace(/^0+/,''); if(!k) return false;
+    if(skuIndex().has(k)) return true;
+    try{ if(window.MINSTOCK && MINSTOCK.items && Object.prototype.hasOwnProperty.call(MINSTOCK.items,k)) return true; }catch(e){}
+    return false;
+  }
   function setCatCount(){ const el=$('catCount'); if(el) el.textContent=Object.keys(CATALOG).length; }
-  function refreshDesc(){ const d=lookupDesc($('txtSku').value.trim()); $('descText').textContent = d ? ('📦 '+d) : ''; }
+  function refreshDesc(){ const v=$('txtSku').value.trim(), d=lookupDesc(v), el=$('descText');
+    const unknown=(!!v && v.length>=5 && !d && skuListsReady() && !skuKnown(v));
+    el.textContent = d ? ('📦 '+d) : (unknown ? '⚠️ המק״ט לא נמצא בקובץ הפריטים — בדוק שהוקלד נכון' : '');
+    el.classList.toggle('desc-warn', unknown); }
 
   // catalog search (by name or sku)
   function renderSearch(q){
@@ -1609,7 +1641,22 @@ html[data-input="touch"] textarea, html[data-input="touch"] select{ font-size:ca
   function minKey(s){ return String(s==null?'':s).trim().toUpperCase().replace(/^0+/,''); }
   function minstockReady(){ try{ return !!(window.MINSTOCK && MINSTOCK.items && Object.keys(MINSTOCK.items).length); }catch(e){ return false; } }
   function isProjectItem(sku){ if(!minstockReady()) return false; const k=minKey(sku); return !!k && !Object.prototype.hasOwnProperty.call(MINSTOCK.items,k); }
-  let projPending=null;
+  let projPending=null, unkPending=null;
+  const UNK_MARK='❓ מק״ט לא מוכר';
+  function showUnknown(subj, kind){
+    unkPending={kind:kind};
+    $('unkInfo').innerHTML='המק״ט שהוקלד <b>לא מופיע בקובץ הפריטים</b>:'
+      +'<br><span class="uk-sku">'+esc(subj.sku)+'</span>'
+      +'<br>עליך לבדוק אותו שוב — ייתכן שנפלה טעות בהקלדה.'
+      +'<br><span style="color:var(--muted);font-size:calc(13.5px * var(--ts))">אם הקלדת נכון — אפשר לשלוח בכל זאת.</span>';
+    setStatus(''); show($('unkWrap'));
+    try{ $('unkBack').focus(); }catch(e){}
+  }
+  $('unkBack').addEventListener('click', function(){
+    const p=unkPending; unkPending=null; hide($('unkWrap'));
+    try{ if(p && (p.kind==='text' || cardMode)) openKeypad('sku'); else $('overlayText').focus(); }catch(e){}
+  });
+  $('unkGo').addEventListener('click', function(){ const p=unkPending; unkPending=null; hide($('unkWrap')); if(p) submitReport(p.kind, {unknownOk:true}); });
   function showProj(subj, kind){
     projPending={kind:kind};
     $('projInfo').innerHTML='מק״ט <b>'+esc(subj.sku)+'</b>'+(subj.desc?(' — '+esc(subj.desc)):'')
@@ -1636,7 +1683,15 @@ html[data-input="touch"] textarea, html[data-input="touch"] select{ font-size:ca
       if(!subj.qty || !subj.qtyRecv){ setStatus('נא למלא כמה הוזמן וכמה התקבל.'); return; }
     }
     if(!apiOn()){ setStatus('אין חיבור למערכת — לא ניתן לשלוח. פנה למפתח.'); return; }
-    const projItem=(subj.type==='חוסר מלאי' && isProjectItem(subj.sku));
+    // מק״ט שלא מופיע בקובץ — קודם בודקים הקלדה. אישור כאן מחליף את שאלת "ייחודי לפרויקט" (לא שואלים פעמיים).
+    const unknownSku=(skuListsReady() && !skuKnown(subj.sku));
+    if(unknownSku && !opts.unknownOk){ showUnknown(subj, kind); return; }
+    if(unknownSku){
+      subj.note = (subj.type==='חוסר מלאי')
+        ? (UNK_MARK+' — לא מופיע בקובץ הפריטים, המחסנאי אישר שהוקלד נכון')
+        : (UNK_MARK+' · '+(subj.note||''));
+    }
+    const projItem=(!unknownSku && subj.type==='חוסר מלאי' && isProjectItem(subj.sku));
     if(projItem && !opts.projectOk){ showProj(subj, kind); return; }
     if(projItem) subj.note=PROJ_MARK+' — המחסנאי ביקש לעדכן בכל זאת';
     currentAlertId=newAlertId();
@@ -2647,7 +2702,7 @@ html[data-input="touch"] textarea, html[data-input="touch"] select{ font-size:ca
 </script>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div id="platTag" style="position:fixed;bottom:5px;right:7px;font-size:10px;color:var(--faint);z-index:5;font-family:monospace;opacity:.55"></div>
-<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:calc(13px * var(--ts));color:var(--faint);z-index:5;font-family:monospace">build 110</div>
+<div id="buildTag" style="position:fixed;bottom:5px;left:7px;font-size:calc(13px * var(--ts));color:var(--faint);z-index:5;font-family:monospace">build 111</div>
 <!-- ===== כלי עזר (מודול עצמאי — זהה בשתי האפליקציות) ===== -->
 <style>
   #tkModal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;display:none;align-items:flex-start;justify-content:center}

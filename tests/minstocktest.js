@@ -8,7 +8,7 @@ function ok(n, c, d) { if (c) { pass++; console.log('  ✓ ' + n); } else { fail
 function head(t) { console.log('\n' + t); }
 const WH = { afcon_reporter: 'משה', afcon_reporter_phone: '0502223333' };
 const DB = { afcon_me: 'דנה' };
-const MS = ['1000123'];          // רק 1000123 מנוהל מינימום; 7777777 ייחודי לפרויקט
+const MS = ['1000123'];          // רק 1000123 מנוהל מינימום; 1234567 בקטלוג אבל ייחודי לפרויקט; 7777777 לא מופיע באף קובץ
 function server() { const S = mkServer(); const o = S.handle.bind(S); S.creates = 0; S.handle = (a, p) => { if (a === 'create') S.creates++; return o(a, p); }; return S; }
 async function wh(S, opts) { const r = await boot('index.html', Object.assign({ server: S, storage: WH, minstock: MS }, opts || {})); await tick(200); return r.w; }
 const vis = (w, id) => !w.document.getElementById(id).classList.contains('hidden');
@@ -30,7 +30,7 @@ const click = (w, el) => el.dispatchEvent(new w.MouseEvent('click', { bubbles: t
 
   head('3 · מק״ט ייחודי לפרויקט → חלון עם שאלה, ושום דבר לא נשלח עדיין');
   { const S = server(); const w = await wh(S);
-    w.document.getElementById('txtSku').value = '7777777'; await w.submitReport('text'); await tick(300);
+    w.document.getElementById('txtSku').value = '1234567'; await w.submitReport('text'); await tick(300);
     ok('החלון מוצג', vis(w, 'projWrap'));
     const t = w.document.getElementById('projInfo').textContent;
     ok('כתוב שאין צורך לעדכן את הרכש', /אין צורך לעדכן את הרכש/.test(t), t);
@@ -46,7 +46,7 @@ const click = (w, el) => el.dispatchEvent(new w.MouseEvent('click', { bubbles: t
 
   head('4 · "כן" → נשלח לקניין עם סימון "ייחודי לפרויקט"');
   { const S = server(); const w = await wh(S);
-    w.document.getElementById('txtSku').value = '7777777'; await w.submitReport('text'); await tick(200);
+    w.document.getElementById('txtSku').value = '1234567'; await w.submitReport('text'); await tick(200);
     click(w, w.document.getElementById('projYes')); await tick(400);
     ok('נשלח לשרת', S.creates === 1, 'create=' + S.creates);
     ok('מסומן ייחודי לפרויקט', /^🏷️ ייחודי לפרויקט/.test((S.alerts[0] || {}).note || ''), (S.alerts[0] || {}).note);
@@ -56,20 +56,70 @@ const click = (w, el) => el.dispatchEvent(new w.MouseEvent('click', { bubbles: t
   head('5 · פגום / אי-התאמה — לא נבדקים מול הרשימה');
   { const S = server(); const w = await wh(S);
     w.applyType('פריט פגום'); w.document.getElementById('noteText').value = 'שבור';
-    w.document.getElementById('txtSku').value = '7777777'; await w.submitReport('text'); await tick(300);
+    w.document.getElementById('txtSku').value = '1234567'; await w.submitReport('text'); await tick(300);
     ok('לא הוצג חלון', !vis(w, 'projWrap')); ok('נשלח', S.creates === 1); w.closed = true; }
 
   head('6 · הרשימה לא נטענה → לא חוסמים');
   { const S = server(); const w = await wh(S, { minstock: [] });
-    w.document.getElementById('txtSku').value = '7777777'; await w.submitReport('text'); await tick(300);
+    w.document.getElementById('txtSku').value = '1234567'; await w.submitReport('text'); await tick(300);
     ok('לא הוצג חלון', !vis(w, 'projWrap')); ok('נשלח', S.creates === 1); w.closed = true; }
 
   head('7 · אין רשת + "כן" → נשמר בתור עם הסימון');
   { const S = server(); S.mode = 'offline'; const w = await wh(S);
-    w.document.getElementById('txtSku').value = '7777777'; await w.submitReport('text'); await tick(200);
+    w.document.getElementById('txtSku').value = '1234567'; await w.submitReport('text'); await tick(200);
     ok('החלון מוצג גם בלי רשת', vis(w, 'projWrap'));
     click(w, w.document.getElementById('projYes')); await tick(300);
     const q = w.obxLoad(); ok('בתור', q.length === 1); ok('הסימון נשמר בתור', /ייחודי לפרויקט/.test(((q[0] || {}).payload || {}).note || ''));
+    w.closed = true; }
+
+  head('7ב · מק״ט שלא מופיע באף קובץ → "בדוק שוב" (לא נשלח כלום)');
+  { const S = server(); const w = await wh(S);
+    w.document.getElementById('txtSku').value = '7777777'; w.refreshDesc();
+    ok('אזהרה מתחת לשדה כבר לפני השליחה', /לא נמצא בקובץ הפריטים/.test(w.document.getElementById('descText').textContent), w.document.getElementById('descText').textContent);
+    await w.submitReport('text'); await tick(300);
+    ok('חלון "המק״ט לא נמצא בקובץ" מוצג', vis(w, 'unkWrap'));
+    ok('חלון "ייחודי לפרויקט" לא מוצג במקביל', !vis(w, 'projWrap'));
+    ok('המק״ט מוצג בחלון', /7777777/.test(w.document.getElementById('unkInfo').textContent));
+    ok('לא נשלח', S.creates === 0);
+    click(w, w.document.getElementById('unkBack')); await tick(200);
+    ok('"חזור ובדוק" — החלון נסגר', !vis(w, 'unkWrap'));
+    ok('המק״ט נשאר בשדה לתיקון', w.document.getElementById('txtSku').value === '7777777');
+    ok('נפתחה מקלדת המק״ט', vis(w, 'kpWrap'));
+    ok('עדיין לא נשלח', S.creates === 0);
+    w.closed = true; }
+
+  head('7ג · "הקלדתי נכון — שלח בכל זאת" → נשלח עם סימון, בלי לשאול שוב על פרויקט');
+  { const S = server(); const w = await wh(S);
+    w.document.getElementById('txtSku').value = '7777777'; await w.submitReport('text'); await tick(200);
+    click(w, w.document.getElementById('unkGo')); await tick(400);
+    ok('חלון פרויקט לא הופיע', !vis(w, 'projWrap'));
+    ok('נשלח לשרת', S.creates === 1, 'create=' + S.creates);
+    ok('מסומן "מק״ט לא מוכר"', /^❓ מק״ט לא מוכר/.test((S.alerts[0] || {}).note || ''), (S.alerts[0] || {}).note);
+    w.closed = true; }
+
+  head('7ד · פגום עם מק״ט לא מוכר → נבדק גם כן; ההערה של המחסנאי נשמרת');
+  { const S = server(); const w = await wh(S);
+    w.applyType('פריט פגום'); w.document.getElementById('noteText').value = 'שבור בפינה';
+    w.document.getElementById('txtSku').value = '7777777'; await w.submitReport('text'); await tick(200);
+    ok('חלון מוצג גם בפגום', vis(w, 'unkWrap'));
+    click(w, w.document.getElementById('unkGo')); await tick(400);
+    const n = (S.alerts[0] || {}).note || '';
+    ok('נשלח עם סימון + ההערה המקורית', /^❓ מק״ט לא מוכר · שבור בפינה$/.test(n), n);
+    w.closed = true; }
+
+  head('7ה · מק״ט שמופיע רק ברשימת המינימום (לא בקטלוג) נחשב מוכר');
+  { const S = server(); const w = await wh(S, { minstock: ['1000123', '5550001'] });
+    w.document.getElementById('txtSku').value = '5550001'; await w.submitReport('text'); await tick(300);
+    ok('אין חלון', !vis(w, 'unkWrap') && !vis(w, 'projWrap')); ok('נשלח', S.creates === 1); w.closed = true; }
+
+  head('7ו · לוח הקניינים: פנייה עם מק״ט לא מוכר מסומנת');
+  { const S = server(); S.alerts.push({ id: 'U1', ticket: '26-0200', type: 'חוסר מלאי', sku: '7777777', desc: '', status: 'ממתין', reporter: 'משה', assignee: '', response: '',
+      note: '❓ מק״ט לא מוכר — לא מופיע בקובץ הפריטים, המחסנאי אישר שהוקלד נכון', created: new Date().toISOString(), updated: new Date().toISOString(), chat: '' });
+    const { w } = await boot('dashboard.html', { server: S, storage: DB, minstock: MS }); await tick(400);
+    const c = w.document.querySelector('.card[data-id="U1"]');
+    ok('פס "מק״ט לא מוכר"', c && !!c.querySelector('.unk-band'));
+    ok('בלי פס פרויקט כפול', c && !c.querySelector('.proj-band'));
+    ok('אפשר להעביר להיסטוריה', c && !!c.querySelector('[data-act="projclose"]'));
     w.closed = true; }
 
   head('8 · לוח הקניינים: פנייה מסומנת + "העבר להיסטוריה"');
